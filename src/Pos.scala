@@ -22,7 +22,7 @@ sealed case class Pos private (x:Int, y: Int, gridCordinates: String){
 	    val x = for {
 	        up <- all 	      
 	        (x,y) = up
-	        pos = Pos(x,y, gridCoords.get(x).toString() + x)
+	        pos = Pos(x,y, gridCoords.get(x).toString() + y)
 	    } yield (x,y) -> pos
 
 	     x.toMap
