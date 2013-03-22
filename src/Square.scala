@@ -1,5 +1,7 @@
+package scrabble;
+
 abstract class Square {
- 
+  
   case class NormalSquare(tile: Option[Tile] = None ) extends Square
   
   case class DoubleLetterSquare(tile: Option[Tile] = None ) extends Square
