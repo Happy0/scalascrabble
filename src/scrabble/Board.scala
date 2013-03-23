@@ -1,9 +1,5 @@
 package scrabble;
 
-import scrabble.Pos
-
-import scrabble.Square
-
 case class Board (
     squares: Map[Pos, Square]
     
@@ -17,9 +13,23 @@ object Board {
   
   def apply(squares: Traversable[(Pos, Square)]): Board = Board(squares.toMap)
   
- // def init : Board = {
+  // Oh dear god... I can't maths / symmetry
+  def init : Board = {
+    val all = Pos.all
     
-  //}
+    val bonusQuarter : List[((Int,Int), Square)] = {
+      List( 
+          (1,1) -> TripleWordSquare(None),
+          (4,1) -> DoubleLetterSquare(None),
+          (8,1) -> TripleWordSquare(None)
+          
+          
+         
+          )
+                  
+    } 
+    
+  }
   
 }
 

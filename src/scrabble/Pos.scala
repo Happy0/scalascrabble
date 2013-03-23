@@ -21,9 +21,6 @@ object Pos {
 	  
   def posAt(x:Int, y:Int) : Option[Pos] = allPositions get (x,y)
   
-  // Wrong: work out how to do it correctly
-  //val all : List[(Int, Int)] = List.range(1,16) zip List.range(1, 16)
-  
   val all : List[(Int, Int)] = for {i <- List.range(1,16); j <- List.range(1,16)} yield i -> j
   
   lazy val allPositions : Map [(Int, Int), Pos] = 
@@ -34,7 +31,8 @@ object Pos {
     val x = for {
         up <- all 	      
         (x,y) = up
-        pos = Pos(x,y, gridCoords.get(x).toString() + y)
+        letter = gridCoords.get(x).get 
+        pos = Pos(x,y, letter.toString() + y)
     } yield (x,y) -> pos
 
      x.toMap
