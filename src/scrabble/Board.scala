@@ -16,7 +16,7 @@ object Board {
   def init : Board =
   {
     // Return a list of all the bonus squares. The rest of the board are then 'normal squares'
-    val bonusSquares : Map[Pos, Square] =
+    val bonusSquares : Map[(Int,Int), Square] =
     {
       val min:Int = 1
       val max:Int = 15
@@ -43,24 +43,31 @@ object Board {
           (4,8) -> DoubleLetterSquare(None)
 
           )
-    
-      
        val rightQuarter: List[((Int,Int), Square)] = leftQuarter.map{ case ((x,y), square) => ((max + 1 -x, y), square) }
        val bottomLeftQuarter: List[((Int,Int), Square)] = leftQuarter.map{ case ((x,y), square) => ((x, max + 1 - y), square) }
        val bottomRightQuarter: List[((Int,Int), Square)] = bottomLeftQuarter.map{ case ((x,y), square) => ((max + 1 -x, y), square) }
        
        // Return all the special squares
-       (leftQuarter ::: rightQuarter ::: bottomLeftQuarter ::: bottomRightQuarter).map{
+       (leftQuarter ::: rightQuarter ::: bottomLeftQuarter ::: bottomRightQuarter)/*.map{
          case ((x,y), square) => (Pos.posAt(x, y).get, square)
-       }.toMap
+       } */.toMap
     } 
     
-      val x = for {
+    // Construct the board. Anything that is not a bonus square is a NormalSquare
+    val all = Pos.all    
+    val list : List[(Pos,Square)] = for {
         a <- all
         (x,y) = a
-        bonus = bonusSquares.get(Pos.posAt(x, y))
-      }
-    
+        special = bonusSquares.get(x, y)
+        
+        square:Square = special match {
+          case None => NormalSquare(None)
+          case Some(x) => x
+        }
+ 
+    } yield Pos.posAt(x:Int,y:Int).get -> square 
+
+    Board(list.toMap)
   }
   
 }
