@@ -48,9 +48,7 @@ object Board {
        val bottomRightQuarter: List[((Int,Int), Square)] = bottomLeftQuarter.map{ case ((x,y), square) => ((max + 1 -x, y), square) }
        
        // Return all the special squares
-       (leftQuarter ::: rightQuarter ::: bottomLeftQuarter ::: bottomRightQuarter)/*.map{
-         case ((x,y), square) => (Pos.posAt(x, y).get, square)
-       } */.toMap
+       (leftQuarter ::: rightQuarter ::: bottomLeftQuarter ::: bottomRightQuarter).toMap
     } 
     
     // Construct the board. Anything that is not a bonus square is a NormalSquare
