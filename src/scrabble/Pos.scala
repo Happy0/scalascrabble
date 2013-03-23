@@ -4,7 +4,7 @@ sealed case class Pos private (x:Int, y: Int, gridCordinates: String) {
   
 	import Pos.posAt
 	
-	// Inspired by ScalaChess
+	// Inspired by ScalaChess. A convenient way to access neighbouring squares.
 	lazy val up: Option[Pos] = posAt(x, y + 1)
 	lazy val down: Option[Pos] = posAt(x, y -1)
 	lazy val left: Option[Pos] = posAt(x - 1, y)
@@ -19,6 +19,7 @@ sealed case class Pos private (x:Int, y: Int, gridCordinates: String) {
 
 object Pos {
 	  
+  /** Returns the position object at location (x,y) if it exists, else returns None (if it is out of the bounds of the board) */
   def posAt(x:Int, y:Int) : Option[Pos] = allPositions get (x,y)
   
   val all : List[(Int, Int)] = for {i <- List.range(1,16); j <- List.range(1,16)} yield i -> j
@@ -26,11 +27,13 @@ object Pos {
   lazy val allPositions : Map [(Int, Int), Pos] = 
   {
     
+    // Letters mapped to columns, for displaying the move log
     val gridCoords = (List.range(1, 16) zip List.range('a','p')).toMap
     
+    // Create the position objects and map them to their location tuple
     val x = for {
-        up <- all 	      
-        (x,y) = up
+        a <- all 	      
+        (x,y) = a
         letter = gridCoords.get(x).get 
         pos = Pos(x,y, letter.toString() + y)
     } yield (x,y) -> pos

@@ -1,6 +1,6 @@
 package scrabble
 
-sealed class Tile (letter: Char, value: Int) {
+class Tile (letter: Char, value: Int) {
 
   
   
