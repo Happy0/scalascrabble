@@ -45,13 +45,22 @@ object Board {
               (7, 7) -> DoubleLetterSquare(None),
               (1, 8) -> TripleWordSquare(None),
               (4, 8) -> DoubleLetterSquare(None))
-
+              
+          // The offsets for the other quarters of the board
+          val offsets: List[(Int => Int, Int => Int)] = List((x => Pos.max + 1 - x, y => y), (x=> x, y=> Pos.max + 1 - y), (x=>Pos.max + 1 - x, y=> Pos.max + 1 - y ))    
+          
+          /*
           val rightQuarter: List[((Int, Int), Square)] = leftQuarter.map { case ((x, y), square) => ((Pos.max + 1 - x, y), square) }
           val bottomLeftQuarter: List[((Int, Int), Square)] = leftQuarter.map { case ((x, y), square) => ((x, Pos.max + 1 - y), square) }
           val bottomRightQuarter: List[((Int, Int), Square)] = bottomLeftQuarter.map { case ((x, y), square) => ((Pos.max + 1 - x, y), square) }
 
           // Return all the special squares
-          (leftQuarter ::: rightQuarter ::: bottomLeftQuarter ::: bottomRightQuarter).toMap
+          (leftQuarter ::: rightQuarter ::: bottomLeftQuarter ::: bottomRightQuarter).toMap */
+          
+          val x = offsets.map{ case ( f, g) =>
+            leftQuarter.map{case ((x,y), square) => ((f(x), g(y)),square)} }.foldLeft(leftQuarter)(((x,y) => x ++ y))
+          
+          x.toMap
         }
 
       // Construct the board. Anything that is not a bonus square is a NormalSquare
