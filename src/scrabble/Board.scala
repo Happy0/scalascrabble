@@ -19,7 +19,7 @@ object Board {
 
   def apply(squares: Traversable[(Pos, Square)]): Board = Board(squares.toMap)
 
-  def init: Board =
+  val init: Board =
     {
       // Return a list of all the bonus squares. The rest of the board are then 'normal squares'
       val bonusSquares: Map[(Int, Int), Square] =
