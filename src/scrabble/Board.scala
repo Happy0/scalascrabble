@@ -24,8 +24,6 @@ object Board {
       // Return a list of all the bonus squares. The rest of the board are then 'normal squares'
       val bonusSquares: Map[(Int, Int), Square] =
         {
-
-          /* Quarter the board, then find the values from the rest of the board using the symmetry. I hope I can maths ;x..*/
           val leftQuarter: List[((Int, Int), Square)] =
             List(
               (1, 1) -> TripleWordSquare(None),
@@ -46,34 +44,38 @@ object Board {
               (1, 8) -> TripleWordSquare(None),
               (4, 8) -> DoubleLetterSquare(None))
 
-          // List of functions to produce the offsets for the other quarters of the board
+          // List of functions to produce the x and y offsets for the other quarters of the board, using the symmetry of the board
           val offsets: List[(Int => Int, Int => Int)] = List((x => Pos.max + 1 - x, y => y), (x => x, y => Pos.max + 1 - y), (x => Pos.max + 1 - x, y => Pos.max + 1 - y))
 
-          /* Everything below could probably be a hell of a lot more efficient. It doesn't matter in the scope of the execution, but I should think about it to learn more about
-           * writing efficient scala code. */
-          
-          // Produce the other quarters of special squares
-          offsets.map {
-            case (f, g) =>
-              leftQuarter.map { case ((x, y), square) => ((f(x), g(y)), square) }
-          }.foldLeft(leftQuarter)(((x, y) => x ++ y)).toMap
+          // Produce and return the other quarters of special squares
+          offsets.foldLeft(leftQuarter.toMap) {
+            case (map, (f, g)) =>
+              val inMap = leftQuarter.foldLeft(map) {
+
+                case (inner, ((x, y), square)) =>
+                  val res = ((f(x), g(y)), square)
+                  inner + res
+
+              }
+              map ++ inMap
+          }
         }
 
-      // Construct the board. Anything that is not a bonus square is a NormalSquare
+      // Construct and return the board. Anything that is not a bonus square is a NormalSquare.
       val all = Pos.all
-      val list: List[(Pos, Square)] = for {
-        a <- all
-        (x, y) = a
-        special = bonusSquares.get(x, y)
 
-        square: Square = special match {
-          case None => NormalSquare(None)
-          case Some(x) => x
-        }
+      val board = all.foldLeft(Map.empty[Pos, Square]) {
+        case (map, (x, y)) =>
+          val special = bonusSquares.get(x, y)
+          val square: Square = special match {
+            case None => NormalSquare(None)
+            case Some(x) => x
+          }
+          val entry = Pos.posAt(x, y).get -> square
 
-      } yield Pos.posAt(x, y).get -> square
-
-      Board(list.toMap)
+          map + entry
+      }
+      Board(board)
     }
 
   def main(args: Array[String]) {

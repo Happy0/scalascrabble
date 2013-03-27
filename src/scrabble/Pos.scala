@@ -33,10 +33,10 @@ object Pos {
 
       // Create the position objects and map them to their grid location tuple
       all.foldLeft(Map.empty[(Int, Int), Pos]) {
-        case (z, (x: Int, y: Int)) =>
+        case (map, (x: Int, y: Int)) =>
           val letter = gridCoords.get(x).get
           val sq = (x, y) -> Pos(x, y, letter.toString() + y)
-          z + sq
+          map + sq
       }
     }
 
