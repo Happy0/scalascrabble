@@ -17,29 +17,27 @@ sealed case class Pos private (x: Int, y: Int, gridCordinates: String) {
 }
 
 object Pos {
-	val min: Int = 1
-    val max: Int = 15
+  val min: Int = 1
+  val max: Int = 15
 
   /** Returns the position object at location (x,y) if it exists, else returns None (if it is out of the bounds of the board) */
   def posAt(x: Int, y: Int): Option[Pos] = allPositions get (x, y)
 
+  // All the positions in the 15 x 15 board
   val all: List[(Int, Int)] = for { i <- List.range(1, 16); j <- List.range(1, 16) } yield i -> j
 
   lazy val allPositions: Map[(Int, Int), Pos] =
     {
-
       // Letters mapped to columns, for displaying the move log
       val gridCoords = (List.range(1, 16) zip List.range('a', 'p')).toMap
 
-      // Create the position objects and map them to their location tuple
-      val x = for {
-        a <- all
-        (x, y) = a
-        letter = gridCoords.get(x).get
-        pos = Pos(x, y, letter.toString() + y)
-      } yield (x, y) -> pos
-
-      x.toMap
+      // Create the position objects and map them to their grid location tuple
+      all.foldLeft(Map.empty[(Int, Int), Pos]) {
+        case (z, (x: Int, y: Int)) =>
+          val letter = gridCoords.get(x).get
+          val sq = (x, y) -> Pos(x, y, letter.toString() + y)
+          z + sq
+      }
     }
 
   def main(args: Array[String]) {

@@ -49,6 +49,9 @@ object Board {
           // List of functions to produce the offsets for the other quarters of the board
           val offsets: List[(Int => Int, Int => Int)] = List((x => Pos.max + 1 - x, y => y), (x => x, y => Pos.max + 1 - y), (x => Pos.max + 1 - x, y => Pos.max + 1 - y))
 
+          /* Everything below could probably be a hell of a lot more efficient. It doesn't matter in the scope of the execution, but I should think about it to learn more about
+           * writing efficient scala code. */
+          
           // Produce the other quarters of special squares
           offsets.map {
             case (f, g) =>
