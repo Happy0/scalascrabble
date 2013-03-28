@@ -9,6 +9,8 @@ class LetterBag (tiles: List[Tile]) {
 
 object LetterBag {
   
+  def apply(tiles: List[Tile]) : LetterBag = LetterBag(tiles)
+  
   def init: LetterBag = {
     
   
