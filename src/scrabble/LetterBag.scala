@@ -27,7 +27,7 @@ object LetterBag {
         list ++ List.tabulate(dst)(i => Tile(let, vl))
     }
     
-    LetterBag(letters)
+    LetterBag(util.Random.shuffle(letters))
   }
 
 }
