@@ -1,13 +1,13 @@
 package scrabble
 
 /** tiles: The current tiles in the bag */
-class LetterBag(tiles: List[Tile]) {
+class LetterBag(tiles: List[Letter]) {
 
 }
 
 object LetterBag {
 
-  def apply(tiles: List[Tile]): LetterBag = LetterBag(tiles)
+  def apply(tiles: List[Letter]): LetterBag = LetterBag(tiles)
 
   /** Returns a new LetterBag in its intial state */
   val init: LetterBag = {
@@ -22,9 +22,10 @@ object LetterBag {
 
     val all = blankPoints ::: onePoints ::: twoPoints ::: threePoints ::: fourPoints ::: fivePoints ::: eightPoints ::: tenPoints
 
-    val letters = all.foldLeft(List.empty[Tile]){
+    // Yield a list of letters, using the distribution to yield the right number of letters
+    val letters = all.foldLeft(List.empty[Letter]){
       case (list, (let,vl, dst)) => 
-        list ++ List.tabulate(dst)(i => Tile(let, vl))
+        list ++ List.tabulate(dst)(i => Letter(let, vl))
     }
     
     LetterBag(util.Random.shuffle(letters))

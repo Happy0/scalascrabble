@@ -1,39 +1,39 @@
 package scrabble;
 
-abstract class Square(tile: Option[Tile] = None) {
+abstract class Square(tile: Option[Letter] = None) {
   
   
 }
   
-case class NormalSquare(tile: Option[Tile] = None) extends Square(tile) {
+case class NormalSquare(tile: Option[Letter] = None) extends Square(tile) {
   override def toString = tile match {
     case Some(x) => x.toString()
     case None => "N"
   }
 }
 
-case class DoubleLetterSquare(tile: Option[Tile] = None)  extends Square(tile) {
+case class DoubleLetterSquare(tile: Option[Letter] = None)  extends Square(tile) {
     override def toString = tile match {
     case Some(x) => x.toString()
     case None => "DL"
   }
 }
   
-case class TripleLetterSquare(tile: Option[Tile] = None)  extends Square(tile) {
+case class TripleLetterSquare(tile: Option[Letter] = None)  extends Square(tile) {
     override def toString = tile match {
     case Some(x) => x.toString()
     case None => "TL"
   }
 }
   
-case class DoubleWordSquare(tile: Option[Tile] = None)  extends Square(tile) {
+case class DoubleWordSquare(tile: Option[Letter] = None)  extends Square(tile) {
     override def toString = tile match {
     case Some(x) => x.toString()
     case None => "DW"
   }
 }
   
-case class TripleWordSquare(tile: Option[Tile] = None)  extends Square(tile) {
+case class TripleWordSquare(tile: Option[Letter] = None)  extends Square(tile) {
     override def toString = tile match {
     case Some(x) => x.toString()
     case None => "TW"
