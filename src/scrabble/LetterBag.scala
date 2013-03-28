@@ -12,6 +12,7 @@ object LetterBag {
   /** Returns a new LetterBag in its intial state. List is in randomised order. */
   val init: LetterBag = {
 
+    // (Letter, Value, Distribution)
     val blankPoints = List(('_', 0, 2))
     val onePoints = List('E', 'A', 'I', 'O', 'N', 'R', 'T', 'L', 'S', 'U') zip List(12, 9, 9, 8, 6, 6, 6, 4, 4, 4) map { case (x, y) => (x, 1, y) }
     val twoPoints = List(('D', 2, 4), ('G', 2, 3))
