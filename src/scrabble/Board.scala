@@ -47,7 +47,7 @@ object Board {
           // List of functions to produce the x and y offsets for the other quarters of the board, using the symmetry of the board
           val offsets: List[(Int => Int, Int => Int)] = List((x => Pos.max + 1 - x, y => y), (x => x, y => Pos.max + 1 - y), (x => Pos.max + 1 - x, y => Pos.max + 1 - y))
 
-          // Produce and return the other quarters of special squares
+          // Produce and return the other quarters of special squares, accumulating the map
           offsets.foldLeft(leftQuarter.toMap) {
             case (map, (f, g)) =>
               val inMap = leftQuarter.foldLeft(map) {
@@ -57,7 +57,7 @@ object Board {
                   inner + res
 
               }
-              map ++ inMap
+              inMap
           }
         }
 
