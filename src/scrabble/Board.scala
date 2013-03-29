@@ -36,6 +36,7 @@ object Board {
               (1, 4) -> DoubleLetterSquare(None),
               (4, 4) -> DoubleWordSquare(None),
               (8, 4) -> DoubleLetterSquare(None),
+              (8, 8) -> DoubleWordSquare(None),
               (5, 5) -> DoubleWordSquare(None),
               (2, 6) -> TripleLetterSquare(None),
               (6, 6) -> TripleLetterSquare(None),

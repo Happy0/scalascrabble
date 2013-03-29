@@ -1,20 +1,21 @@
 package scrabble
 
 /** tiles: The current tiles in the bag */
-case class LetterBag(letters: List[Letter]) {
+case class LetterBag(letters: List[Letter], size: Int) {
 
   override def toString = letters.toString
-  
-  /** Remove @num letters from the letter bag. Returns a list of removed letters (if available)
-   *  and the resulting letter bag */
-  def remove(num : Int) : (List[Letter], LetterBag) = 
-  {
+
+  /**
+   * Remove @num letters from the letter bag. Returns a list of removed letters (if available)
+   *  and the resulting letter bag
+   */
+  def remove(num: Int): (List[Letter], LetterBag) = {
     val split = letters.splitAt(num - 1)
-    
     val removedLetters = split._1
-    val newBag = LetterBag(split._2)
-    
-    return (removedLetters, newBag)
+    val newSize = if (size - num <= 0) 0 else size - num;
+    val newBag = LetterBag(split._2, newSize)
+
+    (removedLetters, newBag)
   }
 
 }
@@ -37,11 +38,13 @@ object LetterBag {
     val all: List[(Char, Int, Int)] = blankPoints ::: onePoints ::: twoPoints ::: threePoints ::: fourPoints ::: fivePoints ::: eightPoints ::: tenPoints
 
     // Yield a list of all the letters in the bag, using the distribution to yield the right number of letters
-    val letters = all.foldLeft(List.empty[Letter]) { case (list, (chr: Char, vl: Int, dst: Int)) =>
-      list ::: List.fill(dst)(Letter(chr, vl)) }
+    val letters = all.foldLeft(List.empty[Letter]) {
+      case (list, (chr: Char, vl: Int, dst: Int)) =>
+        list ::: List.fill(dst)(Letter(chr, vl))
+    }
 
     // Construct with a randomised list
-    LetterBag(util.Random.shuffle(letters))
+    LetterBag(util.Random.shuffle(letters), letters.size)
   }
 
   def main(args: Array[String]) {
