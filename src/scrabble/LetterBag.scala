@@ -4,6 +4,18 @@ package scrabble
 case class LetterBag(letters: List[Letter]) {
 
   override def toString = letters.toString
+  
+  /** Remove @num letters from the letter bag. Returns a list of removed letters (if available)
+   *  and the resulting letter bag */
+  def remove(num : Int) : (List[Letter], LetterBag) = 
+  {
+    val split = letters.splitAt(num - 1)
+    
+    val removedLetters = split._1
+    val newBag = LetterBag(split._2)
+    
+    return (removedLetters, newBag)
+  }
 
 }
 
