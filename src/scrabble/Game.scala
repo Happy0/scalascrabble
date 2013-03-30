@@ -1,14 +1,13 @@
 package scrabble;
 
 case class Game(
-  players: Map[String, Player],
+  players: List[Player],
   board: Board,
-  playersMove: String,
+  playersMove: Int, // Index into the list of players
   bag: LetterBag) {
 
   require(players.size >= 2 && players.size <= 4)
 
-  //def apply(move: Move) : Game = {}
   
 }
 
