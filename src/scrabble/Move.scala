@@ -1,6 +1,6 @@
 package scrabble
 
-case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[Char]) {
+case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char)]) {
 
   /** Returns the updated game if the move is a valid scrabble move, otherwise returns a String with an explanation of why the move is invalid */
   //def updatedGame: Either[String, Game] = {}
@@ -17,23 +17,24 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[Char]) {
 
   val board = game.board
 
+  val placedSorted = placed.sortBy { case (pos: Pos, let: Letter) => (pos.x, pos.y) }
+
   //private val hasRepeats
 
   // Returns true if the letter are placed in a legal distribution (linear or horizontal) within the board range, and there are no already occupied squares
   def validSpread: Boolean = {
-    val startx = placed(0)._1.x
-    val endx = placed(placed.size - 1)._1.x
-    val starty = placed(0)._1.y
-    val endy = placed(placed.size - 1)._1.y
+    val startx = placedSorted(0)._1.x
+    val endx = placedSorted(placedSorted.size - 1)._1.x
+    val starty = placedSorted(0)._1.y
+    val endy = placedSorted(placedSorted.size - 1)._1.y
     val horizontal = starty == endy
     val vertical = startx == endx
 
     if (!horizontal && !vertical) false else true
 
     def isLinear: (Boolean, Int, Int) = {
-    //@TODO: Sort the 'placed' list beforehand. May have been placed in arbitrary order.
-      
-      placed.tail.foldLeft(true, startx, starty) {
+
+      placedSorted.tail.foldLeft(true, startx, starty) {
         case ((bl, lastx: Int, lasty: Int), (pos, let)) =>
           if (horizontal) {
             val isHorizontal = pos.y == lasty
@@ -84,20 +85,21 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[Char]) {
 object Main {
   def main(args: Array[String]) {
     val game = Game.init(List("jim", "joe"), Dictionary.load("C:\\workspace\\Scala\\scalascrabble\\src\\Dict\\en.txt"), LetterBag.init)
-    
+
     val board = Board.init
-    
-    val newBrd = board.squares + (Pos.posAt(3,1).get -> NormalSquare( Some(Letter('a',1)) ))
+
+    val newBrd = board.squares + (Pos.posAt(1, 3).get -> NormalSquare(Some(Letter('a', 1))))
     val testBoard = Board(newBrd)
 
     val placed = List(
       Pos.posAt(1, 1).get -> Letter('a', '1'),
-      Pos.posAt(2, 1).get -> Letter('a', '1'),
-      Pos.posAt(4, 1).get -> Letter('a', '1'))
+      Pos.posAt(1, 4).get -> Letter('a', '1'),
+      Pos.posAt(1, 2).get -> Letter('a', '1'))
 
     val blanks = List()
 
     val move = Move(Game(game.players, testBoard, game.playersMove, game.bag), placed, blanks)
+    println(move.placedSorted)
 
     println(move.validSpread)
   }
