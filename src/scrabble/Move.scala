@@ -12,51 +12,68 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[Char]) {
         case None => true
         case Some(x) => false
       }
-      
-      
+
     }
-  
+
+  val board = game.board
+
   //private val hasRepeats
-  
+
   // Returns true if the letter are placed in a legal distribution (linear or horizontal) within the board range, and there are no already occupied squares
   def validSpread: Boolean = {
-    val horizontal = placed(0)._1.x == placed(placed.size - 1)._1.x
-    val vertical = placed(0)._1.y == placed(placed.size - 1)._1.y
+    val startx = placed(0)._1.x
+    val endx = placed(placed.size - 1)._1.x
+    val starty = placed(0)._1.y
+    val endy = placed(placed.size - 1)._1.y
+    val horizontal = starty == endy
+    val vertical = startx == endx
 
-    def isValid: (Boolean, Int, Int) = {
-      placed.foldLeft(true, placed(0)._1.x, placed(0)._1.y) {
-        case ((bool: Boolean, lastx: Int, lasty: Int), (Pos(x, y, ch), let)) =>
+    if (!horizontal && !vertical) false else true
 
-          val curPos = Pos.posAt(x, y)
-          if (!curPos.isDefined) return (false, x, y) // If the position given isn't in range of the board, return false
-
-          if (!game.board.squareAt(curPos.get).isEmpty) return (false, x, y) // If the square is already occupied, return false
-
+    def isLinear: (Boolean, Int, Int) = {
+      placed.foldLeft(true, startx, starty) {
+        case ((bl, lastx: Int, lasty: Int), (pos, let)) =>
           if (horizontal) {
-            val hor = y == placed(0)._1.y
+            val isHorizontal = pos.y == lasty
+            if (!isHorizontal) return (false, 0, 0)
 
-            lazy val pos = Pos.posAt(lastx + 1, y)
-            lazy val defined = pos.isDefined
-            lazy val occupied = defined && !game.board.squareAt(pos.get).isEmpty
+            val comesAfter = pos.x == lastx + 1
 
-            val correcty = (y == y + 1 || occupied)
-            if (hor && correcty) (true, x, y) else return { (false, x, y) }
+            if (comesAfter) (true, pos.x, pos.y) else {
+              // Loop from the current position to the previous position, making sure there are squares inbetween that the word is built from
+              val range = List.range(startx, pos.x)
 
-          } else if (vertical) {
-            val ver = y == placed(0)._1.y
-            lazy val pos = Pos.posAt(lastx + 1, y)
-            lazy val defined = pos isDefined
-            lazy val occupied = defined && !game.board.squareAt(pos.get).isEmpty
-            val correctx = (x == x + 1 || occupied)
+              val between = range.find { x =>
+                val curPos = Pos.posAt(x, pos.y).get
+                board.squareAt(curPos).isEmpty
+              }
 
-            if (ver && correctx) (true, x, y) else return { (false, x, y) }
+              if (!between.isEmpty) (true, pos.x, pos.y) else return (false, 0, 0)
+
+            }
+
           } else {
-            return { (false, x, y) }
+            val isVertical = pos.x == lastx
+            if (!isVertical) return (false, 0, 0)
+            val comesAfter = pos.y == lasty + 1
+            if (comesAfter) (true, pos.x, pos.y) else {
+              // Loop from the current position to the previous position, making sure there are squares inbetween
+              val range = List.range(starty, pos.y)
+
+              val between = range.find { y =>
+                val curPos = Pos.posAt(pos.x, y).get
+                board.squareAt(curPos).isEmpty
+              }
+
+              if (between.isEmpty) (true, pos.x, pos.y) else return (false, 0, 0)
+            }
           }
+
       }
+
     }
 
-    return isValid._1
+    isLinear._1
   }
 
   /*
@@ -77,11 +94,11 @@ object Main {
     val placed = List(Pos.posAt(1, 1).get -> Letter('a', '1'),
       Pos.posAt(1, 2).get -> Letter('a', '1'),
       Pos.posAt(1, 3).get -> Letter('a', '1'))
-      
+
     val blanks = List()
-    
-    val move = Move(game, placed,blanks)
-    
+
+    val move = Move(game, placed, blanks)
+
     println(move.validSpread)
   }
 }
