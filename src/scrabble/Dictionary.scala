@@ -3,7 +3,10 @@ package scrabble
 import scala.collection.immutable.HashSet
 import scala.io.Source
 
-case class Dictionary(dictionary: HashSet[String])
+case class Dictionary(dictionary: HashSet[String]) {
+  
+	def isValidWord(word: String) = dictionary.contains(word)
+}
 
 object Dictionary {
 

@@ -8,7 +8,7 @@ case class Game(
 
   require(players.size >= 2 && players.size <= 4)
   
-  
+  val currentPlayer = players(playersMove)
   
 }
 
