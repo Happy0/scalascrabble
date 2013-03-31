@@ -31,7 +31,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[Char]) {
     if (!horizontal && !vertical) false else true
 
     def isLinear: (Boolean, Int, Int) = {
-      placed.foldLeft(true, startx, starty) {
+      placed.tail.foldLeft(true, startx, starty) {
         case ((bl, lastx: Int, lasty: Int), (pos, let)) =>
           if (horizontal) {
             val isHorizontal = pos.y == lasty
@@ -41,34 +41,35 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[Char]) {
 
             if (comesAfter) (true, pos.x, pos.y) else {
               // Loop from the current position to the previous position, making sure there are squares inbetween that the word is built from
-              val range = List.range(startx, pos.x)
+              val range = List.range(lastx, pos.x)
 
-              val between = range.find { x =>
+              val emptiesBetween = range.find { x =>
                 val curPos = Pos.posAt(x, pos.y).get
                 board.squareAt(curPos).isEmpty
               }
 
-              if (!between.isEmpty) (true, pos.x, pos.y) else return (false, 0, 0)
+              if (!emptiesBetween.isEmpty) (true, pos.x, pos.y) else return (false, pos.x, pos.y)
 
             }
 
           } else {
             val isVertical = pos.x == lastx
             if (!isVertical) return (false, 0, 0)
+
             val comesAfter = pos.y == lasty + 1
+
             if (comesAfter) (true, pos.x, pos.y) else {
               // Loop from the current position to the previous position, making sure there are squares inbetween
-              val range = List.range(starty, pos.y)
+              val range = List.range(lasty, pos.y)
 
-              val between = range.find { y =>
+              val emptiesBetween = range.find { y =>
                 val curPos = Pos.posAt(pos.x, y).get
                 board.squareAt(curPos).isEmpty
               }
 
-              if (between.isEmpty) (true, pos.x, pos.y) else return (false, 0, 0)
+              if (!emptiesBetween.isEmpty) (true, pos.x, pos.y) else return (false, pos.x, pos.y)
             }
           }
-
       }
 
     }
@@ -82,9 +83,10 @@ object Main {
   def main(args: Array[String]) {
     val game = Game.init(List("jim", "joe"), Dictionary.load("C:\\workspace\\Scala\\scalascrabble\\src\\Dict\\en.txt"), LetterBag.init)
 
-    val placed = List(Pos.posAt(1, 1).get -> Letter('a', '1'),
-      Pos.posAt(1, 2).get -> Letter('a', '1'),
-      Pos.posAt(1, 3).get -> Letter('a', '1'))
+    val placed = List(
+      Pos.posAt(1, 1).get -> Letter('a', '1'),
+      Pos.posAt(2, 1).get -> Letter('a', '1'),
+      Pos.posAt(5, 1).get -> Letter('a', '1'))
 
     val blanks = List()
 
