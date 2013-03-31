@@ -6,6 +6,8 @@ package scrabble;
  */
 abstract class Square(tile: Option[Letter] = None) extends Ordered[Square] {
   def compare(other: Square) = if (other.isInstanceOf[DoubleWordSquare] || other.isInstanceOf[TripleWordSquare]) -1 else 0
+  
+  def isEmpty() = tile.isDefined
 }
 
 case class NormalSquare(tile: Option[Letter] = None) extends Square(tile) {

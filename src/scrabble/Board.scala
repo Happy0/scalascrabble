@@ -12,6 +12,8 @@ case class Board(
       }
     }.toString
   }
+
+  def squareAt(pos: Pos): Square = squares.get(pos).get
 }
 
 object Board {
