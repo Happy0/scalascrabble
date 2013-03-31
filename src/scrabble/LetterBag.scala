@@ -1,5 +1,7 @@
 package scrabble
 
+//@TODO: Think about how to generalise this to other languages. Perhaps using configuration files...
+
 /** tiles: The current tiles in the bag */
 case class LetterBag(letters: List[Letter], size: Int) {
 
@@ -46,6 +48,9 @@ object LetterBag {
     // Construct with a randomised list
     LetterBag(util.Random.shuffle(letters), letters.size)
   }
+  
+  //@TODO: Placeholder for other language generalisation
+  def apply(filePath: String): LetterBag = init
 
   def main(args: Array[String]) {
     val bag = LetterBag.init
