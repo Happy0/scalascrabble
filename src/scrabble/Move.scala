@@ -1,6 +1,6 @@
 package scrabble
 
-class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[Char]) {
+case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[Char]) {
 
   /** Returns the updated game if the move is a valid scrabble move, otherwise returns a String with an explanation of why the move is invalid */
   //def updatedGame: Either[String, Game] = {}
@@ -12,10 +12,14 @@ class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[Char]) {
         case None => true
         case Some(x) => false
       }
+      
+      
     }
-
+  
+  //private val hasRepeats
+  
   // Returns true if the letter are placed in a legal distribution (linear or horizontal) within the board range, and there are no already occupied squares
-  private def validSpread: Boolean = {
+  def validSpread: Boolean = {
     val horizontal = placed(0)._1.x == placed(placed.size - 1)._1.x
     val vertical = placed(0)._1.y == placed(placed.size - 1)._1.y
 
@@ -64,8 +68,21 @@ class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[Char]) {
    
   */
 
+}
+
+object Main {
   def main(args: Array[String]) {
-    val game = Game.init(List("jim", "joe"), Dictionary.load("en.txt"), LetterBag.init)
+    val game = Game.init(List("jim", "joe"), Dictionary.load("C:\\workspace\\Scala\\scalascrabble\\src\\Dict\\en.txt"), LetterBag.init)
+
+    val placed = List(Pos.posAt(1, 1).get -> Letter('a', '1'),
+      Pos.posAt(1, 2).get -> Letter('a', '1'),
+      Pos.posAt(1, 3).get -> Letter('a', '1'))
+      
+    val blanks = List()
+    
+    val move = Move(game, placed,blanks)
+    
+    println(move.validSpread)
   }
 }
 
