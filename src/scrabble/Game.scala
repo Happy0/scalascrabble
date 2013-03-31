@@ -8,8 +8,7 @@ case class Game(
 
   require(players.size >= 2 && players.size <= 4)
   
-  /** Produces a new game state from a move */ 
-  def apply(move: Move) : Game = {}
+  
   
 }
 

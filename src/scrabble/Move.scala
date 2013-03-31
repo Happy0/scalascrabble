@@ -2,12 +2,11 @@ package scrabble
 
 // Think about how to deal with blank letters. Seperate method?
 
-class Move(board: Board, player: Player,  bag: LetterBag, dict: Dictionary, placed: List[(Pos, Letter)], blanks: List[Char])
+class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[Char])
 {
   
-  /** Returns the updated board if the move is a valid scrabble move, otherwise returns false */
-  def updatedBoard : Option[Board] = {
-    
+  /** Returns the updated game if the move is a valid scrabble move, otherwise returns a String with an explanation of why the move is invalid */
+  def updatedGame: Either[String, Game] = {
     
   }
   
