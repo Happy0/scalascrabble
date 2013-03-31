@@ -11,16 +11,16 @@ class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[Char])
   }
   
   // Returns true if the letter are placed in a legal distribution (linear, and attached to an existing letter)
-  def validSpread (placed: List[(Pos, Letter)]) : Boolean = {
+  private def validSpread (placed: List[(Pos, Letter)]) : Boolean = {
     
   }
   
   /*
-  val updatedPlayer: Player = 
+  private val updatedPlayer: Player = 
   
-  val updatedBag = 
+  private val updatedBag = 
     
-  val updatedBoard = 
+  private val updatedBoard = 
    
   */
 
