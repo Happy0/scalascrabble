@@ -19,6 +19,13 @@ case class LetterBag(letters: List[Letter], size: Int) {
 
     (removedLetters, newBag)
   }
+  
+  def exchange(exchanged: List[Letter]) : (List[Letter],LetterBag) =
+    {
+	  val (given, bag) = remove(exchanged.size)
+	  (given, LetterBag(util.Random.shuffle(bag.letters ::: exchanged), size))
+    }
+    
 
 }
 

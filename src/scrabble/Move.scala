@@ -76,15 +76,6 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[Char]) {
     isLinear._1
   }
 
-  /*
-  private val updatedPlayer: Player = 
-  
-  private val updatedBag = 
-    
-  private val updatedBoard = 
-   
-  */
-
 }
 
 object Main {
