@@ -31,6 +31,8 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[Char]) {
     if (!horizontal && !vertical) false else true
 
     def isLinear: (Boolean, Int, Int) = {
+    //@TODO: Sort the 'placed' list beforehand. May have been placed in arbitrary order.
+      
       placed.tail.foldLeft(true, startx, starty) {
         case ((bl, lastx: Int, lasty: Int), (pos, let)) =>
           if (horizontal) {
@@ -82,15 +84,20 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[Char]) {
 object Main {
   def main(args: Array[String]) {
     val game = Game.init(List("jim", "joe"), Dictionary.load("C:\\workspace\\Scala\\scalascrabble\\src\\Dict\\en.txt"), LetterBag.init)
+    
+    val board = Board.init
+    
+    val newBrd = board.squares + (Pos.posAt(3,1).get -> NormalSquare( Some(Letter('a',1)) ))
+    val testBoard = Board(newBrd)
 
     val placed = List(
       Pos.posAt(1, 1).get -> Letter('a', '1'),
       Pos.posAt(2, 1).get -> Letter('a', '1'),
-      Pos.posAt(5, 1).get -> Letter('a', '1'))
+      Pos.posAt(4, 1).get -> Letter('a', '1'))
 
     val blanks = List()
 
-    val move = Move(game, placed, blanks)
+    val move = Move(Game(game.players, testBoard, game.playersMove, game.bag), placed, blanks)
 
     println(move.validSpread)
   }
