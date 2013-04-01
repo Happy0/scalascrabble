@@ -14,6 +14,17 @@ case class Board(
   }
 
   def squareAt(pos: Pos): Square = squares.get(pos).get
+
+  def LettersAbove(pos: Pos): List[Square] = findAdjacentLetters(pos, pos=> pos.up, List())
+  def LettersBelow(pos: Pos): List[Square] = findAdjacentLetters(pos, pos=> pos.down, List())
+  def LettersLeft(pos: Pos): List[Square] = findAdjacentLetters(pos, pos=> pos.left, List())
+  def LettersRight(pos: Pos): List[Square] = findAdjacentLetters(pos, pos=> pos.right, List())
+
+  private def findAdjacentLetters(pos: Pos, direction: Pos => Option[Pos], gathered: List[Square]): List[Square] = {
+    val nextTo: Option[Pos] = direction(pos)
+    if (nextTo.isEmpty || squareAt(nextTo.get).isEmpty) gathered else squareAt(pos) :: findAdjacentLetters(nextTo.get, direction, gathered)
+  }
+
 }
 
 object Board {

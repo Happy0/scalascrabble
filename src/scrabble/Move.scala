@@ -3,7 +3,7 @@ package scrabble
 case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char)]) {
 
   /** Returns the updated game if the move is a valid scrabble move, otherwise returns a String with an explanation of why the move is invalid */
-  //def updatedGame: Either[InvalidMove, Game] = {}
+  def updatedGame: Either[InvalidMove, Game] = ???
 
   // Paranoid checks
   
@@ -25,6 +25,8 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
   val placedSorted = placed.sortBy { case (pos: Pos, let: Letter) => (pos.x, pos.y) }
 
   // Returns true if the letter are placed in a legal distribution (linear or horizontal) within the board range, and it is attached to at least one existing word
+  
+  //@TODO: Collect words as it goes
   def validlyPlaced: Either[Boolean, InvalidMove] = {
     val amountPlaced = placedSorted.size
 
