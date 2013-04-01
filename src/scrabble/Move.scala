@@ -21,7 +21,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
   //private val hasRepeats
 
-  // Returns true if the letter are placed in a legal distribution (linear or horizontal) within the board range, and there are no already occupied squares
+  // Returns true if the letter are placed in a legal distribution (linear or horizontal) within the board range, and it is attached to at least one existing word
   def validSpread: Either[Boolean, String] = {
     val amountPlaced = placedSorted.size
 
@@ -34,15 +34,20 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
     if (!horizontal && !vertical) false else true
 
-    def isLinear: (Boolean, Int, Int) = {
+    def isLinear: (Boolean, Boolean, Int, Int) = {
 
-      placedSorted.tail.foldLeft(true, startx, starty) {
-        case ((bl, lastx: Int, lasty: Int), (pos, let)) =>
+      placedSorted.tail.foldLeft(true, false, startx, starty) {
+        case ((bl, neigh, lastx: Int, lasty: Int), (pos, let)) =>
           val isLinear = if (horizontal) pos.y == lasty else pos.x == lastx
-          if (!isLinear) return (false, pos.x, pos.y)
+          if (!isLinear) return (false, false, pos.x, pos.y)
           val comesAfter = if (horizontal) pos.x == lastx + 1 else pos.y == lasty + 1
 
-          if (comesAfter) (true, pos.x, pos.y) else {
+          // Search for neighbouring squares
+          lazy val lookAt = pos.up::pos.down::pos.left::pos.right::List()
+          
+          val hasNeighbours = if (neigh == true) true else !lookAt.find { ps => if (!ps.isDefined) false else !board.squareAt(ps.get).isEmpty }.isEmpty
+
+          if (comesAfter) (true, hasNeighbours, pos.x, pos.y) else {
             // Loop from the current position to the previous position, making sure there are squares inbetween that the word is built from
             val range = if (horizontal) List.range(lastx + 1, pos.x) else List.range(lasty + 1, pos.y)
 
@@ -52,7 +57,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
             }
             println(emptiesBetween)
 
-            if (!emptiesBetween.isDefined) (true, pos.x, pos.y) else return (false, pos.x, pos.y)
+            if (!emptiesBetween.isDefined) (true, true, pos.x, pos.y) else return (false, false, pos.x, pos.y)
 
           }
 
@@ -60,9 +65,9 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
     }
 
-    val (bl, x, y) = isLinear
+    val (bl, neigh, x, y) = isLinear
 
-    if (bl) return Left(true) else return Right("Letter placed at " + Pos.posAt(x, y).get.toString + " is an illegal move")
+    if (bl && neigh) Left(true) else if (!neigh) return Right("Not attached to existing word") else Right("Letter placed at " + Pos.posAt(x, y).get.toString + " is an illegal move")
   }
 
 }
@@ -73,13 +78,13 @@ object Main {
 
     val board = Board.init
 
-    val newBrd = board.squares + (Pos.posAt(3, 1).get -> NormalSquare(Some(Letter('a', 1))))
+    val newBrd = board.squares + (Pos.posAt(3, 2).get -> NormalSquare(Some(Letter('a', 1))))
     val testBoard = Board(newBrd)
-    
+
     println(testBoard)
 
     val placed = List(
-      Pos.posAt(4, 1).get -> Letter('A', 1),
+      Pos.posAt(3, 1).get -> Letter('A', 1),
       Pos.posAt(2, 1).get -> Letter('A', 1),
       Pos.posAt(1, 1).get -> Letter('A', 1))
 

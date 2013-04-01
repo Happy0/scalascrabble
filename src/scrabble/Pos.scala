@@ -9,11 +9,8 @@ sealed case class Pos private (x: Int, y: Int, gridCordinates: String) {
   lazy val down: Option[Pos] = posAt(x, y - 1)
   lazy val left: Option[Pos] = posAt(x - 1, y)
   lazy val right: Option[Pos] = posAt(x + 1, y)
-  lazy val upLeft: Option[Pos] = up flatMap (_ left)
-  lazy val upRight: Option[Pos] = up flatMap (_ right)
-  lazy val downLeft: Option[Pos] = down flatMap (_ left)
-  lazy val downRight: Option[Pos] = down flatMap (_ right)
-  
+
+
   //override def toString = gridCordinates
 
 }
