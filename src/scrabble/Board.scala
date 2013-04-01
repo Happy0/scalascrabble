@@ -22,7 +22,7 @@ case class Board(
 
   private def findAdjacentLetters(pos: Pos, direction: Pos => Option[Pos], gathered: List[(Pos,Square)]): List[(Pos,Square)] = {
     val nextTo: Option[Pos] = direction(pos)
-    if (nextTo.isEmpty || squareAt(nextTo.get).isEmpty) gathered else nextTo.get -> squareAt(pos) :: findAdjacentLetters(nextTo.get, direction, gathered)
+    if (nextTo.isEmpty || squareAt(nextTo.get).isEmpty) gathered else nextTo.get -> squareAt(nextTo.get) :: findAdjacentLetters(nextTo.get, direction, gathered)
   }
 
 }
