@@ -3,9 +3,11 @@ package scrabble
 case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char)]) {
 
   /** Returns the updated game if the move is a valid scrabble move, otherwise returns a String with an explanation of why the move is invalid */
-  //def updatedGame: Either[String, Game] = {}
+  //def updatedGame: Either[InvalidMove, Game] = {}
 
-  private val playerHasLetters: Boolean = {
+  // Paranoid checks
+  
+  private lazy val playerHasLetters: Boolean = {
     val doesntHave = placed.find { case (Pos(x, y, gr), let) => !game.currentPlayer.letters.contains(let) }
     doesntHave match {
       case None => true
@@ -15,13 +17,15 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
   }
 
   lazy val alreadyOccupiedSquares = placed.find { case (pos: Pos, letter: Letter) => !(board.squareAt(pos).isEmpty) }
+  
+  // <Paranoid checks>
 
   val board = game.board
 
   val placedSorted = placed.sortBy { case (pos: Pos, let: Letter) => (pos.x, pos.y) }
 
   // Returns true if the letter are placed in a legal distribution (linear or horizontal) within the board range, and it is attached to at least one existing word
-  def validlyPlaced: Either[Boolean, String] = {
+  def validlyPlaced: Either[Boolean, InvalidMove] = {
     val amountPlaced = placedSorted.size
 
     val (startx, endx) = (placedSorted(0)._1.x, placedSorted(amountPlaced - 1)._1.x)
@@ -63,7 +67,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
     val (bl, neigh, x, y) = isLinear
 
-    if (bl && neigh) Left(true) else if (!neigh) return Right("Not attached to existing word") else Right("Letter placed at " + Pos.posAt(x, y).get.toString + " is an illegal move")
+    if (bl && neigh) Left(true) else if (!neigh && bl) return Right(NotAttachedToWord()) else Right(MisPlacedLetters(x,y))
   }
 
 }
