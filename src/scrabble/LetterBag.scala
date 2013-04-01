@@ -20,6 +20,7 @@ case class LetterBag(letters: List[Letter], size: Int) {
     (removedLetters, newBag)
   }
   
+  /** Exchange @exchanged letters for the same number of letters from the bag. Returns the new bag after shuffling its contents. */
   def exchange(exchanged: List[Letter]) : (List[Letter],LetterBag) =
     {
 	  val (given, bag) = remove(exchanged.size)
