@@ -94,6 +94,9 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
             val otherWords: List[(Pos, Char)] =
               if (horizontal) {
+                println("above: " + board.LettersAbove(pos))
+                println("below : " + board.LettersBelow(pos))
+                
                 (board.LettersAbove(pos).map { case (pos, sq) => pos -> sq.tile.get.letter } :+ pos -> let.letter) ::: board.LettersBelow(pos).map { case (pos, sq) => pos -> sq.tile.get.letter }
               } else {
                 (board.LettersLeft(pos).map { case (pos, sq) => pos -> sq.tile.get.letter } :+ pos -> let.letter) ::: board.LettersRight(pos).map { case (pos, sq) => pos -> sq.tile.get.letter }
