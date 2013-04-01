@@ -13,6 +13,8 @@ sealed case class Pos private (x: Int, y: Int, gridCordinates: String) {
   lazy val upRight: Option[Pos] = up flatMap (_ right)
   lazy val downLeft: Option[Pos] = down flatMap (_ left)
   lazy val downRight: Option[Pos] = down flatMap (_ right)
+  
+  //override def toString = gridCordinates
 
 }
 
@@ -29,7 +31,7 @@ object Pos {
   lazy val allPositions: Map[(Int, Int), Pos] =
     {
       // Letters mapped to columns, for displaying the move log
-      val gridCoords = (List.range(1, 16) zip List.range('a', 'p')).toMap
+      val gridCoords = (List.range(1, 16) zip List.range('A', 'P')).toMap
 
       // Create the position objects and map them to their grid location tuple
       all.foldLeft(Map.empty[(Int, Int), Pos]) {

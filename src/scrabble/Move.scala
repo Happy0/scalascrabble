@@ -22,11 +22,13 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
   //private val hasRepeats
 
   // Returns true if the letter are placed in a legal distribution (linear or horizontal) within the board range, and there are no already occupied squares
-  def validSpread: Boolean = {
+  def validSpread: Either[Boolean, String] = {
+    val amountPlaced = placedSorted.size
+
     val startx = placedSorted(0)._1.x
-    val endx = placedSorted(placedSorted.size - 1)._1.x
+    val endx = placedSorted(amountPlaced - 1)._1.x
     val starty = placedSorted(0)._1.y
-    val endy = placedSorted(placedSorted.size - 1)._1.y
+    val endy = placedSorted(amountPlaced - 1)._1.y
     val horizontal = starty == endy
     val vertical = startx == endx
 
@@ -36,48 +38,31 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
       placedSorted.tail.foldLeft(true, startx, starty) {
         case ((bl, lastx: Int, lasty: Int), (pos, let)) =>
-          if (horizontal) {
-            val isHorizontal = pos.y == lasty
-            if (!isHorizontal) return (false, 0, 0)
+          val isLinear = if (horizontal) pos.y == lasty else pos.x == lastx
+          if (!isLinear) return (false, pos.x, pos.y)
+          val comesAfter = if (horizontal) pos.x == lastx + 1 else pos.y == lasty + 1
 
-            val comesAfter = pos.x == lastx + 1
+          if (comesAfter) (true, pos.x, pos.y) else {
+            // Loop from the current position to the previous position, making sure there are squares inbetween that the word is built from
+            val range = if (horizontal) List.range(lastx + 1, pos.x) else List.range(lasty + 1, pos.y)
 
-            if (comesAfter) (true, pos.x, pos.y) else {
-              // Loop from the current position to the previous position, making sure there are squares inbetween that the word is built from
-              val range = List.range(lastx, pos.x)
-
-              val emptiesBetween = range.find { x =>
-                val curPos = Pos.posAt(x, pos.y).get
-                board.squareAt(curPos).isEmpty
-              }
-
-              if (!emptiesBetween.isEmpty) (true, pos.x, pos.y) else return (false, pos.x, pos.y)
-
+            val emptiesBetween = range.find { nxt =>
+              val curPos = if (horizontal) Pos.posAt(nxt, pos.y).get else Pos.posAt(pos.x, nxt).get
+              board.squareAt(curPos).isEmpty
             }
+            println(emptiesBetween)
 
-          } else {
-            val isVertical = pos.x == lastx
-            if (!isVertical) return (false, 0, 0)
+            if (!emptiesBetween.isDefined) (true, pos.x, pos.y) else return (false, pos.x, pos.y)
 
-            val comesAfter = pos.y == lasty + 1
-
-            if (comesAfter) (true, pos.x, pos.y) else {
-              // Loop from the current position to the previous position, making sure there are squares inbetween
-              val range = List.range(lasty, pos.y)
-
-              val emptiesBetween = range.find { y =>
-                val curPos = Pos.posAt(pos.x, y).get
-                board.squareAt(curPos).isEmpty
-              }
-
-              if (!emptiesBetween.isEmpty) (true, pos.x, pos.y) else return (false, pos.x, pos.y)
-            }
           }
+
       }
 
     }
 
-    isLinear._1
+    val (bl, x, y) = isLinear
+
+    if (bl) return Left(true) else return Right("Letter placed at " + Pos.posAt(x, y).get.toString + " is an illegal move")
   }
 
 }
@@ -88,13 +73,15 @@ object Main {
 
     val board = Board.init
 
-    val newBrd = board.squares + (Pos.posAt(1, 3).get -> NormalSquare(Some(Letter('a', 1))))
+    val newBrd = board.squares + (Pos.posAt(3, 1).get -> NormalSquare(Some(Letter('a', 1))))
     val testBoard = Board(newBrd)
+    
+    println(testBoard)
 
     val placed = List(
-      Pos.posAt(1, 1).get -> Letter('a', '1'),
-      Pos.posAt(1, 4).get -> Letter('a', '1'),
-      Pos.posAt(1, 2).get -> Letter('a', '1'))
+      Pos.posAt(4, 1).get -> Letter('A', 1),
+      Pos.posAt(2, 1).get -> Letter('A', 1),
+      Pos.posAt(1, 1).get -> Letter('A', 1))
 
     val blanks = List()
 
