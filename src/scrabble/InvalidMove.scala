@@ -17,3 +17,7 @@ case class NotAttachedToWord(errorcode: Int = 2) extends InvalidMove(errorcode) 
 case class NotInDictionary(word: String, errorcode: Int = 3) extends InvalidMove(errorcode) {
   def defaultMessage = word + " is not in the dictionary."
 }
+
+case class NotLinear(errorcode: Int = 4) extends InvalidMove(errorcode) {
+  def defaultMessage = "Letters are not placed in a line"
+}

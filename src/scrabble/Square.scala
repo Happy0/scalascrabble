@@ -4,13 +4,15 @@ package scrabble;
  * A square on the board. Extends ordered so that a list of squares may be sorted and the score evaluated in the
  *  right order. Might remove the ordered trait later as it's probably not required
  */
-abstract class Square(tile: Option[Letter] = None) extends Ordered[Square] {
+abstract class Square() extends Ordered[Square] {
+  val tile: Option[Letter]
+  
   def compare(other: Square) = if (other.isInstanceOf[DoubleWordSquare] || other.isInstanceOf[TripleWordSquare]) -1 else 0
   
   def isEmpty = tile.isEmpty
 }
 
-case class NormalSquare(tile: Option[Letter] = None) extends Square(tile) {
+case class NormalSquare( tile: Option[Letter] ) extends Square {
   override def toString = tile match {
     case Some(x) => x.toString()
     case None => "N"
@@ -18,21 +20,21 @@ case class NormalSquare(tile: Option[Letter] = None) extends Square(tile) {
 
 }
 
-case class DoubleLetterSquare(tile: Option[Letter] = None) extends Square(tile) {
+case class DoubleLetterSquare(tile: Option[Letter]) extends Square {
   override def toString = tile match {
     case Some(x) => x.toString()
     case None => "DL"
   }
 
 }
-case class TripleLetterSquare(tile: Option[Letter] = None) extends Square(tile) {
+case class TripleLetterSquare(tile: Option[Letter]) extends Square {
   override def toString = tile match {
     case Some(x) => x.toString()
     case None => "TL"
   }
 }
 
-case class DoubleWordSquare(tile: Option[Letter] = None) extends Square(tile) {
+case class DoubleWordSquare(tile: Option[Letter]) extends Square {
   override def toString = tile match {
     case Some(x) => x.toString()
     case None => "DW"
@@ -40,7 +42,7 @@ case class DoubleWordSquare(tile: Option[Letter] = None) extends Square(tile) {
 
 }
 
-case class TripleWordSquare(tile: Option[Letter] = None) extends Square(tile) {
+case class TripleWordSquare(override val  tile: Option[Letter] = None) extends Square {
   override def toString = tile match {
     case Some(x) => x.toString()
     case None => "TW"
