@@ -36,7 +36,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
     if (!horizontal && !vertical) Right(NotLinear()) else {
 
       val startList = (if (horizontal) board.LettersLeft(placedSorted(0)._1).map { case (pos, sq) => pos -> sq.tile.get.letter } else
-        board.LettersAbove(placedSorted(0)._1).map { case (pos, sq) => pos -> sq.tile.get.letter }) :+ (placedSorted(0)._1, placedSorted(0)._2.letter)
+        board.LettersBelow(placedSorted(0)._1).map { case (pos, sq) => pos -> sq.tile.get.letter }) :+ (placedSorted(0)._1, placedSorted(0)._2.letter)
 
       println("startList " + startList)
 
@@ -109,7 +109,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
     } else {
       val list = if (!left.isEmpty || !right.isEmpty) (left.map { case (ps, sq) => ps -> sq.tile.get.letter } :+ pos -> let.letter) ::: right.map { case (ps, sq) => ps -> sq.tile.get.letter } else List()
 
-      if ((pos.x, pos.y) == (endx, endy)) list ::: below.map { case (ps, sq) => ps -> sq.tile.get.letter } else list
+      if ((pos.x, pos.y) == (endx, endy)) list ::: above.map { case (ps, sq) => ps -> sq.tile.get.letter } else list
     }
 
   }
@@ -122,15 +122,15 @@ object Main {
 
     val board = Board.init
 
-    val newBrd = board.squares + (Pos.posAt(4, 2).get -> NormalSquare(Some(Letter('a', 1))))
+    val newBrd = board.squares + (Pos.posAt(1, 5).get -> NormalSquare(Some(Letter('a', 1))))
     val testBoard = Board(newBrd)
 
     println(testBoard)
 
     val placed = List(
-      Pos.posAt(4, 1).get -> Letter('A', 1),
-      Pos.posAt(3, 1).get -> Letter('A', 1),
-      Pos.posAt(2, 1).get -> Letter('A', 1))
+      Pos.posAt(1, 2).get -> Letter('A', 1),
+      Pos.posAt(1, 3).get -> Letter('A', 1),
+      Pos.posAt(1, 4).get -> Letter('A', 1))
 
     val blanks = List()
 
