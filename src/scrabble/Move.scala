@@ -16,11 +16,11 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
   }
 
-  lazy val startPosition = Pos.posAt(8,8).get
-  
+  lazy val startPosition = Pos.posAt(8, 8).get
+
   lazy val alreadyOccupiedSquares = placed.find { case (pos: Pos, letter: Letter) => !(board.squareAt(pos).isEmpty) }
-  
-  lazy val obeysFirstMovePositionRule = if (game.moves > 0) true else if (game.moves == 0 && placedSorted(0)._1 == startPosition) true else false 
+
+  lazy val obeysFirstMovePositionRule = if (game.moves > 0) true else if (game.moves == 0 && placedSorted(0)._1 == startPosition) true else false
 
   // <Paranoid checks>
 
@@ -42,9 +42,13 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
       val startList = (if (horizontal) board.LettersLeft(placedSorted(0)._1).map { case (pos, sq) => pos -> sq.tile.get.letter } else
         board.LettersBelow(placedSorted(0)._1).map { case (pos, sq) => pos -> sq.tile.get.letter }) :+ (placedSorted(0)._1, placedSorted(0)._2.letter)
 
+      val otherWords = allAdjacentTo(placedSorted(0)._1, placedSorted(0)._2)
+
+      val startWith = if (otherWords.isEmpty) List(startList) else List(startList) :+ otherWords
+
       println("startList " + startList)
 
-      val lists: (Int, Int, List[List[(Pos, Char)]]) = placedSorted.tail.foldLeft(startx, starty, List(startList)) {
+      val lists: (Int, Int, List[List[(Pos, Char)]]) = placedSorted.tail.foldLeft(startx, starty, startWith) {
         case ((lastx, lasty, (x :: xs)), (pos: Pos, let)) =>
           val isLinear = if (horizontal) pos.y == lasty else pos.x == lastx
           if (!isLinear) return Right(MisPlacedLetters(pos.x, pos.y))
@@ -122,11 +126,11 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
 object Main {
   def main(args: Array[String]) {
-    val game = Game.init(List("jim", "joe"), Dictionary.load("C:\\workspace\\Scala\\scalascrabble\\src\\Dict\\en.txt"), LetterBag.init)
+    val game = Game.init(List("jim", "joe"), Dictionary.load("C:\\Users\\Gordon\\workspace\\scalascrabble\\src\\Dict\\en.txt"), LetterBag.init)
 
     val board = Board.init
 
-    val newBrd = board.squares + (Pos.posAt(1, 5).get -> NormalSquare(Some(Letter('a', 1))))
+    val newBrd = board.squares + (Pos.posAt(2, 2).get -> NormalSquare(Some(Letter('a', 1))))
     val testBoard = Board(newBrd)
 
     println(testBoard)
