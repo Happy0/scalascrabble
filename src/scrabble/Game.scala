@@ -4,7 +4,8 @@ case class Game(
   players: List[Player],
   board: Board,
   playersMove: Int, // Index into the list of players
-  bag: LetterBag) {
+  bag: LetterBag,
+  moves: Int) {
 
   require(players.size >= 2 && players.size <= 4)
 
@@ -28,7 +29,7 @@ object Game {
           ((player :: playerList), bag)
       }
 
-    Game(players, Board.init, 0, remainingBag)
+    Game(players, Board.init, 0, remainingBag,0)
   }
 }
 

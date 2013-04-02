@@ -16,14 +16,18 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
   }
 
+  lazy val startPosition = Pos.posAt(8,8).get
+  
   lazy val alreadyOccupiedSquares = placed.find { case (pos: Pos, letter: Letter) => !(board.squareAt(pos).isEmpty) }
+  
+  lazy val obeysFirstMovePositionRule = if (game.moves > 0) true else if (game.moves == 0 && placedSorted(0)._1 == startPosition) true else false 
 
   // <Paranoid checks>
 
   val board = game.board
 
   lazy val placedMap = placed.toMap
-  val placedSorted = placed.sortBy { case (pos: Pos, let: Letter) => (pos.x, pos.y) }
+  lazy val placedSorted = placed.sortBy { case (pos: Pos, let: Letter) => (pos.x, pos.y) }
 
   val amountPlaced = placedSorted.size
 
@@ -134,7 +138,7 @@ object Main {
 
     val blanks = List()
 
-    val move = Move(Game(game.players, testBoard, game.playersMove, game.bag), placed, blanks)
+    val move = Move(Game(game.players, testBoard, game.playersMove, game.bag, 0), placed, blanks)
     println(move.placedSorted)
 
     println(move.buildWords)
