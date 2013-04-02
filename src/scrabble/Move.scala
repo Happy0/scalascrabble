@@ -31,7 +31,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
   val (starty, endy) = (placedSorted(0)._1.y, placedSorted(amountPlaced - 1)._1.y)
   val (horizontal, vertical) = (starty == endy, startx == endx)
 
-  // @TODO: Tidy this up, add anything after the end of the word 
+  // @TODO: Tidy this up. Most hurrendous looking code ever...
   def buildWords: Either[List[List[(Pos, Char)]], InvalidMove] = {
     if (!horizontal && !vertical) Right(NotLinear()) else {
 
@@ -52,29 +52,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
             val newlist = x :+ pos -> let.letter
             val updatedList = newlist :: xs
 
-            val otherWords: List[(Pos, Char)] =
-              if (horizontal) {
-                val above = board.LettersAbove(pos)
-                val below = board.LettersBelow(pos)
-                lazy val right = board.lettersRight(pos)
-
-                if (!above.isEmpty || !below.isEmpty) (above.map { case (ps, sq) => ps -> sq.tile.get.letter } :+ pos -> let.letter) ::: below.map { case (ps, sq) => ps -> sq.tile.get.letter } else {
-                  if ((pos.x, pos.y) == (startx, endx)){
-                    
-                  } else {
-                    List()
-                  }
-                }
-                  
-                 
-              } else {
-                val left = board.LettersLeft(pos)
-                val right = board.LettersRight(pos)
-
-                if (!left.isEmpty || !right.isEmpty) (left.map { case (ps, sq) => ps -> sq.tile.get.letter } :+ pos -> let.letter) ::: right.map { case (ps, sq) => ps -> sq.tile.get.letter } else List()
-              }
-            
-            
+            val otherWords = allAdjacentTo(pos, let)
 
             println("otherwords" + otherWords)
             (pos.x, pos.y, if (!otherWords.isEmpty) updatedList :+ otherWords else updatedList)
@@ -100,18 +78,8 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
               val newlist = x :+ pos -> let.letter
               val updatedList = newlist :: xs
 
-              val otherWords: List[(Pos, Char)] =
-                if (horizontal) {
-                  val above = board.LettersAbove(pos)
-                  val below = board.LettersBelow(pos)
+              val otherWords: List[(Pos, Char)] = allAdjacentTo(pos, let)
 
-                  if (!above.isEmpty || !below.isEmpty) (above.map { case (ps, sq) => ps -> sq.tile.get.letter } :+ pos -> let.letter) ::: below.map { case (ps, sq) => ps -> sq.tile.get.letter } else List()
-                } else {
-                  val left = board.LettersLeft(pos)
-                  val right = board.LettersRight(pos)
-
-                  if (!left.isEmpty || !right.isEmpty) (left.map { case (ps, sq) => ps -> sq.tile.get.letter } :+ pos -> let.letter) ::: right.map { case (ps, sq) => ps -> sq.tile.get.letter } else List()
-                }
               (pos.x, pos.y, if (!otherWords.isEmpty) updatedList :+ otherWords else updatedList)
 
             } else {
@@ -127,6 +95,25 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
   }
 
+  def allAdjacentTo(pos: Pos, let: Letter): List[(Pos, Char)] = {
+    lazy val above = board.LettersAbove(pos)
+    lazy val below = board.LettersBelow(pos)
+    lazy val left = board.LettersBelow(pos)
+    lazy val right = board.LettersRight(pos)
+
+    if (horizontal) {
+      val list = if (!above.isEmpty || !below.isEmpty) (above.map { case (ps, sq) => ps -> sq.tile.get.letter } :+ pos -> let.letter) ::: below.map { case (ps, sq) => ps -> sq.tile.get.letter } else List()
+
+      if ((pos.x, pos.y) == (endx, endy)) list ::: right.map { case (ps, sq) => ps -> sq.tile.get.letter } else list
+
+    } else {
+      val list = if (!left.isEmpty || !right.isEmpty) (left.map { case (ps, sq) => ps -> sq.tile.get.letter } :+ pos -> let.letter) ::: right.map { case (ps, sq) => ps -> sq.tile.get.letter } else List()
+
+      if ((pos.x, pos.y) == (endx, endy)) list ::: below.map { case (ps, sq) => ps -> sq.tile.get.letter } else list
+    }
+
+  }
+
 }
 
 object Main {
@@ -135,7 +122,7 @@ object Main {
 
     val board = Board.init
 
-    val newBrd = board.squares + (Pos.posAt(1, 1).get -> NormalSquare(Some(Letter('a', 1))))
+    val newBrd = board.squares + (Pos.posAt(4, 2).get -> NormalSquare(Some(Letter('a', 1))))
     val testBoard = Board(newBrd)
 
     println(testBoard)
