@@ -31,24 +31,24 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
   val amountPlaced = placedSorted.size
 
-  val (startx, endx) = (placedSorted(0)._1.x, placedSorted(amountPlaced - 1)._1.x)
-  val (starty, endy) = (placedSorted(0)._1.y, placedSorted(amountPlaced - 1)._1.y)
-  val (horizontal, vertical) = (starty == endy, startx == endx)
+  private val (startx, endx) = (placedSorted(0)._1.x, placedSorted(amountPlaced - 1)._1.x)
+  private val (starty, endy) = (placedSorted(0)._1.y, placedSorted(amountPlaced - 1)._1.y)
+  private val (horizontal, vertical) = (starty == endy, startx == endx)
 
   // @TODO: Tidy this up. Most hurrendous looking code ever...
-  def buildWords: Either[List[List[(Pos, Char)]], InvalidMove] = {
+  def buildWords: Either[List[List[(Pos, Letter)]], InvalidMove] = {
     if (!horizontal && !vertical) Right(NotLinear()) else {
 
-      val startList = (if (horizontal) board.LettersLeft(placedSorted(0)._1).map { case (pos, sq) => pos -> sq.tile.get.letter } else
-        board.LettersBelow(placedSorted(0)._1).map { case (pos, sq) => pos -> sq.tile.get.letter }) :+ (placedSorted(0)._1, placedSorted(0)._2.letter)
+      val startList: List[(Pos,Letter)] = (if (horizontal) board.LettersLeft(placedSorted(0)._1).map { case (pos, sq) => pos -> sq.tile.get } else
+        board.LettersBelow(placedSorted(0)._1).map { case (pos, sq) => pos -> sq.tile.get }) :+ (placedSorted(0)._1, placedSorted(0)._2)
 
       val otherWords = allAdjacentTo(placedSorted(0)._1, placedSorted(0)._2)
 
-      val startWith = if (otherWords.isEmpty) List(startList) else List(startList) :+ otherWords
+      val startWith: List[List[(Pos,Letter)]] = if (otherWords.isEmpty) List(startList) else List(startList) :+ otherWords
 
       println("startList " + startList)
 
-      val lists: (Int, Int, List[List[(Pos, Char)]]) = placedSorted.tail.foldLeft(startx, starty, startWith) {
+      val lists: (Int, Int, List[List[(Pos, Letter)]]) = placedSorted.tail.foldLeft(startx, starty, startWith) {
         case ((lastx, lasty, (x :: xs)), (pos: Pos, let)) =>
           val isLinear = if (horizontal) pos.y == lasty else pos.x == lastx
           if (!isLinear) return Right(MisPlacedLetters(pos.x, pos.y))
@@ -57,7 +57,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
           if (comesAfter) {
             // Add the letter to the first list
-            val newlist = x :+ pos -> let.letter
+            val newlist = x :+ pos -> let
             val updatedList = newlist :: xs
 
             val otherWords = allAdjacentTo(pos, let)
@@ -83,10 +83,10 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
                   Pos.posAt(pos.x, x).get -> sq
               } :+ pos -> let.letter
 
-              val newlist = x :+ pos -> let.letter
+              val newlist = x :+ pos -> let
               val updatedList = newlist :: xs
 
-              val otherWords: List[(Pos, Char)] = allAdjacentTo(pos, let)
+              val otherWords: List[(Pos, Letter)] = allAdjacentTo(pos, let)
 
               (pos.x, pos.y, if (!otherWords.isEmpty) updatedList :+ otherWords else updatedList)
 
@@ -103,21 +103,21 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
   }
 
-  def allAdjacentTo(pos: Pos, let: Letter): List[(Pos, Char)] = {
+  def allAdjacentTo(pos: Pos, let: Letter): List[(Pos, Letter)] = {
     lazy val above = board.LettersAbove(pos)
     lazy val below = board.LettersBelow(pos)
     lazy val left = board.LettersBelow(pos)
     lazy val right = board.LettersRight(pos)
 
     if (horizontal) {
-      val list = if (!above.isEmpty || !below.isEmpty) (above.map { case (ps, sq) => ps -> sq.tile.get.letter } :+ pos -> let.letter) ::: below.map { case (ps, sq) => ps -> sq.tile.get.letter } else List()
+      val list = if (!above.isEmpty || !below.isEmpty) (above.map { case (ps, sq) => ps -> sq.tile.get } :+ pos -> let) ::: below.map { case (ps, sq) => ps -> sq.tile.get } else List()
 
-      if ((pos.x, pos.y) == (endx, endy)) list ::: right.map { case (ps, sq) => ps -> sq.tile.get.letter } else list
+      if ((pos.x, pos.y) == (endx, endy)) list ::: right.map { case (ps, sq) => ps -> sq.tile.get } else list
 
     } else {
-      val list = if (!left.isEmpty || !right.isEmpty) (left.map { case (ps, sq) => ps -> sq.tile.get.letter } :+ pos -> let.letter) ::: right.map { case (ps, sq) => ps -> sq.tile.get.letter } else List()
+      val list = if (!left.isEmpty || !right.isEmpty) (left.map { case (ps, sq) => ps -> sq.tile.get } :+ pos -> let) ::: right.map { case (ps, sq) => ps -> sq.tile.get } else List()
 
-      if ((pos.x, pos.y) == (endx, endy)) list ::: above.map { case (ps, sq) => ps -> sq.tile.get.letter } else list
+      if ((pos.x, pos.y) == (endx, endy)) list ::: above.map { case (ps, sq) => ps -> sq.tile.get } else list
     }
 
   }
