@@ -58,7 +58,7 @@ object LetterBag {
   }
   
   //@TODO: Placeholder for other language generalisation
-  def apply(filePath: String): LetterBag = init
+  def apply(filePath: String): LetterBag = ???
 
   def main(args: Array[String]) {
     val bag = LetterBag.init

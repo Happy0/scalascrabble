@@ -2,7 +2,7 @@ package scrabble
 
 case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char)]) {
 
-  /** Returns the updated game if the move is a valid scrabble move, otherwise returns a String with an explanation of why the move is invalid */
+  /** Returns the updated game if the move is a valid scrabble move, otherwise returns an InvalidMove with an explanation of why the move is invalid */
   def updatedGame: Either[InvalidMove, Game] = ???
 
   // Paranoid checks
@@ -39,12 +39,12 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
   def buildWords: Either[List[List[(Pos, Letter)]], InvalidMove] = {
     if (!horizontal && !vertical) Right(NotLinear()) else {
 
-      val startList: List[(Pos,Letter)] = (if (horizontal) board.LettersLeft(placedSorted(0)._1).map { case (pos, sq) => pos -> sq.tile.get } else
-        board.LettersBelow(placedSorted(0)._1).map { case (pos, sq) => pos -> sq.tile.get }) :+ (placedSorted(0)._1, placedSorted(0)._2)
+      val startList: List[(Pos, Letter)] = (if (horizontal) board.LettersLeft(placedSorted(0)._1) else
+        board.LettersBelow(placedSorted(0)._1)) :+ (placedSorted(0)._1, placedSorted(0)._2)
 
       val otherWords = allAdjacentTo(placedSorted(0)._1, placedSorted(0)._2)
 
-      val startWith: List[List[(Pos,Letter)]] = if (otherWords.isEmpty) List(startList) else List(startList) :+ otherWords
+      val startWith: List[List[(Pos, Letter)]] = if (otherWords.isEmpty) List(startList) else List(startList) :+ otherWords
 
       println("startList " + startList)
 
@@ -97,12 +97,14 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
           }
 
       }
+      // if (game.moves >= 1 && lists._3.size <= 1) Right(NotAttachedToWord) else Left(lists._3)
 
       Left(lists._3)
     }
 
   }
 
+  /** Returns words that are formed from the placement */
   def allAdjacentTo(pos: Pos, let: Letter): List[(Pos, Letter)] = {
     lazy val above = board.LettersAbove(pos)
     lazy val below = board.LettersBelow(pos)
@@ -110,14 +112,18 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
     lazy val right = board.LettersRight(pos)
 
     if (horizontal) {
-      val list = if (!above.isEmpty || !below.isEmpty) (above.map { case (ps, sq) => ps -> sq.tile.get } :+ pos -> let) ::: below.map { case (ps, sq) => ps -> sq.tile.get } else List()
+      val list = if (!above.isEmpty || !below.isEmpty) {
+        (above :+ pos -> let) ::: below
+      } else List()
 
-      if ((pos.x, pos.y) == (endx, endy)) list ::: right.map { case (ps, sq) => ps -> sq.tile.get } else list
+      if ((pos.x, pos.y) == (endx, endy)) list ::: right else list
 
     } else {
-      val list = if (!left.isEmpty || !right.isEmpty) (left.map { case (ps, sq) => ps -> sq.tile.get } :+ pos -> let) ::: right.map { case (ps, sq) => ps -> sq.tile.get } else List()
+      val list = if (!left.isEmpty || !right.isEmpty) {
+        (left :+ pos -> let) ::: right
+      } else List()
 
-      if ((pos.x, pos.y) == (endx, endy)) list ::: above.map { case (ps, sq) => ps -> sq.tile.get } else list
+      if ((pos.x, pos.y) == (endx, endy)) list ::: above else list
     }
 
   }

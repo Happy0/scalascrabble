@@ -15,17 +15,17 @@ case class Board(
 
   def squareAt(pos: Pos): Square = squares.get(pos).get
 
-  def LettersAbove(pos: Pos): List[(Pos, Square)] = findAdjacentLetters(pos, pos => pos.up, List())
-  def LettersBelow(pos: Pos): List[(Pos, Square)] = findAdjacentLetters(pos, pos => pos.down, List())
-  def LettersLeft(pos: Pos): List[(Pos, Square)] = findAdjacentLetters(pos, pos => pos.left, List())
-  def LettersRight(pos: Pos): List[(Pos, Square)] = findAdjacentLetters(pos, pos => pos.right, List())
+  def LettersAbove(pos: Pos): List[(Pos, Letter)] = findAdjacentLetters(pos, pos => pos.up, List())
+  def LettersBelow(pos: Pos): List[(Pos, Letter)] = findAdjacentLetters(pos, pos => pos.down, List())
+  def LettersLeft(pos: Pos): List[(Pos, Letter)] = findAdjacentLetters(pos, pos => pos.left, List())
+  def LettersRight(pos: Pos): List[(Pos, Letter)] = findAdjacentLetters(pos, pos => pos.right, List())
 
-  private def findAdjacentLetters(pos: Pos, direction: Pos => Option[Pos], gathered: List[(Pos, Square)]): List[(Pos, Square)] = {
+  private def findAdjacentLetters(pos: Pos, direction: Pos => Option[Pos], gathered: List[(Pos, Letter)]): List[(Pos, Letter)] = {
     val nextTo: Option[Pos] = direction(pos)
-    if (nextTo.isEmpty || squareAt(nextTo.get).isEmpty) gathered else nextTo.get -> squareAt(nextTo.get) :: findAdjacentLetters(nextTo.get, direction, gathered)
+
+    if (nextTo.isEmpty || squareAt(nextTo.get).isEmpty) gathered
+    else nextTo.get -> squareAt(nextTo.get).tile.get :: findAdjacentLetters(nextTo.get, direction, gathered)
   }
-
-
 
 }
 
@@ -64,7 +64,7 @@ object Board {
           val offsets: List[(Int => Int, Int => Int)] = List((x => Pos.max + 1 - x, y => y), (x => x, y => Pos.max + 1 - y), (x => Pos.max + 1 - x, y => Pos.max + 1 - y))
 
           // Produce and return the other quarters of special squares, accumulating the map
-          offsets.foldLeft(leftQuarter.toMap) {
+          val wholeBoard = offsets.foldLeft(leftQuarter.toMap) {
             case (map, (f, g)) =>
               val inMap = leftQuarter.foldLeft(map) {
 
@@ -75,6 +75,8 @@ object Board {
               }
               inMap
           }
+
+          wholeBoard
         }
 
       // Construct and return the board. Anything that is not a bonus square is a NormalSquare.
