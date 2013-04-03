@@ -46,10 +46,6 @@ object LetterBag {
 
     val all: List[(Char, Int, Int)] = blankPoints ::: onePoints ::: twoPoints ::: threePoints ::: fourPoints ::: fivePoints ::: eightPoints ::: tenPoints
 
-    val letterMap: Map[Char, Letter] = all.map { case (chr: Char, vl: Int, dst: Int) => chr -> Letter(chr, vl) } toMap
-
-    def letterFor(chr: Char): Option[Letter] = letterMap get chr
-
     // Yield a list of all the letters in the bag, using the distribution to yield the right number of letters
     val letters = all.foldLeft(List.empty[Letter]) {
       case (list, (chr: Char, vl: Int, dst: Int)) =>
