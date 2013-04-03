@@ -43,6 +43,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
       case (wordList, list) =>
         list.map { case (pos, letter) => letter.letter }.mkString :: wordList
     }
+    println(words)
 
     game.dictionary.invalidWords(words)
   }
@@ -176,8 +177,6 @@ object Main {
 
     val move = Move((game.copy(board = testBoard)), placed, blanks)
     println(move.placedSorted)
-
-    println(move.buildWords)
   }
 }
 
