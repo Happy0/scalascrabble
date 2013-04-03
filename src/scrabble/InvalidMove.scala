@@ -29,3 +29,7 @@ case class WordsNotInDictionary(words: List[String], errorCode:Int = 4) extends 
 case class NotLinear(errorcode: Int = 5) extends InvalidMove(errorcode) {
   def defaultMessage = "Letters are not placed in a line"
 }
+
+case class ClientError(errorCode: Int = 6) extends InvalidMove(errorCode) {
+  def defaultMessage = "Client error or malicious client."
+}

@@ -3,11 +3,43 @@ package scrabble
 case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char)]) {
 
   /** Returns the updated game if the move is a valid scrabble move, otherwise returns an InvalidMove with an explanation of why the move is invalid */
-  def updatedGame: Either[InvalidMove, Game] = ???
+  def updatedGame: Either[InvalidMove, Game] = {
+    val checks = moveError
+
+    checks match {
+      case Some(error) => Left(error)
+
+      // Move is valid, update the game state 
+      case None => 
+        ???
+    }
+  }
+
+  val moveError: Option[InvalidMove] = {
+    if (!playerHasLetters || !alreadyOccupiedSquares.isEmpty) Some(ClientError()) else {
+      if (!obeysFirstMovePositionRule) Some(FirstMovePositionWrong()) else {
+
+        formedWords match {
+          case Right(x) => Some(x)
+          case Left(list) =>
+            val badwords = badWords(list)
+            if (!badwords.isEmpty) {
+              Some(WordsNotInDictionary(badwords))
+            } else {
+              None
+            }
+
+        }
+      }
+
+    }
+  }
 
   // Paranoid checks
 
   private lazy val playerHasLetters: Boolean = {
+
+    // @TODO: Argh. What about two of the same letter?
     val doesntHave = placed.find { case (Pos(x, y, gr), let) => !game.currentPlayer.letters.contains(let) }
     doesntHave match {
       case None => true
@@ -15,7 +47,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
     }
 
   }
-  
+
   lazy val alreadyOccupiedSquares = placed.find { case (pos: Pos, letter: Letter) => !(board.squareAt(pos).isEmpty) }
   lazy val obeysFirstMovePositionRule = if (game.moves > 0) true else if (game.moves == 0 && placedSorted(0)._1 == startPosition) true else false
 
@@ -28,7 +60,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
     game.dictionary.invalidWords(words)
   }
 
-  lazy val words = buildWords
+  lazy val formedWords = buildWords
   lazy val startPosition = Pos.posAt(8, 8).get
   lazy val sevenLetterBonus: Boolean = amountPlaced == 7
   val board = game.board
