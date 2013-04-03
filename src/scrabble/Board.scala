@@ -27,6 +27,12 @@ case class Board(
     else nextTo.get -> squareAt(nextTo.get).tile.get :: findAdjacentLetters(nextTo.get, direction, gathered)
   }
 
+  def placeLetters(list: List[(Pos, Letter)]): Board = {
+    //@TODO: Is it hacky to consider a square that has a letter placed on it just a 'normal' square, since its bonus has already been used?
+    val addedSquares = list.map{case (pos, let) => pos -> NormalSquare(Some(let))}
+    copy(squares = squares ++ addedSquares)
+
+  }
 }
 
 object Board {

@@ -18,9 +18,7 @@ object Dictionary {
 
   def main(args: Array[String]) {
     //@TODO: Find out how to make this a relative path / think about implications for deployment
-    val dict = load("C:\\Users\\Gordon\\workspace\\scalascrabble\\src\\Dict\\en.txt")
-
-    println(dict.toString())
+    val dict = load("C:\\workspace\\Scala\\scalascrabble\\src\\Dict\\en.txt")
     println(dict.dictionary.size)
   }
 

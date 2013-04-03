@@ -97,7 +97,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
           }
 
       }
-      // if (game.moves >= 1 && lists._3.size <= 1) Right(NotAttachedToWord) else Left(lists._3)
+      if (game.moves >= 1 && lists._3.size <= 1) Right(NotAttachedToWord) else Left(lists._3)
 
       Left(lists._3)
     }
@@ -132,11 +132,11 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
 object Main {
   def main(args: Array[String]) {
-    val game = Game.init(List("jim", "joe"), Dictionary.load("C:\\Users\\Gordon\\workspace\\scalascrabble\\src\\Dict\\en.txt"), LetterBag.init)
+    val game = Game.init(List("jim", "joe"), Dictionary.load("C:\\workspace\\Scala\\scalascrabble\\src\\Dict\\en.txt"), LetterBag.init)
 
     val board = Board.init
 
-    val newBrd = board.squares + (Pos.posAt(2, 2).get -> NormalSquare(Some(Letter('a', 1))))
+    val newBrd = board.squares + (Pos.posAt(2, 4).get -> NormalSquare(Some(Letter('a', 1))))
     val testBoard = Board(newBrd)
 
     println(testBoard)

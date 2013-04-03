@@ -6,17 +6,21 @@ package scrabble;
  */
 abstract class Square() extends Ordered[Square] {
   val tile: Option[Letter]
-  
+
   def compare(other: Square) = if (other.isInstanceOf[DoubleWordSquare] || other.isInstanceOf[TripleWordSquare]) -1 else 0
-  
+
   def isEmpty = tile.isEmpty
+
+  def addToWordScore(scoreSoFar: Int): Int
 }
 
-case class NormalSquare( tile: Option[Letter] ) extends Square {
+case class NormalSquare(tile: Option[Letter]) extends Square {
   override def toString = tile match {
     case Some(x) => x.toString()
     case None => "N"
   }
+
+  def addToWordScore(soFar: Int): Int = soFar + tile.get.value
 
 }
 
@@ -26,12 +30,16 @@ case class DoubleLetterSquare(tile: Option[Letter]) extends Square {
     case None => "DL"
   }
 
+  def addToWordScore(soFar: Int): Int = soFar + tile.get.value * 2
+
 }
 case class TripleLetterSquare(tile: Option[Letter]) extends Square {
   override def toString = tile match {
     case Some(x) => x.toString()
     case None => "TL"
   }
+
+  def addToWordScore(soFar: Int): Int = soFar + tile.get.value * 3
 }
 
 case class DoubleWordSquare(tile: Option[Letter]) extends Square {
@@ -40,12 +48,16 @@ case class DoubleWordSquare(tile: Option[Letter]) extends Square {
     case None => "DW"
   }
 
+  def addToWordScore(soFar: Int): Int = (soFar + tile.get.value) * 2
+
 }
 
-case class TripleWordSquare(override val  tile: Option[Letter] = None) extends Square {
+case class TripleWordSquare(override val tile: Option[Letter] = None) extends Square {
   override def toString = tile match {
     case Some(x) => x.toString()
     case None => "TW"
   }
+
+  def addToWordScore(soFar: Int): Int = (soFar + tile.get.value) * 3
 
 }
