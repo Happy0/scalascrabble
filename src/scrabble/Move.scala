@@ -4,7 +4,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
   /** Returns the updated game if the move is a valid scrabble move, otherwise returns an InvalidMove with an explanation of why the move is invalid */
   def updatedGame: Either[InvalidMove, Game] = ???
-
+  
   // Paranoid checks
 
   private lazy val playerHasLetters: Boolean = {
@@ -15,6 +15,8 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
     }
 
   }
+  
+  lazy val words = buildWords
 
   lazy val startPosition = Pos.posAt(8, 8).get
 
