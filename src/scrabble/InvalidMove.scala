@@ -30,6 +30,6 @@ case class NotLinear(errorcode: Int = 5) extends InvalidMove(errorcode) {
   def defaultMessage = "Letters are not placed in a line"
 }
 
-case class ClientError(errorCode: Int = 6) extends InvalidMove(errorCode) {
-  def defaultMessage = "Client error or malicious client."
+case class SquareOccupiedClientError(errorCode: Int = 6) extends InvalidMove(errorCode) {
+  def defaultMessage = "Square already occupied. Client error or malicious client."
 }

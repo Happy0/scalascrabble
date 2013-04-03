@@ -16,8 +16,8 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
   }
 
   val moveError: Option[InvalidMove] = {
-    if (!playerHasLetters || !alreadyOccupiedSquares.isEmpty) Some(ClientError()) else {
-      if (!obeysFirstMovePositionRule) Some(FirstMovePositionWrong()) else {
+    if (!obeysFirstMovePositionRule ) Some(FirstMovePositionWrong()) else {
+      if (!alreadyOccupiedSquares.isEmpty) Some(SquareOccupiedClientError()) else {
 
         formedWords match {
           case Right(x) => Some(x)
@@ -33,19 +33,6 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
       }
 
     }
-  }
-
-  // Paranoid checks
-
-  private lazy val playerHasLetters: Boolean = {
-
-    // @TODO: Argh. What about two of the same letter?
-    val doesntHave = placed.find { case (Pos(x, y, gr), let) => !game.currentPlayer.letters.contains(let) }
-    doesntHave match {
-      case None => true
-      case Some(x) => false
-    }
-
   }
 
   lazy val alreadyOccupiedSquares = placed.find { case (pos: Pos, letter: Letter) => !(board.squareAt(pos).isEmpty) }

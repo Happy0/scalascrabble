@@ -19,14 +19,13 @@ case class LetterBag(letters: List[Letter], size: Int) {
 
     (removedLetters, newBag)
   }
-  
+
   /** Exchange @exchanged letters for the same number of letters from the bag. Returns the new bag after shuffling its contents. */
-  def exchange(exchanged: List[Letter]) : (List[Letter],LetterBag) =
+  def exchange(exchanged: List[Letter]): (List[Letter], LetterBag) =
     {
-	  val (given, bag) = remove(exchanged.size)
-	  (given, LetterBag(util.Random.shuffle(bag.letters ::: exchanged), size))
+      val (given, bag) = remove(exchanged.size)
+      (given, LetterBag(util.Random.shuffle(bag.letters ::: exchanged), size))
     }
-    
 
 }
 
@@ -47,6 +46,10 @@ object LetterBag {
 
     val all: List[(Char, Int, Int)] = blankPoints ::: onePoints ::: twoPoints ::: threePoints ::: fourPoints ::: fivePoints ::: eightPoints ::: tenPoints
 
+    val letterMap: Map[Char, Letter] = all.map { case (chr: Char, vl: Int, dst: Int) => chr -> Letter(chr, vl) } toMap
+
+    def letterFor(chr: Char): Option[Letter] = letterMap get chr
+
     // Yield a list of all the letters in the bag, using the distribution to yield the right number of letters
     val letters = all.foldLeft(List.empty[Letter]) {
       case (list, (chr: Char, vl: Int, dst: Int)) =>
@@ -56,7 +59,7 @@ object LetterBag {
     // Construct with a randomised list
     LetterBag(util.Random.shuffle(letters), letters.size)
   }
-  
+
   //@TODO: Placeholder for other language generalisation
   def apply(filePath: String): LetterBag = ???
 
