@@ -22,6 +22,10 @@ case class NotInDictionary(word: String, errorcode: Int = 3) extends InvalidMove
   def defaultMessage = word + " is not in the dictionary."
 }
 
-case class NotLinear(errorcode: Int = 4) extends InvalidMove(errorcode) {
+case class WordsNotInDictionary(words: List[String], errorCode:Int = 4) extends InvalidMove(errorCode) {
+  def defaultMessage = words.fold(""){case (str, wrd) => str + " " + wrd } + " are not in the dictionary. "
+}
+
+case class NotLinear(errorcode: Int = 5) extends InvalidMove(errorcode) {
   def defaultMessage = "Letters are not placed in a line"
 }

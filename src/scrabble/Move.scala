@@ -4,7 +4,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
   /** Returns the updated game if the move is a valid scrabble move, otherwise returns an InvalidMove with an explanation of why the move is invalid */
   def updatedGame: Either[InvalidMove, Game] = ???
-  
+
   // Paranoid checks
 
   private lazy val playerHasLetters: Boolean = {
@@ -16,28 +16,33 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
   }
   
-  lazy val words = buildWords
-
-  lazy val startPosition = Pos.posAt(8, 8).get
-
   lazy val alreadyOccupiedSquares = placed.find { case (pos: Pos, letter: Letter) => !(board.squareAt(pos).isEmpty) }
-
   lazy val obeysFirstMovePositionRule = if (game.moves > 0) true else if (game.moves == 0 && placedSorted(0)._1 == startPosition) true else false
 
-  // <Paranoid checks>
+  def badWords(crawled: List[List[(Pos, Letter)]]): List[String] = {
+    val words: List[String] = crawled.foldLeft(List.empty[String]) {
+      case (wordList, list) =>
+        list.map { case (pos, letter) => letter.letter }.mkString :: wordList
+    }
 
+    game.dictionary.invalidWords(words)
+  }
+
+  lazy val words = buildWords
+  lazy val startPosition = Pos.posAt(8, 8).get
+  lazy val sevenLetterBonus: Boolean = amountPlaced == 7
   val board = game.board
-
   lazy val placedMap = placed.toMap
   lazy val placedSorted = placed.sortBy { case (pos: Pos, let: Letter) => (pos.x, pos.y) }
-
   val amountPlaced = placedSorted.size
+  private lazy val (startx, endx) = (placedSorted(0)._1.x, placedSorted(amountPlaced - 1)._1.x)
+  private lazy val (starty, endy) = (placedSorted(0)._1.y, placedSorted(amountPlaced - 1)._1.y)
+  private lazy val (horizontal, vertical) = (starty == endy, startx == endx)
 
-  private val (startx, endx) = (placedSorted(0)._1.x, placedSorted(amountPlaced - 1)._1.x)
-  private val (starty, endy) = (placedSorted(0)._1.y, placedSorted(amountPlaced - 1)._1.y)
-  private val (horizontal, vertical) = (starty == endy, startx == endx)
-
-  // @TODO: Tidy this up. Most hurrendous looking code ever...
+  /**
+   * Returns either a list of lists of (Pos, Letter) which are the words (with position info preserved) formed by the placement of the letters or an error
+   *   if the player has not placed the words linearly or the letters are not attached to at least one existing letter on the board
+   */
   def buildWords: Either[List[List[(Pos, Letter)]], InvalidMove] = {
     if (!horizontal && !vertical) Right(NotLinear()) else {
 
@@ -106,7 +111,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
   }
 
-  /** Returns words that are formed from the placement */
+  /** Returns words that are formed from the placement of a letter on a square on the board */
   def allAdjacentTo(pos: Pos, let: Letter): List[(Pos, Letter)] = {
     lazy val above = board.LettersAbove(pos)
     lazy val below = board.LettersBelow(pos)
@@ -150,7 +155,7 @@ object Main {
 
     val blanks = List()
 
-    val move = Move(Game(game.players, testBoard, game.playersMove, game.bag, 0), placed, blanks)
+    val move = Move((game.copy(board = testBoard)), placed, blanks)
     println(move.placedSorted)
 
     println(move.buildWords)
