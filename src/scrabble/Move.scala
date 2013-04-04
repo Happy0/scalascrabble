@@ -69,16 +69,13 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
           } else {
             val range = if (horizontal) List.range(lastx + 1, pos.x) else List.range(lasty + 1, pos.y)
-            val emptiesBetween = range.find { nxt =>
-              val curPos = if (horizontal) Pos.posAt(nxt, pos.y).get else Pos.posAt(pos.x, nxt).get
-              board.squareAt(curPos).isEmpty
-            }
-
-            if (!emptiesBetween.isDefined) {
+            
               // Add the letters inbetween and the current char to the first list, then look for letters above and below the current char
               val between = range.map {
 
                 x =>
+                  if (board.squareAt(pos).isEmpty) return Right(MisPlacedLetters(pos.x, pos.y))
+                  
                   val position = if (horizontal) Pos.posAt(x, pos.y) else Pos.posAt(pos.x, x)
                   val sq = board.squareAt(position.get)
 
@@ -91,11 +88,6 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
               val otherWords: List[(Pos, Letter)] = allAdjacentTo(pos, let)
 
               (pos.x, pos.y, if (!otherWords.isEmpty) updatedList :+ otherWords else updatedList)
-
-            } else {
-              return Right(MisPlacedLetters(pos.x, pos.y))
-            }
-
           }
 
       }
@@ -134,7 +126,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
 object Main {
   def main(args: Array[String]) {
-    val game = Game.init(List("jim", "joe"), Dictionary.load("C:\\workspace\\Scala\\scalascrabble\\src\\Dict\\en.txt"), LetterBag.init)
+    val game = Game.init(List("jim", "joe"), Dictionary.load("C:\\Users\\Gordon\\workspace\\scalascrabble\\src\\Dict\\en.txt"), LetterBag.init)
 
     val board = Board.init
 
