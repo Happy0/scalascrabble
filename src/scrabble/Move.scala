@@ -14,7 +14,13 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
         ???
     }
   }
+  
+  /** Removes letters from player's letter rack and updates the board */
+  def placeLetters : (Board, Player) = {
+    ???
+  }
 
+  /** Returns an InvalidMove object describing the error in the move, or returns None if there is no error in the placement of letters. */
   val moveError: Option[InvalidMove] = {
     if (!obeysFirstMovePositionRule ) Some(FirstMovePositionWrong()) else {
       if (!alreadyOccupiedSquares.isEmpty) Some(SquareOccupiedClientError()) else {
