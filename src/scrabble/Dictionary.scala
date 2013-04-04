@@ -24,6 +24,8 @@ object Dictionary {
     //@TODO: Find out how to make this a relative path / think about implications for deployment
     val dict = load("C:\\workspace\\Scala\\scalascrabble\\src\\Dict\\en.txt")
     println(dict.dictionary.size)
+    
+    println(dict.isValidWord("monitor"))
   }
 
 }

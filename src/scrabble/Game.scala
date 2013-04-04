@@ -2,6 +2,7 @@ package scrabble;
 
 case class Game(
   players: List[Player],
+  dictionary: Dictionary,
   board: Board,
   playersMove: Int, // Index into the list of players
   bag: LetterBag,
@@ -29,7 +30,7 @@ object Game {
           ((player :: playerList), bag)
       }
 
-    Game(players, Board.init, 0, remainingBag,0)
+    Game(players, dictionary, Board.init, 0, remainingBag,0)
   }
 }
 
