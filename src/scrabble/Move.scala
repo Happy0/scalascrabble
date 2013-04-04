@@ -20,7 +20,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
       if (!alreadyOccupiedSquares.isEmpty) Some(SquareOccupiedClientError()) else {
 
         formedWords match {
-          case Right(x) => Some(x)
+          case Right(error) => Some(error)
           case Left(list) =>
             val badwords = badWords(list)
             if (!badwords.isEmpty) {
