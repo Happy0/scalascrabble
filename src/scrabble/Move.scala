@@ -15,10 +15,13 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
     }
   }
   
-  /** Removes letters from player's letter rack and updates the board */
-  def placeLetters : (Board, Player) = {
+  /** Removes letters from player's letter rack and updates the board. Returns an error if the player does not have the letters  */
+  def placeLetters : Either[(Board, Player), InvalidMove] = {
     ???
   }
+  
+  /** Returns an overall score, and a score for each word */
+  def calculateScore: (Int, List[(String, Int)]) = ???
 
   /** Returns an InvalidMove object describing the error in the move, or returns None if there is no error in the placement of letters. */
   val moveError: Option[InvalidMove] = {

@@ -3,7 +3,7 @@ package scrabble
 //@TODO: Think about how to generalise this to other languages. Perhaps using configuration files...
 
 /** tiles: The current tiles in the bag */
-case class LetterBag(letters: List[Letter], size: Int) {
+case class LetterBag(letters: List[Letter], size: Int, tileSet: Map[Char, Letter]) {
 
   override def toString = letters.toString
 
@@ -15,7 +15,7 @@ case class LetterBag(letters: List[Letter], size: Int) {
     val split = letters.splitAt(num - 1)
     val removedLetters = split._1
     val newSize = if (size - num <= 0) 0 else size - num;
-    val newBag = LetterBag(split._2, newSize)
+    val newBag = copy(letters = split._2, size = newSize)
 
     (removedLetters, newBag)
   }
@@ -24,8 +24,11 @@ case class LetterBag(letters: List[Letter], size: Int) {
   def exchange(exchanged: List[Letter]): (List[Letter], LetterBag) =
     {
       val (given, bag) = remove(exchanged.size)
-      (given, LetterBag(util.Random.shuffle(bag.letters ::: exchanged), size))
+      val newLetters = util.Random.shuffle(bag.letters ::: exchanged)
+      (given, copy( letters =  newLetters))
     }
+  
+  def letterFor(letter: Char) : Option[Letter] = tileSet get letter 
 
 }
 
@@ -51,9 +54,11 @@ object LetterBag {
       case (list, (chr: Char, vl: Int, dst: Int)) =>
         list ::: List.fill(dst)(Letter(chr, vl))
     }
+    
+    val tileSet: Map[Char,Letter] = all.map{case (chr, vl, dst) => chr -> Letter(chr,vl)} toMap
 
     // Construct with a randomised list
-    LetterBag(util.Random.shuffle(letters), letters.size)
+    LetterBag(util.Random.shuffle(letters), letters.size, tileSet)
   }
 
   //@TODO: Placeholder for other language generalisation

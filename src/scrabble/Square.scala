@@ -11,6 +11,8 @@ abstract class Square() extends Ordered[Square] {
 
   def isEmpty = tile.isEmpty
 
+  def setLetter(letter: Letter): Square
+
 }
 
 case class NormalSquare(tile: Option[Letter]) extends Square {
@@ -18,6 +20,8 @@ case class NormalSquare(tile: Option[Letter]) extends Square {
     case Some(x) => x.toString()
     case None => "N"
   }
+
+  def setLetter(letter: Letter) = NormalSquare(Some(letter))
 
 }
 
@@ -27,6 +31,8 @@ case class DoubleLetterSquare(tile: Option[Letter]) extends Square {
     case None => "DL"
   }
 
+  def setLetter(letter: Letter) = DoubleLetterSquare(Some(letter))
+
 }
 case class TripleLetterSquare(tile: Option[Letter]) extends Square {
   override def toString = tile match {
@@ -34,7 +40,7 @@ case class TripleLetterSquare(tile: Option[Letter]) extends Square {
     case None => "TL"
   }
 
-  def addToWordScore(soFar: Int): Int = soFar + tile.get.value * 3
+  def setLetter(letter: Letter) = TripleLetterSquare(Some(letter))
 }
 
 case class DoubleWordSquare(tile: Option[Letter]) extends Square {
@@ -43,12 +49,17 @@ case class DoubleWordSquare(tile: Option[Letter]) extends Square {
     case None => "DW"
   }
 
+  def setLetter(letter: Letter) = DoubleWordSquare(Some(letter))
+
 }
 
 case class TripleWordSquare(override val tile: Option[Letter] = None) extends Square {
   override def toString = tile match {
     case Some(x) => x.toString()
-    case None => "TW"
+    case None =>
+      "TW"
   }
+
+  def setLetter(letter: Letter) = TripleWordSquare(Some(letter))
 
 }
