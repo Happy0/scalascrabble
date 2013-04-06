@@ -10,22 +10,49 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
       case Some(error) => Left(error)
 
       // Move is valid, update the game state 
-      case None => 
+      case None =>
         ???
     }
   }
-  
+
   /** Removes letters from player's letter rack and updates the board. Returns an error if the player does not have the letters  */
-  def placeLetters : Either[(Board, Player), InvalidMove] = {
+  def placeLetters: Either[(Board, Player), InvalidMove] = {
     ???
   }
-  
+
   /** Returns an overall score, and a score for each word */
-  def calculateScore: (Int, List[(String, Int)]) = ???
+  def calculateScore(lists: List[List[(Pos, Letter)]]): (Int, List[(String, Int)]) = {
+    val (score, lsts) = lists.foldLeft((0, List.empty[(String, Int)])) {
+      case ((acc, lsts), (xs)) =>
+        
+        val word = toWord(xs)
+        
+        val squares = xs.map{case (pos, let) => board.squareAt(pos).setLetter(let)}
+
+        // Sort to put the word bonus squares last
+        val score = squares.sortWith(_ < _).foldLeft(0) {
+          case (scr, sq) =>
+            sq match {
+              case (NormalSquare(x)) => scr + sq.tile.get.value
+              case (DoubleLetterSquare(x)) => scr + (sq.tile.get.value * 2)
+              case (TripleLetterSquare(x)) => scr + (sq.tile.get.value * 3)
+              case (DoubleWordSquare(x)) => (scr + sq.tile.get.value) * 2
+              case (TripleWordSquare(x)) => (scr + sq.tile.get.value) * 3
+            }
+
+        }
+        
+        (acc + score, lsts :+ (word, score))
+
+    }
+    
+    if (sevenLetterBonus) (score + 50, lsts) else (score, lsts)
+
+  }
 
   /** Returns an InvalidMove object describing the error in the move, or returns None if there is no error in the placement of letters. */
   val moveError: Option[InvalidMove] = {
-    if (!obeysFirstMovePositionRule ) Some(FirstMovePositionWrong()) else {
+    if (!obeysFirstMovePositionRule) Some(FirstMovePositionWrong()) else {
       if (!alreadyOccupiedSquares.isEmpty) Some(SquareOccupiedClientError()) else {
 
         formedWords match {
@@ -44,13 +71,15 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
     }
   }
 
+  def toWord(list: List[(Pos, Letter)]): String = list.map { case (pos, letter) => letter.letter }.mkString
+
   lazy val alreadyOccupiedSquares = placed.find { case (pos: Pos, letter: Letter) => !(board.squareAt(pos).isEmpty) }
   lazy val obeysFirstMovePositionRule = if (game.moves > 0) true else if (game.moves == 0 && placedSorted(0)._1 == startPosition) true else false
 
   def badWords(crawled: List[List[(Pos, Letter)]]): List[String] = {
     val words: List[String] = crawled.foldLeft(List.empty[String]) {
       case (wordList, list) =>
-        list.map { case (pos, letter) => letter.letter }.mkString :: wordList
+        toWord(list) :: wordList
     }
     println(words)
 
@@ -95,7 +124,6 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
             // Add the letter to the first list
             val newlist = x :+ pos -> let
             val updatedList = newlist :: xs
-
             val otherWords = allAdjacentTo(pos, let)
 
             println("otherwords" + otherWords)
@@ -103,25 +131,21 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
           } else {
             val range = if (horizontal) List.range(lastx + 1, pos.x) else List.range(lasty + 1, pos.y)
-            
-              // Add the letters inbetween and the current char to the first list, then look for letters above and below the current char
-              val between = range.map {
 
-                x =>
-                  if (board.squareAt(pos).isEmpty) return Right(MisPlacedLetters(pos.x, pos.y))
-                  
-                  val position = if (horizontal) Pos.posAt(x, pos.y) else Pos.posAt(pos.x, x)
-                  val sq = board.squareAt(position.get)
+            // Add the letters inbetween and the current char to the first list, then look for letters above and below the current char
+            val between = range.map {
+              x =>
+                if (board.squareAt(pos).isEmpty) return Right(MisPlacedLetters(pos.x, pos.y))
+                val position = if (horizontal) Pos.posAt(x, pos.y) else Pos.posAt(pos.x, x)
+                val sq = board.squareAt(position.get)
+                Pos.posAt(pos.x, x).get -> sq
+            } :+ pos -> let.letter
 
-                  Pos.posAt(pos.x, x).get -> sq
-              } :+ pos -> let.letter
+            val newlist = x :+ pos -> let
+            val updatedList = newlist :: xs
+            val otherWords: List[(Pos, Letter)] = allAdjacentTo(pos, let)
 
-              val newlist = x :+ pos -> let
-              val updatedList = newlist :: xs
-
-              val otherWords: List[(Pos, Letter)] = allAdjacentTo(pos, let)
-
-              (pos.x, pos.y, if (!otherWords.isEmpty) updatedList :+ otherWords else updatedList)
+            (pos.x, pos.y, if (!otherWords.isEmpty) updatedList :+ otherWords else updatedList)
           }
 
       }
