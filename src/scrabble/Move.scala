@@ -21,7 +21,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
   }
 
   /** Returns an overall score, and a score for each word */
-  def calculateScore(lists: List[List[(Pos, Letter)]]): (Int, List[(String, Int)]) = {
+  def calculateScores(lists: List[List[(Pos, Letter)]]): (Int, List[(String, Int)]) = {
     val (score, lsts) = lists.foldLeft((0, List.empty[(String, Int)])) {
       case ((acc, lsts), (xs)) =>
         
