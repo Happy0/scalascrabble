@@ -53,17 +53,23 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
         val bdwords = if (!game.dictionary.isValidWord(word)) word :: badwords else badwords
 
-        val squares = xs.map { case (pos, let) => board.squareAt(pos).setLetter(let) }
+        val squares = xs.map { case (pos, let) => pos -> board.squareAt(pos).setLetter(let) }
 
         // Sort to put the word bonus squares last
-        val score = squares.sortWith(_ < _).foldLeft(0) {
-          case (scr, sq) =>
-            sq match {
-              case (NormalSquare(x)) => scr + sq.tile.get.value
-              case (DoubleLetterSquare(x)) => scr + (sq.tile.get.value * 2)
-              case (TripleLetterSquare(x)) => scr + (sq.tile.get.value * 3)
-              case (DoubleWordSquare(x)) => (scr + sq.tile.get.value) * 2
-              case (TripleWordSquare(x)) => (scr + sq.tile.get.value) * 3
+        val score = squares.sortWith { case ((pos, sq), (pos2, sq2)) => sq < sq2 }.foldLeft(0) {
+          case (scr, (pos, sq)) =>
+            val square = board.squareAt(pos)
+
+            // If the bonus has already been used, ignore the bonus square
+            if (!board.squareAt(pos).isEmpty) scr + square.tile.get.value else {
+
+              sq match {
+                case (NormalSquare(x)) => scr + sq.tile.get.value
+                case (DoubleLetterSquare(x)) => scr + (sq.tile.get.value * 2)
+                case (TripleLetterSquare(x)) => scr + (sq.tile.get.value * 3)
+                case (DoubleWordSquare(x)) => (scr + sq.tile.get.value) * 2
+                case (TripleWordSquare(x)) => (scr + sq.tile.get.value) * 3
+              }
             }
 
         }
@@ -96,7 +102,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
   private lazy val (horizontal, vertical) = (starty == endy, startx == endx)
 
   // @TODO: Absolutely hurrendous looking. Need to tidy it up.
-  
+
   /**
    * Returns either a list of lists of (Pos, Letter) which are the words (with position info preserved) formed by the placement of the letters or an error
    *   if the player has not placed the words linearly or the letters are not attached to at least one existing letter on the board
