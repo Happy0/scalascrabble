@@ -88,6 +88,8 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
   val board = game.board
   lazy val placedMap = placed.toMap
   lazy val placedSorted = placed.sortBy { case (pos: Pos, let: Letter) => (pos.x, pos.y) }
+  lazy val first = placedSorted(0)
+  
   lazy val amountPlaced = placedSorted.size
 
   private lazy val (startx, endx) = (placedSorted(0)._1.x, placedSorted(amountPlaced - 1)._1.x)
@@ -102,9 +104,9 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
     if (!horizontal && !vertical) Left(NotLinear()) else {
 
       val startList: List[(Pos, Letter)] = (if (horizontal) board.LettersLeft(placedSorted(0)._1) else
-        board.LettersBelow(placedSorted(0)._1)) :+ (placedSorted(0)._1, placedSorted(0)._2)
+        board.LettersBelow(placedSorted(0)._1)) :+ (first._1, first._2)
 
-      val otherWords = allAdjacentTo(placedSorted(0)._1, placedSorted(0)._2)
+      val otherWords = allAdjacentTo(first._1, first._2)
 
       val startWith: List[List[(Pos, Letter)]] = if (otherWords.isEmpty) List(startList) else List(startList) :+ otherWords
 
@@ -157,7 +159,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
   def allAdjacentTo(pos: Pos, let: Letter): List[(Pos, Letter)] = {
     lazy val above = board.LettersAbove(pos)
     lazy val below = board.LettersBelow(pos)
-    lazy val left = board.LettersBelow(pos)
+    lazy val left = board.LettersLeft(pos)
     lazy val right = board.LettersRight(pos)
 
     if (horizontal) {
@@ -185,7 +187,7 @@ object Main {
 
     val board = Board.init
 
-    val newBrd = board.squares + (Pos.posAt(1, 1).get -> NormalSquare(Some(Letter('S', 1))))
+    val newBrd = board.squares + (Pos.posAt(1, 5).get -> NormalSquare(Some(Letter('S', 1))))
     val testBoard = Board(newBrd)
 
     println(testBoard)
