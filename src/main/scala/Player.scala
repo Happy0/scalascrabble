@@ -1,8 +1,8 @@
 package scrabble
 
 case class Player(
-    val letters: List[Option[Letter]],
-    val username: String,
-    val score: Int){
+  letters: List[Option[Letter]],
+  username: String,
+  score: Int) {
 
 }

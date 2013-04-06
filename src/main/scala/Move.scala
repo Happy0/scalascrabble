@@ -10,7 +10,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
       case Left(error) => Left(error)
 
       // Move is valid, update the game state 
-      case Right(Score(overall, x::xs)) =>
+      case Right(Score(overall, x :: xs)) =>
         ???
     }
   }
@@ -35,7 +35,6 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
         }
       }
-     
 
     }
   }
@@ -54,17 +53,23 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
         val bdwords = if (!game.dictionary.isValidWord(word)) word :: badwords else badwords
 
-        val squares = xs.map { case (pos, let) => board.squareAt(pos).setLetter(let) }
+        val squares = xs.map { case (pos, let) => pos -> board.squareAt(pos).setLetter(let) }
 
         // Sort to put the word bonus squares last
-        val score = squares.sortWith(_ < _).foldLeft(0) {
-          case (scr, sq) =>
-            sq match {
-              case (NormalSquare(x)) => scr + sq.tile.get.value
-              case (DoubleLetterSquare(x)) => scr + (sq.tile.get.value * 2)
-              case (TripleLetterSquare(x)) => scr + (sq.tile.get.value * 3)
-              case (DoubleWordSquare(x)) => (scr + sq.tile.get.value) * 2
-              case (TripleWordSquare(x)) => (scr + sq.tile.get.value) * 3
+        val score = squares.sortWith { case ((pos, sq), (pos2, sq2)) => sq < sq2 }.foldLeft(0) {
+          case (scr, (pos, sq)) =>
+            val square = board.squareAt(pos)
+
+            // If the bonus has already been used, ignore the bonus square
+            if (!board.squareAt(pos).isEmpty) scr + square.tile.get.value else {
+
+              sq match {
+                case (NormalSquare(x)) => scr + sq.tile.get.value
+                case (DoubleLetterSquare(x)) => scr + (sq.tile.get.value * 2)
+                case (TripleLetterSquare(x)) => scr + (sq.tile.get.value * 3)
+                case (DoubleWordSquare(x)) => (scr + sq.tile.get.value) * 2
+                case (TripleWordSquare(x)) => (scr + sq.tile.get.value) * 3
+              }
             }
 
         }
@@ -89,12 +94,14 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
   lazy val placedMap = placed.toMap
   lazy val placedSorted = placed.sortBy { case (pos: Pos, let: Letter) => (pos.x, pos.y) }
   lazy val first = placedSorted(0)
-  
+
   lazy val amountPlaced = placedSorted.size
 
   private lazy val (startx, endx) = (placedSorted(0)._1.x, placedSorted(amountPlaced - 1)._1.x)
   private lazy val (starty, endy) = (placedSorted(0)._1.y, placedSorted(amountPlaced - 1)._1.y)
   private lazy val (horizontal, vertical) = (starty == endy, startx == endx)
+
+  // @TODO: Absolutely hurrendous looking. Need to tidy it up.
 
   /**
    * Returns either a list of lists of (Pos, Letter) which are the words (with position info preserved) formed by the placement of the letters or an error
@@ -121,7 +128,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
           if (comesAfter) {
             // Add the letter to the first list
-            val newlist = x :+ pos -> let
+            val newlist: List[(Pos, Letter)] = (x :+ pos -> let) ::: (if ((pos.x, pos.y) == (endx, endy)) (if (horizontal) board.LettersRight(pos) else board.LettersAbove(pos)) else List.empty[(Pos, Letter)])
             val updatedList = newlist :: xs
             val otherWords = allAdjacentTo(pos, let)
 
@@ -140,7 +147,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
                 Pos.posAt(pos.x, x).get -> sq
             } :+ pos -> let.letter
 
-            val newlist = x :+ pos -> let
+            val newlist: List[(Pos, Letter)] = (x :+ pos -> let) ::: (if ((pos.x, pos.y) == (endx, endy)) (if (horizontal) board.LettersRight(pos) else board.LettersAbove(pos)) else List.empty[(Pos, Letter)])
             val updatedList = newlist :: xs
             val otherWords: List[(Pos, Letter)] = allAdjacentTo(pos, let)
 
@@ -167,14 +174,14 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
         (above :+ pos -> let) ::: below
       } else List()
 
-      if ((pos.x, pos.y) == (endx, endy)) list ::: right else list
+      list
 
     } else {
       val list = if (!left.isEmpty || !right.isEmpty) {
         (left :+ pos -> let) ::: right
       } else List()
 
-      if ((pos.x, pos.y) == (endx, endy)) list ::: above else list
+      list
     }
 
   }
@@ -183,11 +190,11 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
 object Main {
   def main(args: Array[String]) {
-    val game = Game.init(List("jim", "joe"), Dictionary.load("C:\\workspace\\Scala\\scalascrabble\\src\\Dict\\en.txt"), LetterBag.init)
+    val game = Game.make(List("jim", "joe"), Dictionary.load("C:\\workspace\\Scala\\scalascrabble\\src\\Dict\\en.txt"), LetterBag.init).get
 
     val board = Board.init
 
-    val newBrd = board.squares + (Pos.posAt(1, 5).get -> NormalSquare(Some(Letter('S', 1))))
+    val newBrd = board.squares + (Pos.posAt(1, 1).get -> NormalSquare(Some(Letter('S', 1))))
     val testBoard = Board(newBrd)
 
     println(testBoard)
