@@ -128,7 +128,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
           if (comesAfter) {
             // Add the letter to the first list
-            val newlist: List[(Pos, Letter)] = (x :+ pos -> let) ::: (if ((pos.x, pos.y) == (endx, endy)) (if (horizontal) board.LettersRight(pos) else board.LettersAbove(pos)) else List.empty[(Pos, Letter)])
+            val newlist: List[(Pos, Letter)] = x ::: pos -> let :: (if ((pos.x, pos.y) == (endx, endy)) (if (horizontal) board.LettersRight(pos) else board.LettersAbove(pos)) else List.empty[(Pos, Letter)])
             val updatedList = newlist :: xs
             val otherWords = allAdjacentTo(pos, let)
 
@@ -148,7 +148,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
                 Pos.posAt(pos.x, x).get -> sq.tile.get
             }
 
-            val newlist: List[(Pos, Letter)] = ((x ::: between) :+ pos -> let) ::: (if ((pos.x, pos.y) == (endx, endy)) (if (horizontal) board.LettersRight(pos) else board.LettersAbove(pos)) else List.empty[(Pos, Letter)])
+            val newlist: List[(Pos, Letter)] = ((x ::: between)) ::: pos -> let :: (if ((pos.x, pos.y) == (endx, endy)) (if (horizontal) board.LettersRight(pos) else board.LettersAbove(pos)) else List.empty[(Pos, Letter)])
             val updatedList = newlist :: xs
             val otherWords: List[(Pos, Letter)] = allAdjacentTo(pos, let)
 
@@ -172,14 +172,14 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
     if (horizontal) {
       val list = if (!above.isEmpty || !below.isEmpty) {
-        (above :+ pos -> let) ::: below
+        above ::: pos -> let :: below
       } else List()
 
       list
 
     } else {
       val list = if (!left.isEmpty || !right.isEmpty) {
-        (left :+ pos -> let) ::: right
+        left ::: pos -> let :: right
       } else List()
 
       list
