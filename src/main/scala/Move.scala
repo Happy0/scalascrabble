@@ -139,15 +139,16 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
             val range = if (horizontal) List.range(lastx + 1, pos.x) else List.range(lasty + 1, pos.y)
 
             // Add the letters inbetween and the current char to the first list, then look for letters above and below the current char
-            val between = range.map {
+            val between: List[(Pos, Letter)] = range.map {
+              println("Pos is " + pos)
               x =>
-                if (board.squareAt(pos).isEmpty) return Left(MisPlacedLetters(pos.x, pos.y))
                 val position = if (horizontal) Pos.posAt(x, pos.y) else Pos.posAt(pos.x, x)
+                if (board.squareAt(position.get).isEmpty) return Left(MisPlacedLetters(pos.x, pos.y))
                 val sq = board.squareAt(position.get)
-                Pos.posAt(pos.x, x).get -> sq
-            } :+ pos -> let.letter
+                Pos.posAt(pos.x, x).get -> sq.tile.get
+            }
 
-            val newlist: List[(Pos, Letter)] = (x :+ pos -> let) ::: (if ((pos.x, pos.y) == (endx, endy)) (if (horizontal) board.LettersRight(pos) else board.LettersAbove(pos)) else List.empty[(Pos, Letter)])
+            val newlist: List[(Pos, Letter)] = ((x ::: between) :+ pos -> let) ::: (if ((pos.x, pos.y) == (endx, endy)) (if (horizontal) board.LettersRight(pos) else board.LettersAbove(pos)) else List.empty[(Pos, Letter)])
             val updatedList = newlist :: xs
             val otherWords: List[(Pos, Letter)] = allAdjacentTo(pos, let)
 
@@ -194,15 +195,15 @@ object Main {
 
     val board = Board.init
 
-    val newBrd = board.squares + (Pos.posAt(1, 1).get -> NormalSquare(Some(Letter('S', 1))))
+    val newBrd = board.squares + (Pos.posAt(1, 3).get -> NormalSquare(Some(Letter('S', 1))))
     val testBoard = Board(newBrd)
 
     println(testBoard)
 
     val placed = List(
       Pos.posAt(1, 2).get -> Letter('B', 1),
-      Pos.posAt(1, 3).get -> Letter('A', 1),
-      Pos.posAt(1, 4).get -> Letter('D', 1))
+      Pos.posAt(1, 4).get -> Letter('A', 1),
+      Pos.posAt(1, 5).get -> Letter('D', 1))
 
     val blanks = List()
 
