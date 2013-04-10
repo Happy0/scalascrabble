@@ -5,5 +5,7 @@ case class Player(
   username: String,
   score: Int) {
   
+  def replaceLetters(lettrs: List[Letter]) : Player = copy(letters = lettrs)
+  
 }
 

@@ -1,5 +1,7 @@
 package scrabble
 
+import scala.util.{ Try, Success, Failure }
+
 case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char)]) {
 
   //@TODO: Would 'Try' rather than 'Either', with all its usefulness, be appropriate despite the 'exception' falling into normal expected behaviour?
@@ -8,54 +10,36 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
   def updatedGame: Either[InvalidMove, Game] = {
     val checkMove = tryMove
 
-    checkMove match {
-      case Left(error) => Left(error)
-
-      // Move is valid, update the game state 
-      case Right(Score(overall, x :: xs)) =>
-        
-    }
+    
   }
 
   /** Returns an InvalidMove object describing the error in the move, or a score if there is no error in the placement of letters. */
-  val tryMove: Either[InvalidMove, Score] = {
-    if (!obeysFirstMovePositionRule) Left(FirstMovePositionWrong()) else {
-      if (!alreadyOccupiedSquares.isEmpty) Left(SquareOccupiedClientError()) else {
-
-        formedWords match {
-          case Left(error) => Left(error)
-          case Right(list) =>
-            val scores = calculateScores(list)
-            val score = Score(scores._1, scores._2)
-
-            val badWords = scores._3
-            if (!badWords.isEmpty) {
-              Left(WordsNotInDictionary(badWords, score))
-            } else {
-              Right(score)
-            }
-
-        }
+  val tryMove: Try[Score] = {
+    if (!obeysFirstMovePositionRule) throw (FirstMovePositionWrong()) else {
+      if (!alreadyOccupiedSquares.isEmpty) throw (SquareOccupiedClientError()) else {
+        
+        // dfsfsdfsdfdf monads, how do they work?
+       Try (buildWords).transform(s=> Try(calculateScores(s.get).transform(s => Success(s), f => throw f)), f => throw f )
       }
-
     }
   }
 
   /** Removes letters from player's letter rack and updates the board. Returns an error if the player does not have the letters  */
-  def placeLetters: Either[InvalidMove, (Board, Player)] = {
-    val playerLetters = game.currentPlayer.letters
+  def placeLetters: Try[(Board, Player)] = {
+    val currentPlayer = game.currentPlayer
+    val playerLetters = currentPlayer.letters
 
-    def place(placed: List[(Pos, Letter)], remainingLetters: List[Letter], board: Board): Either[playerDoesNotHaveLettersClientError, (Board, Player)] = {
+    def place(placed: List[(Pos, Letter)], remainingLetters: List[Letter], board: Board): Try[(Board, Player)] = {
       placed match {
         case y :: rest =>
           val (upTo, after) = remainingLetters.span { let => let != y._2 }
 
-          if (upTo.size == remainingLetters.size) Left(playerDoesNotHaveLettersClientError()) else {
+          if (upTo.size == remainingLetters.size) throw (playerDoesNotHaveLettersClientError()) else {
             val newLetters: List[Letter] = upTo ::: after.drop(1)
             place(rest, newLetters, board.placeLetter(y._1, after.head))
           }
 
-        case Nil => Right(board, game.currentPlayer.replaceLetters(remainingLetters))
+        case Nil => Success(board, currentPlayer.replaceLetters(remainingLetters))
 
       }
 
@@ -64,7 +48,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
   }
 
   /** Returns an overall score, and a score for each word. Returns a list of words that are not in the dictionary (empty if none) */
-  def calculateScores(lists: List[List[(Pos, Letter)]]): (Int, List[(String, Int)], List[String]) = {
+  def calculateScores(lists: List[List[(Pos, Letter)]]): Try[Score] = {
     val (score, lsts, badwords) = lists.foldLeft((0, List.empty[(String, Int)], List.empty[String])) {
       case ((acc, lsts, badwords), (xs)) =>
 
@@ -96,8 +80,10 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
         (acc + score, lsts :+ (word, score), bdwords)
 
     }
-
-    if (sevenLetterBonus) (score + 50, lsts, badwords) else (score, lsts, badwords)
+    val the_score: Score = if (sevenLetterBonus) Score(score + 50, lsts) else Score(score, lsts)
+    
+    if (badwords.isEmpty) Success(the_score) else throw WordsNotInDictionary(badwords, the_score)
+   
 
   }
 
@@ -126,8 +112,8 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
    * Returns either a list of lists of (Pos, Letter) which are the words (with position info preserved) formed by the placement of the letters or an error
    *   if the player has not placed the words linearly or the letters are not attached to at least one existing letter on the board
    */
-  def buildWords: Either[InvalidMove, List[List[(Pos, Letter)]]] = {
-    if (!horizontal && !vertical) Left(NotLinear()) else {
+  def buildWords: Try[List[List[(Pos, Letter)]]] = {
+    if (!horizontal && !vertical) throw NotLinear() else {
 
       val startList: List[(Pos, Letter)] = (if (horizontal) board.LettersLeft(placedSorted(0)._1) else
         board.LettersBelow(placedSorted(0)._1)) :+ (first._1, first._2)
@@ -141,7 +127,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
       val lists: (Int, Int, List[List[(Pos, Letter)]]) = placedSorted.tail.foldLeft(startx, starty, startWith) {
         case ((lastx, lasty, (x :: xs)), (pos: Pos, let)) =>
           val isLinear = if (horizontal) pos.y == lasty else pos.x == lastx
-          if (!isLinear) return Left(MisPlacedLetters(pos.x, pos.y))
+          if (!isLinear) return throw (MisPlacedLetters(pos.x, pos.y))
 
           val comesAfter = if (horizontal) pos.x == lastx + 1 else pos.y == lasty + 1
 
@@ -162,7 +148,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
               println("Pos is " + pos)
               x =>
                 val position = if (horizontal) Pos.posAt(x, pos.y) else Pos.posAt(pos.x, x)
-                if (board.squareAt(position.get).isEmpty) return Left(MisPlacedLetters(pos.x, pos.y))
+                if (board.squareAt(position.get).isEmpty) return throw (MisPlacedLetters(pos.x, pos.y))
                 val sq = board.squareAt(position.get)
                 Pos.posAt(pos.x, x).get -> sq.tile.get
             }
@@ -177,7 +163,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
       }
       if (game.moves >= 1 && lists._3.size <= 1) Right(NotAttachedToWord) else Left(lists._3)
 
-      Right(lists._3)
+      Success(lists._3)
     }
 
   }
