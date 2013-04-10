@@ -34,3 +34,11 @@ case class NotLinear(errorcode: Int = 5) extends InvalidMove(errorcode) {
 case class SquareOccupiedClientError(errorCode: Int = 6) extends InvalidMove(errorCode) {
   def defaultMessage = "Square already occupied. Client error or malicious client."
 }
+
+case class playerDoesNotHaveLettersClientError(errorcode: Int = 7) extends InvalidMove(errorcode) {
+  def defaultMessage = "Player does not have all of the placed letters. Client error or malicious client."
+}
+
+case class LetterNotInTileSetClientError(errorcode: Int = 8) extends InvalidMove(errorcode) {
+  def defaultMessage = "Letter not in the tileset for this game. Client error or malicious client."
+}

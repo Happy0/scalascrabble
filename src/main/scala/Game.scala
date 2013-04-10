@@ -26,7 +26,7 @@ object Game {
         playerNames.foldLeft((List.empty[Player], letterbag)) {
           case ((playerList, thebag), name) =>
             val (letters: List[Letter], bag) = thebag.remove(7)
-            val player = Player(letters.map(x => Some(x)), name, 0)
+            val player = Player(letters, name, 0)
 
             ((player :: playerList), bag)
         }

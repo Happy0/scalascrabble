@@ -1,8 +1,9 @@
 package scrabble
 
 case class Player(
-  letters: List[Option[Letter]],
+  letters: List[Letter],
   username: String,
   score: Int) {
-
+  
 }
+

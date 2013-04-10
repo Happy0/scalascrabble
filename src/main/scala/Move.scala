@@ -2,6 +2,8 @@ package scrabble
 
 case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char)]) {
 
+  //@TODO: Would 'Try' rather than 'Either', with all its usefulness, be appropriate despite the 'exception' falling into normal expected behaviour?
+
   /** Returns the updated game if the move is a valid scrabble move, otherwise returns an InvalidMove with an explanation of why the move is invalid */
   def updatedGame: Either[InvalidMove, Game] = {
     val checkMove = tryMove
@@ -11,7 +13,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
       // Move is valid, update the game state 
       case Right(Score(overall, x :: xs)) =>
-        ???
+        
     }
   }
 
@@ -41,7 +43,24 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
   /** Removes letters from player's letter rack and updates the board. Returns an error if the player does not have the letters  */
   def placeLetters: Either[InvalidMove, (Board, Player)] = {
-    ???
+    val playerLetters = game.currentPlayer.letters
+
+    def place(placed: List[(Pos, Letter)], remainingLetters: List[Letter], board: Board): Either[playerDoesNotHaveLettersClientError, (Board, Player)] = {
+      placed match {
+        case y :: rest =>
+          val (upTo, after) = remainingLetters.span { let => let != y._2 }
+
+          if (upTo.size == remainingLetters.size) Left(playerDoesNotHaveLettersClientError()) else {
+            val newLetters: List[Letter] = upTo ::: after.drop(1)
+            place(rest, newLetters, board.placeLetter(y._1, after.head))
+          }
+
+        case Nil => Right(board, game.currentPlayer.replaceLetters(remainingLetters))
+
+      }
+
+    }
+    place(placed, playerLetters, board)
   }
 
   /** Returns an overall score, and a score for each word. Returns a list of words that are not in the dictionary (empty if none) */
@@ -195,15 +214,18 @@ object Main {
 
     val board = Board.init
 
-    val newBrd = board.squares + (Pos.posAt(1, 3).get -> NormalSquare(Some(Letter('S', 1))))
+    val newBrd = board.squares ++ List(
+      Pos.posAt(1, 3).get -> NormalSquare(Some(Letter('S', 1))),
+      Pos.posAt(1, 4).get -> NormalSquare(Some(Letter('T', 1))))
+
     val testBoard = Board(newBrd)
 
     println(testBoard)
 
     val placed = List(
-      Pos.posAt(1, 2).get -> Letter('B', 1),
-      Pos.posAt(1, 4).get -> Letter('A', 1),
-      Pos.posAt(1, 5).get -> Letter('D', 1))
+      Pos.posAt(1, 1).get -> Letter('L', 1),
+      Pos.posAt(1, 2).get -> Letter('A', 1))
+    // Pos.posAt(1, 5).get -> Letter('D', 1))
 
     val blanks = List()
 
