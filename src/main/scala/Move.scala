@@ -7,21 +7,18 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
   //@TODO: Would 'Try' rather than 'Either', with all its usefulness, be appropriate despite the 'exception' falling into normal expected behaviour?
 
   /** Returns the updated game if the move is a valid scrabble move, otherwise returns an InvalidMove with an explanation of why the move is invalid */
-  def updatedGame: Either[InvalidMove, Game] = {
-    val checkMove = tryMove
+  def updatedGame: Try[Game] = {
 
-    
-  }
-
-  /** Returns an InvalidMove object describing the error in the move, or a score if there is no error in the placement of letters. */
-  val tryMove: Try[Score] = {
     if (!obeysFirstMovePositionRule) throw (FirstMovePositionWrong()) else {
       if (!alreadyOccupiedSquares.isEmpty) throw (SquareOccupiedClientError()) else {
+
+        val words = Try(formedWords)
+        val score = words.flatMap(suc => calculateScores(suc.get))
+
         
-        // dfsfsdfsdfdf monads, how do they work?
-       Try (buildWords).transform(s=> Try(calculateScores(s.get).transform(s => Success(s), f => throw f)), f => throw f )
       }
     }
+
   }
 
   /** Removes letters from player's letter rack and updates the board. Returns an error if the player does not have the letters  */
@@ -81,9 +78,8 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
     }
     val the_score: Score = if (sevenLetterBonus) Score(score + 50, lsts) else Score(score, lsts)
-    
+
     if (badwords.isEmpty) Success(the_score) else throw WordsNotInDictionary(badwords, the_score)
-   
 
   }
 
