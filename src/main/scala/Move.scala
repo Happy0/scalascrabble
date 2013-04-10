@@ -4,18 +4,36 @@ import scala.util.{ Try, Success, Failure }
 
 case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char)]) {
 
-  //@TODO: Would 'Try' rather than 'Either', with all its usefulness, be appropriate despite the 'exception' falling into normal expected behaviour?
+  //@TODO: Incorporate blanks. Think about how to record games. Tidy up buildWords function. Test it - properly.
 
   /** Returns the updated game if the move is a valid scrabble move, otherwise returns an InvalidMove with an explanation of why the move is invalid */
-  def updatedGame: Try[Game] = {
+  def makeMove: Try[Game] = {
 
     if (!obeysFirstMovePositionRule) throw (FirstMovePositionWrong()) else {
       if (!alreadyOccupiedSquares.isEmpty) throw (SquareOccupiedClientError()) else {
 
         val words = Try(formedWords)
         val score = words.flatMap(suc => calculateScores(suc.get))
+        lazy val placeLets = placeLetters
 
-        
+        score match {
+          case Success(score) =>
+            placeLets match {
+              case Success((board, player)) =>
+                // give the player letters
+                val (given, newbag) = game.bag.remove(amountPlaced)
+                val newplayer = player.replaceLetters(player.letters ++ given).copy(score = player.score + score.overAllScore)
+                val nextPlayer = (game.playersMove + 1) % game.players.size // Check maths
+                
+                val players = game.players.patch(game.playersMove, Seq(newplayer), 1)
+                
+                Success(game.copy(players = players, board = board, playersMove = nextPlayer, bag = newbag, moves = game.moves + 1, score = game.score + score.overAllScore))
+                
+
+              case Failure(err) => Failure(err)
+            }
+          case Failure(err) => Failure(err)
+        }
       }
     }
 

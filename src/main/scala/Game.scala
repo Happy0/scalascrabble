@@ -6,7 +6,8 @@ case class Game private (
   board: Board,
   playersMove: Int, // Index into the list of players
   bag: LetterBag,
-  moves: Int) {
+  moves: Int,
+  score: Int) {
 
   val currentPlayer = players(playersMove)
 
@@ -31,7 +32,7 @@ object Game {
             ((player :: playerList), bag)
         }
 
-      Some(Game(players, dictionary, Board.init, 0, remainingBag, 0))
+      Some(Game(players, dictionary, Board.init, 0, remainingBag, 0, 0))
     }
 
   }
