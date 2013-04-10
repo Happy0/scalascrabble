@@ -11,14 +11,12 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
     if (!obeysFirstMovePositionRule) throw (FirstMovePositionWrong()) else {
       if (!alreadyOccupiedSquares.isEmpty) throw (SquareOccupiedClientError()) else {
-        val words = Try(formedWords)
-        val score = words.flatMap(suc => calculateScores(suc.get))
-        lazy val placeLets = placeLetters
+        val score = formedWords.flatMap(suc => calculateScores(suc))
 
         score.flatMap {
           scr =>
             val score = scr
-            placeLets.flatMap {
+            placeLetters.flatMap {
               case (board, player) =>
                 // give the player letters
                 val (given, newbag) = game.bag.remove(amountPlaced)
@@ -34,7 +32,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
   }
 
   /** Removes letters from player's letter rack and updates the board. Returns an error if the player does not have the letters  */
-  def placeLetters: Try[(Board, Player)] = {
+  lazy val placeLetters: Try[(Board, Player)] = {
     val currentPlayer = game.currentPlayer
     val playerLetters = currentPlayer.letters
 
