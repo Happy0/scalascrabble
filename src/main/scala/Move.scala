@@ -7,7 +7,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
   //@TODO: Incorporate blanks. Think about how to record games. Tidy up buildWords function. Test it - properly.
 
   /** Returns the updated game if the move is a valid scrabble move, otherwise returns an InvalidMove with an explanation of why the move is invalid */
-  def makeMove: Try[Game] = {
+  def makeMove: Try[(Game, Score)] = {
 
     if (!obeysFirstMovePositionRule) throw (FirstMovePositionWrong()) else {
       if (!alreadyOccupiedSquares.isEmpty) throw (SquareOccupiedClientError()) else {
@@ -23,7 +23,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
                 val newplayer = player.replaceLetters(player.letters ++ given).copy(score = player.score + score.overAllScore)
                 val nextPlayer = (game.playersMove + 1) % game.players.size // Check maths
                 val players = game.players.patch(game.playersMove, Seq(newplayer), 1)
-                Success(game.copy(players = players, board = board, playersMove = nextPlayer, bag = newbag, moves = game.moves + 1, score = game.score + score.overAllScore))
+                Success(game.copy(players = players, board = board, playersMove = nextPlayer, bag = newbag, moves = game.moves + 1, score = game.score + score.overAllScore), score)
             }
         }
       }
@@ -32,7 +32,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
   }
 
   /** Removes letters from player's letter rack and updates the board. Returns an error if the player does not have the letters  */
-  lazy val placeLetters: Try[(Board, Player)] = {
+  private lazy val placeLetters: Try[(Board, Player)] = {
     val currentPlayer = game.currentPlayer
     val playerLetters = currentPlayer.letters
 
@@ -54,15 +54,20 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
     place(placed, playerLetters, board)
   }
 
+  /**
+   * Returns either a list of lists of (Pos, Letter) which are the words (with position info preserved) formed by the placement of the letters or an error
+   *   if the player has not placed the words linearly or the letters are not attached to at least one existing letter on the board
+   */
+  lazy val formedWords: Try[List[List[(Pos, Letter)]]] = buildWords
+
   /** Returns an overall score, and a score for each word. Returns a list of words that are not in the dictionary (empty if none) */
   def calculateScores(lists: List[List[(Pos, Letter)]]): Try[Score] = {
+    def toWord(list: List[(Pos, Letter)]): String = list.map { case (pos, letter) => letter.letter }.mkString
+
     val (score, lsts, badwords) = lists.foldLeft((0, List.empty[(String, Int)], List.empty[String])) {
       case ((acc, lsts, badwords), (xs)) =>
-
         val word = toWord(xs)
-
         val bdwords = if (!game.dictionary.isValidWord(word)) word :: badwords else badwords
-
         val squares = xs.map { case (pos, let) => pos -> board.squareAt(pos).setLetter(let) }
 
         // Sort to put the word bonus squares last
@@ -93,39 +98,54 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
   }
 
-  private def toWord(list: List[(Pos, Letter)]): String = list.map { case (pos, letter) => letter.letter }.mkString
+  private lazy val alreadyOccupiedSquares = placed.find { case (pos: Pos, letter: Letter) => !(board.squareAt(pos).isEmpty) }
+  private lazy val obeysFirstMovePositionRule = if (game.moves > 0) true else if (game.moves == 0 && placedSorted(0)._1 == startPosition) true else false
+  private lazy val startPosition = Pos.posAt(8, 8).get
+  private lazy val sevenLetterBonus: Boolean = amountPlaced == 7
+  private val board = game.board
+  private lazy val placedSorted = placed.sortBy { case (pos: Pos, let: Letter) => (pos.x, pos.y) }
+  private lazy val first = placedSorted(0)
 
-  lazy val alreadyOccupiedSquares = placed.find { case (pos: Pos, letter: Letter) => !(board.squareAt(pos).isEmpty) }
-  lazy val obeysFirstMovePositionRule = if (game.moves > 0) true else if (game.moves == 0 && placedSorted(0)._1 == startPosition) true else false
-
-  lazy val formedWords = buildWords
-  lazy val startPosition = Pos.posAt(8, 8).get
-  lazy val sevenLetterBonus: Boolean = amountPlaced == 7
-  val board = game.board
-  lazy val placedMap = placed.toMap
-  lazy val placedSorted = placed.sortBy { case (pos: Pos, let: Letter) => (pos.x, pos.y) }
-  lazy val first = placedSorted(0)
-
-  lazy val amountPlaced = placedSorted.size
+  private lazy val amountPlaced = placedSorted.size
 
   private lazy val (startx, endx) = (placedSorted(0)._1.x, placedSorted(amountPlaced - 1)._1.x)
   private lazy val (starty, endy) = (placedSorted(0)._1.y, placedSorted(amountPlaced - 1)._1.y)
   private lazy val (horizontal, vertical) = (starty == endy, startx == endx)
 
   // @TODO: Absolutely hurrendous looking. Need to tidy it up.
+  private def buildWords: Try[List[List[(Pos, Letter)]]] = {
 
-  /**
-   * Returns either a list of lists of (Pos, Letter) which are the words (with position info preserved) formed by the placement of the letters or an error
-   *   if the player has not placed the words linearly or the letters are not attached to at least one existing letter on the board
-   */
-  def buildWords: Try[List[List[(Pos, Letter)]]] = {
+    def afterEnd(pos: Pos) = (if ((pos.x, pos.y) == (endx, endy)) (if (horizontal) board.LettersRight(pos) else board.LettersAbove(pos)) else List.empty[(Pos, Letter)])
+
+    /** Returns words that are formed from the placement of a letter on a square on the board */
+    def allAdjacentTo(pos: Pos, let: Letter): List[(Pos, Letter)] = {
+      lazy val above = board.LettersAbove(pos)
+      lazy val below = board.LettersBelow(pos)
+      lazy val left = board.LettersLeft(pos)
+      lazy val right = board.LettersRight(pos)
+
+      if (horizontal) {
+        val list = if (!above.isEmpty || !below.isEmpty) {
+          above ::: pos -> let :: below
+        } else List()
+
+        list
+
+      } else {
+        val list = if (!left.isEmpty || !right.isEmpty) {
+          left ::: pos -> let :: right
+        } else List()
+
+        list
+      }
+
+    }
+
     if (!horizontal && !vertical) throw NotLinear() else {
 
       val startList: List[(Pos, Letter)] = (if (horizontal) board.LettersLeft(placedSorted(0)._1) else
         board.LettersBelow(placedSorted(0)._1)) :+ (first._1, first._2)
-
       val otherWords = allAdjacentTo(first._1, first._2)
-
       val startWith: List[List[(Pos, Letter)]] = if (otherWords.isEmpty) List(startList) else List(startList) :+ otherWords
 
       println("startList " + startList)
@@ -139,7 +159,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
           if (comesAfter) {
             // Add the letter to the first list
-            val newlist: List[(Pos, Letter)] = x ::: pos -> let :: (if ((pos.x, pos.y) == (endx, endy)) (if (horizontal) board.LettersRight(pos) else board.LettersAbove(pos)) else List.empty[(Pos, Letter)])
+            val newlist: List[(Pos, Letter)] = x ::: pos -> let :: afterEnd(pos)
             val updatedList = newlist :: xs
             val otherWords = allAdjacentTo(pos, let)
 
@@ -159,7 +179,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
                 Pos.posAt(pos.x, x).get -> sq.tile.get
             }
 
-            val newlist: List[(Pos, Letter)] = ((x ::: between)) ::: pos -> let :: (if ((pos.x, pos.y) == (endx, endy)) (if (horizontal) board.LettersRight(pos) else board.LettersAbove(pos)) else List.empty[(Pos, Letter)])
+            val newlist: List[(Pos, Letter)] = ((x ::: between)) ::: pos -> let :: afterEnd(pos)
             val updatedList = newlist :: xs
             val otherWords: List[(Pos, Letter)] = allAdjacentTo(pos, let)
 
@@ -170,30 +190,6 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
       if (game.moves >= 1 && lists._3.size <= 1) Right(NotAttachedToWord) else Left(lists._3)
 
       Success(lists._3)
-    }
-
-  }
-
-  /** Returns words that are formed from the placement of a letter on a square on the board */
-  def allAdjacentTo(pos: Pos, let: Letter): List[(Pos, Letter)] = {
-    lazy val above = board.LettersAbove(pos)
-    lazy val below = board.LettersBelow(pos)
-    lazy val left = board.LettersLeft(pos)
-    lazy val right = board.LettersRight(pos)
-
-    if (horizontal) {
-      val list = if (!above.isEmpty || !below.isEmpty) {
-        above ::: pos -> let :: below
-      } else List()
-
-      list
-
-    } else {
-      val list = if (!left.isEmpty || !right.isEmpty) {
-        left ::: pos -> let :: right
-      } else List()
-
-      list
     }
 
   }
@@ -222,7 +218,9 @@ object Main {
     val blanks = List()
 
     val move = Move((game.copy(board = testBoard)), placed, blanks)
-    println(move.formedWords)
+    val words = (move.formedWords)
+    
+    println(move.calculateScores(words.get))
   }
 }
 

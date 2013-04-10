@@ -7,7 +7,7 @@ import java.io.File
 case class Dictionary(dictionary: HashSet[String]) {
   
     /** Checks the dictionary for the validity of a word */
-	def isValidWord(word: String) : Boolean = dictionary.contains(word)
+	def isValidWord(word: String) : Boolean = dictionary.contains(word.toLowerCase())
 	
 	/** Returns a list of invalid words in the input list of words. Returns an empty list if there are none. */
 	def invalidWords(words: List[String]) : List[String] =  words.filter(x => !isValidWord(x))
