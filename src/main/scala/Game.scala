@@ -1,5 +1,4 @@
 package scrabble;
-
 case class Game private (
   players: List[Player],
   dictionary: Dictionary,
@@ -10,7 +9,9 @@ case class Game private (
 
   val currentPlayer = players(playersMove)
   
-  //@TODO: Turn the 'playersMove' into a stream, and possibly 'players' into a map of player number => Player
+  private val moveOrder = Stream.continually((1 to players.size).toStream).flatten
+  
+  val nextPlayer: Int = moveOrder.take(1).head
 
 }
 
