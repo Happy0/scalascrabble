@@ -4,7 +4,10 @@ import scala.util.{ Try, Success, Failure }
 
 case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char)]) {
 
-  //@TODO: Incorporate blanks. Think about how to record games. Tidy up buildWords function. Test it - properly.
+  //@TODO: Handle blanks properly throughout the project. Think about how to record games. Tidy up buildWords function. Test it - properly.
+
+  /** Processes the placed letters. Sorts them into order, and replaces the blanks with the player's choice of letters. */
+  private lazy val placedProcessed = withLabeledBlanks.sortBy { case (pos: Pos, let: Letter) => (pos.x, pos.y) }
 
   /** Returns the updated game if the move is a valid scrabble move, otherwise returns an InvalidMove with an explanation of why the move is invalid */
   def makeMove: Try[(Game, Score)] = {
@@ -39,7 +42,9 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
     def place(placed: List[(Pos, Letter)], remainingLetters: List[Letter], board: Board): Try[(Board, Player)] = {
       placed match {
         case y :: rest =>
-          val (upTo, after) = remainingLetters.span { let => let != y._2 }
+          /* Split the remaining player's letters up till it matches one of their placed letters. (Second condition half of boolean expression checks if it's a blank letter
+           * that has been labeled by the player.) */
+          val (upTo, after) = remainingLetters.span { let => let != y._2 || !(y._2.value == 0 && let.value == 0) }
 
           if (upTo.size == remainingLetters.size) throw (playerDoesNotHaveLettersClientError()) else {
             val newLetters: List[Letter] = upTo ::: after.drop(1)
@@ -51,7 +56,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
       }
 
     }
-    place(placed, playerLetters, board)
+    place(placedProcessed, playerLetters, board)
   }
 
   /**
@@ -98,18 +103,23 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
   }
 
+  /** Labels the player's placed blank letters with the letters they chose to assign to them. Returns the placed list with these letters assigned. */
+  private lazy val withLabeledBlanks: List[(Pos, Letter)] = blanks.foldLeft(placed) {
+    case (acc, (pos, char)) =>
+      acc.map { case (pos2, let) => if (let.letter == '_' && pos2 == pos) (pos2, Letter(char, 0)) else (pos2, let) }
+  }
+
   private lazy val alreadyOccupiedSquares = placed.find { case (pos: Pos, letter: Letter) => !(board.squareAt(pos).isEmpty) }
-  private lazy val obeysFirstMovePositionRule = if (game.moves > 0) true else if (game.moves == 0 && placedSorted(0)._1 == startPosition) true else false
+  private lazy val obeysFirstMovePositionRule = if (game.moves > 0) true else if (game.moves == 0 && placedProcessed(0)._1 == startPosition) true else false
   private lazy val startPosition = Pos.posAt(8, 8).get
   private lazy val sevenLetterBonus: Boolean = amountPlaced == 7
   private val board = game.board
-  private lazy val placedSorted = placed.sortBy { case (pos: Pos, let: Letter) => (pos.x, pos.y) }
-  private lazy val first = placedSorted(0)
+  private lazy val first = placedProcessed(0)
 
-  private lazy val amountPlaced = placedSorted.size
+  private lazy val amountPlaced = placedProcessed.size
 
-  private lazy val (startx, endx) = (placedSorted(0)._1.x, placedSorted(amountPlaced - 1)._1.x)
-  private lazy val (starty, endy) = (placedSorted(0)._1.y, placedSorted(amountPlaced - 1)._1.y)
+  private lazy val (startx, endx) = (placedProcessed(0)._1.x, placedProcessed(amountPlaced - 1)._1.x)
+  private lazy val (starty, endy) = (placedProcessed(0)._1.y, placedProcessed(amountPlaced - 1)._1.y)
   private lazy val (horizontal, vertical) = (starty == endy, startx == endx)
 
   // @TODO: Absolutely hurrendous looking. Need to tidy it up.
@@ -143,14 +153,14 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
 
     if (!horizontal && !vertical) throw NotLinear() else {
 
-      val startList: List[(Pos, Letter)] = (if (horizontal) board.LettersLeft(placedSorted(0)._1) else
-        board.LettersBelow(placedSorted(0)._1)) :+ (first._1, first._2)
+      val startList: List[(Pos, Letter)] = (if (horizontal) board.LettersLeft(placedProcessed(0)._1) else
+        board.LettersBelow(placedProcessed(0)._1)) :+ (first._1, first._2)
       val otherWords = allAdjacentTo(first._1, first._2)
       val startWith: List[List[(Pos, Letter)]] = if (otherWords.isEmpty) List(startList) else List(startList) :+ otherWords
 
       println("startList " + startList)
 
-      val lists: (Int, Int, List[List[(Pos, Letter)]]) = placedSorted.tail.foldLeft(startx, starty, startWith) {
+      val lists: (Int, Int, List[List[(Pos, Letter)]]) = placedProcessed.tail.foldLeft(startx, starty, startWith) {
         case ((lastx, lasty, (x :: xs)), (pos: Pos, let)) =>
           val isLinear = if (horizontal) pos.y == lasty else pos.x == lastx
           if (!isLinear) return throw (MisPlacedLetters(pos.x, pos.y))
@@ -219,7 +229,7 @@ object Main {
 
     val move = Move((game.copy(board = testBoard)), placed, blanks)
     val words = (move.formedWords)
-    
+
     println(move.calculateScores(words.get))
   }
 }
