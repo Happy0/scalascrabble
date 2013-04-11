@@ -23,7 +23,7 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
                 val newplayer = player.replaceLetters(player.letters ++ given).copy(score = player.score + score.overAllScore)
                 val nextPlayer = (game.playersMove + 1) % game.players.size // Check maths
                 val players = game.players.patch(game.playersMove, Seq(newplayer), 1)
-                Success(game.copy(players = players, board = board, playersMove = nextPlayer, bag = newbag, moves = game.moves + 1, score = game.score + score.overAllScore), score)
+                Success(game.copy(players = players, board = board, playersMove = nextPlayer, bag = newbag, moves = game.moves + 1), score)
             }
         }
       }
