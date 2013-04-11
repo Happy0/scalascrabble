@@ -26,18 +26,9 @@ case class Board(
     if (nextTo.isEmpty || squareAt(nextTo.get).isEmpty) gathered
     else nextTo.get -> squareAt(nextTo.get).tile.get :: findAdjacentLetters(nextTo.get, direction, gathered)
   }
-  
-  def placeLetter (pos: Pos, let: Letter) : Board = copy(squares = squares + (pos -> squareAt(pos).setLetter(let)))
 
-  def placeLetters(letters: List[(Pos, Letter)]) : Board = {
-    val placedsquares = letters.map{case (pos, letter) => 
-      val square = squareAt(pos)
-      val newSquare = square.setLetter(letter)
-      pos -> newSquare
-    }
-    copy(squares = squares ++ placedsquares)
-  }
-  
+  def placeLetter(pos: Pos, let: Letter): Board = copy(squares = squares.updated(pos, squareAt(pos).setLetter(let)))
+
 }
 
 object Board {
