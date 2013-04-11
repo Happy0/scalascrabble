@@ -4,7 +4,7 @@ import scala.util.{ Try, Success, Failure }
 
 case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char)]) {
 
-  //@TODO: Handle blanks properly throughout the project. Think about how to record games. Tidy up buildWords function. Test it - properly.
+  //@TODO:Think about how to record games. Tidy up buildWords function. Test it - properly.
 
   /** Processes the placed letters. Sorts them into order, and replaces the blanks with the player's choice of letters. */
   private lazy val placedProcessed = withLabeledBlanks.sortBy { case (pos: Pos, let: Letter) => (pos.x, pos.y) }
@@ -23,9 +23,9 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
               case (board, player) =>
                 // give the player letters
                 val (given, newbag) = game.bag.remove(amountPlaced)
-                val newplayer = player.replaceLetters(player.letters ++ given).copy(score = player.score + score.overAllScore)
+                val newplayer = player.copy(letters = player.letters ++ given, score = player.score + score.overAllScore)
                 val nextPlayer = game.nextPlayer
-                val players = game.players.patch(game.playersMove, Seq(newplayer), 1)
+                val players = game.players.updated(game.playersMove, newplayer)
                 Success(game.copy(players = players, board = board, playersMove = nextPlayer, bag = newbag, moves = game.moves + 1), score)
             }
         }

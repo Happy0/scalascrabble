@@ -1,6 +1,6 @@
 package scrabble;
 case class Game private (
-  players: List[Player],
+  players: Map[Int,Player],
   dictionary: Dictionary,
   board: Board,
   playersMove: Int, // Index into the list of players
@@ -24,17 +24,17 @@ object Game {
   def make(playerNames: List[String], dictionary: Dictionary, letterbag: LetterBag): Option[Game] = {
     if (!(2 to 4 contains playerNames.size)) None else {
       // Distribute letters from the bag to the players
-      val (players: List[Player], remainingBag: LetterBag) =
+      val (players: List[(Int,Player)], remainingBag: LetterBag, player_no: Int) =
 
-        playerNames.foldLeft((List.empty[Player], letterbag)) {
-          case ((playerList, thebag), name) =>
+        playerNames.foldLeft((List.empty[(Int,Player)], letterbag, 0)) {
+          case ((playerList, thebag, player_no), name) =>
             val (letters: List[Letter], bag) = thebag.remove(7)
             val player = Player(letters, name, 0)
 
-            ((player :: playerList), bag)
+            ((player_no -> player) :: playerList, bag, player_no + 1)
         }
 
-      Some(Game(players, dictionary, Board.init, 0, remainingBag, 0))
+      Some(Game(players.toMap, dictionary, Board.init, 0, remainingBag, 0))
     }
 
   }
