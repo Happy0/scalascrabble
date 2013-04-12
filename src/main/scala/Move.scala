@@ -2,7 +2,13 @@ package scrabble
 
 import scala.util.{ Try, Success, Failure }
 
-case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char)]) {
+abstract class Move(game: Game) {
+    
+  def makeMove: Try[Game]
+
+}
+
+case class PlaceLettersMove(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char)]) extends Move(game) {
 
   //@TODO:Think about how to record games. Tidy up buildWords function. Test it - properly.
 
@@ -10,23 +16,21 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
   private lazy val placedProcessed = withLabeledBlanks.sortBy { case (pos: Pos, let: Letter) => (pos.x, pos.y) }
 
   /** Returns the updated game if the move is a valid scrabble move, otherwise returns an InvalidMove with an explanation of why the move is invalid */
-  def makeMove: Try[(Game, Score)] = {
+  def makeMove: Try[(Game)] = {
 
     if (!obeysFirstMovePositionRule) throw (FirstMovePositionWrong()) else {
       if (!alreadyOccupiedSquares.isEmpty) throw (SquareOccupiedClientError()) else {
-        val score = formedWords.flatMap(suc => calculateScores(suc))
 
         score.flatMap {
           scr =>
-            val score = scr
             placeLetters.flatMap {
               case (board, player) =>
                 // give the player letters
                 val (given, newbag) = game.bag.remove(amountPlaced)
-                val newplayer = player.copy(letters = player.letters ++ given, score = player.score + score.overAllScore)
+                val newplayer = player.copy(letters = player.letters ++ given, score = player.score + scr.overAllScore)
                 val nextPlayer = game.nextPlayer
                 val players = game.players.updated(game.playersMove, newplayer)
-                Success(game.copy(players = players, board = board, playersMove = nextPlayer, bag = newbag, moves = game.moves + 1), score)
+                Success(game.copy(players = players, board = board, playersMove = nextPlayer, bag = newbag, moves = game.moves + 1))
             }
         }
       }
@@ -66,41 +70,46 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
   lazy val formedWords: Try[List[List[(Pos, Letter)]]] = buildWords
 
   /** Returns an overall score, and a score for each word. Returns a list of words that are not in the dictionary (empty if none) */
-  def calculateScores(lists: List[List[(Pos, Letter)]]): Try[Score] = {
+  lazy val score: Try[Score] = {
     def toWord(list: List[(Pos, Letter)]): String = list.map { case (pos, letter) => letter.letter }.mkString
+    
+    formedWords.flatMap {
+      lists =>
+        val (score, lsts, badwords) = lists.foldLeft((0, List.empty[(String, Int)], List.empty[String])) {
+          case ((acc, lsts, badwords), (xs)) =>
+            val word = toWord(xs)
+            val bdwords = if (!game.dictionary.isValidWord(word)) word :: badwords else badwords
+            val squares = xs.map { case (pos, let) => pos -> board.squareAt(pos).setLetter(let) }
 
-    val (score, lsts, badwords) = lists.foldLeft((0, List.empty[(String, Int)], List.empty[String])) {
-      case ((acc, lsts, badwords), (xs)) =>
-        val word = toWord(xs)
-        val bdwords = if (!game.dictionary.isValidWord(word)) word :: badwords else badwords
-        val squares = xs.map { case (pos, let) => pos -> board.squareAt(pos).setLetter(let) }
+            // Sort to put the word bonus squares last
+            val score = squares.sortWith { case ((pos, sq), (pos2, sq2)) => sq < sq2 }.foldLeft(0) {
+              case (scr, (pos, sq)) =>
+                val square = board.squareAt(pos)
 
-        // Sort to put the word bonus squares last
-        val score = squares.sortWith { case ((pos, sq), (pos2, sq2)) => sq < sq2 }.foldLeft(0) {
-          case (scr, (pos, sq)) =>
-            val square = board.squareAt(pos)
+                // If the bonus has already been used, ignore the bonus square
+                if (!board.squareAt(pos).isEmpty) scr + square.tile.get.value else {
 
-            // If the bonus has already been used, ignore the bonus square
-            if (!board.squareAt(pos).isEmpty) scr + square.tile.get.value else {
+                  sq match {
+                    case (NormalSquare(x)) => scr + sq.tile.get.value
+                    case (DoubleLetterSquare(x)) => scr + (sq.tile.get.value * 2)
+                    case (TripleLetterSquare(x)) => scr + (sq.tile.get.value * 3)
+                    case (DoubleWordSquare(x)) => (scr + sq.tile.get.value) * 2
+                    case (TripleWordSquare(x)) => (scr + sq.tile.get.value) * 3
+                  }
+                }
 
-              sq match {
-                case (NormalSquare(x)) => scr + sq.tile.get.value
-                case (DoubleLetterSquare(x)) => scr + (sq.tile.get.value * 2)
-                case (TripleLetterSquare(x)) => scr + (sq.tile.get.value * 3)
-                case (DoubleWordSquare(x)) => (scr + sq.tile.get.value) * 2
-                case (TripleWordSquare(x)) => (scr + sq.tile.get.value) * 3
-              }
             }
 
-        }
+            (acc + score, lsts :+ (word, score), bdwords)
 
-        (acc + score, lsts :+ (word, score), bdwords)
+        }
+        val the_score: Score = if (sevenLetterBonus) Score(score + 50, lsts) else Score(score, lsts)
+
+        if (badwords.isEmpty) Success(the_score) else throw WordsNotInDictionary(badwords, the_score)
 
     }
-    val the_score: Score = if (sevenLetterBonus) Score(score + 50, lsts) else Score(score, lsts)
 
-    if (badwords.isEmpty) Success(the_score) else throw WordsNotInDictionary(badwords, the_score)
-
+    
   }
 
   /** Labels the player's placed blank letters with the letters they chose to assign to them. Returns the placed list with these letters assigned. */
@@ -197,13 +206,21 @@ case class Move(game: Game, placed: List[(Pos, Letter)], blanks: List[(Pos, Char
           }
 
       }
-      if (game.moves >= 1 && lists._3.size <= 1) Right(NotAttachedToWord) else Left(lists._3)
+      
+      if (lists._3.size <= 1) throw NotAttachedToWord() else Success(lists._3)
 
       Success(lists._3)
     }
-
   }
 
+}
+
+case class PassMove(game: Game) extends Move(game) {
+  def makeMove: Try[Game] = ???
+}
+
+case class ExchangeMove(game: Game, exchangeLetters: List[Letter]) extends Move(game) {
+   def makeMove: Try[Game] = ???
 }
 
 object Main {
@@ -227,10 +244,10 @@ object Main {
 
     val blanks = List()
 
-    val move = Move((game.copy(board = testBoard)), placed, blanks)
+    val move = PlaceLettersMove((game.copy(board = testBoard)), placed, blanks)
     val words = (move.formedWords)
 
-    println(move.calculateScores(words.get))
+    println(move.score)
   }
 }
 
