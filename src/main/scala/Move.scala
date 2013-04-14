@@ -54,7 +54,7 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)], blanks: List[
 
           if (upTo.size == remainingLetters.size) throw (playerDoesNotHaveLettersClientError()) else {
             val newLetters: List[Tile] = upTo ::: after.drop(1)
-            place(rest, newLetters, board.placeLetter(y._1, after.head))
+            place(rest, newLetters, board.placeLetter(y._1, y._2))
           }
         case Nil => Success(board, currentPlayer.replaceLetters(remainingLetters))
       }
@@ -73,7 +73,7 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)], blanks: List[
   lazy val score: Try[Score] = {
     def toWord(list: List[(Pos, Tile)]): String = list.map { case (pos, letter) => letter.letter }.mkString
 
-    formedWords.flatMap {
+    formedWords.map {
       lists =>
         val (score, lsts, badwords) = lists.foldLeft((0, List.empty[(String, Int)], List.empty[String])) {
           case ((acc, lsts, badwords), (xs)) =>
@@ -105,7 +105,7 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)], blanks: List[
         }
         val the_score: Score = if (sevenLetterBonus) Score(score + 50, lsts) else Score(score, lsts)
 
-        if (badwords.isEmpty) Success(the_score) else throw WordsNotInDictionary(badwords, the_score)
+        if (badwords.isEmpty) the_score else throw WordsNotInDictionary(badwords, the_score)
 
     }
 
@@ -233,7 +233,7 @@ object Main {
 
     val placed = List(
       Pos.posAt(1, 1).get -> Letter('L', 1),
-      Pos.posAt(1, 2).get -> Letter('A', 1))
+      Pos.posAt(1, 2).get -> Letter('G', 1))
     // Pos.posAt(1, 5).get -> Tile('D', 1))
 
     val blanks = List()
