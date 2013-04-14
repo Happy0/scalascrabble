@@ -15,19 +15,19 @@ case class Board(
 
   def squareAt(pos: Pos): Square = squares.get(pos).get
 
-  def LettersAbove(pos: Pos): List[(Pos, Letter)] = findAdjacentLetters(pos, pos => pos.up, List())
-  def LettersBelow(pos: Pos): List[(Pos, Letter)] = findAdjacentLetters(pos, pos => pos.down, List())
-  def LettersLeft(pos: Pos): List[(Pos, Letter)] = findAdjacentLetters(pos, pos => pos.left, List())
-  def LettersRight(pos: Pos): List[(Pos, Letter)] = findAdjacentLetters(pos, pos => pos.right, List())
+  def LettersAbove(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.up, List())
+  def LettersBelow(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.down, List())
+  def LettersLeft(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.left, List())
+  def LettersRight(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.right, List())
 
-  private def findAdjacentLetters(pos: Pos, direction: Pos => Option[Pos], gathered: List[(Pos, Letter)]): List[(Pos, Letter)] = {
+  private def findAdjacentLetters(pos: Pos, direction: Pos => Option[Pos], gathered: List[(Pos, Tile)]): List[(Pos, Tile)] = {
     val nextTo: Option[Pos] = direction(pos)
 
     if (nextTo.isEmpty || squareAt(nextTo.get).isEmpty) gathered
     else nextTo.get -> squareAt(nextTo.get).tile.get :: findAdjacentLetters(nextTo.get, direction, gathered)
   }
 
-  def placeLetter(pos: Pos, let: Letter): Board = copy(squares = squares.updated(pos, squareAt(pos).setLetter(let)))
+  def placeLetter(pos: Pos, let: Tile): Board = copy(squares = squares.updated(pos, squareAt(pos).setLetter(let)))
 
 }
 

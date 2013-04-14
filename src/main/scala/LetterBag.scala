@@ -3,7 +3,7 @@ package scrabble
 //@TODO: Think about how to generalise this to other languages. Perhaps using configuration files...
 
 /** tiles: The current tiles in the bag */
-case class LetterBag(letters: List[Letter], size: Int, tileSet: Map[Char, Letter]) {
+case class LetterBag(letters: List[Tile], size: Int, tileSet: Map[Char, Letter]) {
 
   override def toString = letters.toString
 
@@ -11,7 +11,7 @@ case class LetterBag(letters: List[Letter], size: Int, tileSet: Map[Char, Letter
    * Remove @num letters from the letter bag. Returns a list of removed letters (if available)
    *  and the resulting letter bag
    */
-  def remove(num: Int): (List[Letter], LetterBag) = {
+  def remove(num: Int): (List[Tile], LetterBag) = {
     val split = letters.splitAt(num - 1)
     val removedLetters = split._1
     val newSize = if (size - num <= 0) 0 else size - num;
@@ -21,7 +21,7 @@ case class LetterBag(letters: List[Letter], size: Int, tileSet: Map[Char, Letter
   }
 
   /** Exchange @exchanged letters for the same number of letters from the bag. Returns the new bag after shuffling its contents. */
-  def exchange(exchanged: List[Letter]): (List[Letter], LetterBag) =
+  def exchange(exchanged: List[Tile]): (List[Tile], LetterBag) =
     {
       val (given, bag) = remove(exchanged.size)
       val newLetters = util.Random.shuffle(bag.letters ::: exchanged)
@@ -50,9 +50,9 @@ object LetterBag {
     val all: List[(Char, Int, Int)] = blankPoints ::: onePoints ::: twoPoints ::: threePoints ::: fourPoints ::: fivePoints ::: eightPoints ::: tenPoints
 
     // Yield a list of all the letters in the bag, using the distribution to yield the right number of letters
-    val letters = all.foldLeft(List.empty[Letter]) {
+    val letters = all.foldLeft(List.empty[Tile]) {
       case (list, (chr: Char, vl: Int, dst: Int)) =>
-        list ::: List.fill(dst)(Letter(chr, vl))
+        list ::: List.fill(dst)(if (chr == '_') BlankLetter(chr) else Letter(chr, vl))
     }
     
     val tileSet: Map[Char,Letter] = all.map{case (chr, vl, dst) => chr -> Letter(chr,vl)} toMap

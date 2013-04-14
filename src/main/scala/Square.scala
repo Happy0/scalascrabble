@@ -5,14 +5,14 @@ package scrabble;
  *  right order. Might remove the ordered trait later as it's probably not required
  */
 abstract class Square() extends Ordered[Square] {
-  val tile: Option[Letter]
+  val tile: Option[Tile]
   val bonusString: String
 
   def compare(other: Square) = if (other.isInstanceOf[DoubleWordSquare] || other.isInstanceOf[TripleWordSquare]) -1 else 0
 
   def isEmpty = tile.isEmpty
 
-  def setLetter(letter: Letter): Square
+  def setLetter(letter: Tile): Square
 
   override def toString = tile match {
     case Some(x) => x.toString()
@@ -21,35 +21,35 @@ abstract class Square() extends Ordered[Square] {
 
 }
 
-case class NormalSquare(tile: Option[Letter]) extends Square {
+case class NormalSquare(tile: Option[Tile]) extends Square {
   val bonusString = "N"
 
-  def setLetter(letter: Letter) = NormalSquare(Some(letter))
+  def setLetter(letter: Tile) = NormalSquare(Some(letter))
 
 }
 
-case class DoubleLetterSquare(tile: Option[Letter]) extends Square {
+case class DoubleLetterSquare(tile: Option[Tile]) extends Square {
   val bonusString = "DL"
 
-  def setLetter(letter: Letter) = DoubleLetterSquare(Some(letter))
+  def setLetter(letter: Tile) = DoubleLetterSquare(Some(letter))
 
 }
-case class TripleLetterSquare(tile: Option[Letter]) extends Square {
+case class TripleLetterSquare(tile: Option[Tile]) extends Square {
   val bonusString = "TL"
 
-  def setLetter(letter: Letter) = TripleLetterSquare(Some(letter))
+  def setLetter(letter: Tile) = TripleLetterSquare(Some(letter))
 }
 
-case class DoubleWordSquare(tile: Option[Letter]) extends Square {
+case class DoubleWordSquare(tile: Option[Tile]) extends Square {
   val bonusString = "DW"
 
-  def setLetter(letter: Letter) = DoubleWordSquare(Some(letter))
+  def setLetter(letter: Tile) = DoubleWordSquare(Some(letter))
 
 }
 
-case class TripleWordSquare(override val tile: Option[Letter] = None) extends Square {
+case class TripleWordSquare(override val tile: Option[Tile] = None) extends Square {
   val bonusString = "TW"
 
-  def setLetter(letter: Letter) = TripleWordSquare(Some(letter))
+  def setLetter(letter: Tile) = TripleWordSquare(Some(letter))
 
 }
