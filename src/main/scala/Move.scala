@@ -8,12 +8,12 @@ abstract class Move(game: Game) {
 
 }
 
-case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)], blanks: List[(Pos, Char)]) extends Move(game) {
+case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(game) {
 
   //@TODO:Think about how to record games. Tidy up buildWords function. Test it - properly.
 
-  /** Processes the placed letters. Sorts them into order, and replaces the blanks with the player's choice of letters. */
-  private lazy val placedProcessed = withLabeledBlanks.sortBy { case (pos: Pos, let: Tile) => (pos.x, pos.y) }
+  /** Processes the placed letters. Sorts them into positional order. */
+  private lazy val placedProcessed = placed.sortBy { case (pos: Pos, let: Tile) => (pos.x, pos.y) }
 
   /**
    * Returns the updated game if the move is a valid scrabble move, otherwise returns an InvalidMove
@@ -110,16 +110,6 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)], blanks: List[
     }
 
   }
-
-  /**
-   * Labels the player's placed blank letters with the letters they chose to assign to them.
-   *  Returns the placed list with these letters assigned.
-   */
-  private lazy val withLabeledBlanks: List[(Pos, Tile)] = blanks.foldLeft(placed) {
-    case (acc, (pos, char)) =>
-      acc.map { case (pos2, let) => if (let.letter == '_' && pos2 == pos) (pos2, BlankLetter(char)) else (pos2, let) }
-  }
-
   private lazy val alreadyOccupiedSquares = placed.find { case (pos: Pos, letter: Tile) => !(board.squareAt(pos).isEmpty) }
   private lazy val obeysFirstMovePositionRule = if (game.moves > 0) true else if (game.moves == 0 && placedProcessed(0)._1 == startPosition) true else false
   private lazy val startPosition = Pos.posAt(8, 8).get
@@ -238,7 +228,7 @@ object Main {
 
     val blanks = List()
 
-    val move = PlaceLettersMove((game.copy(board = testBoard)), placed, blanks)
+    val move = PlaceLettersMove((game.copy(board = testBoard)), placed)
     val words = (move.formedWords)
 
     println(move.score)

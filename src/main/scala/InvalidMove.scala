@@ -1,6 +1,6 @@
 package scrabble
 
-abstract class InvalidMove(errorCode: Int) extends Exception {
+abstract class InvalidMove(errorCode: Int) extends Throwable {
 
   def defaultMessage: String
 }

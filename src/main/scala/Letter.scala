@@ -8,7 +8,7 @@ abstract class Tile() {
 case class Letter(letter: Char, value: Int) extends Tile {
   override def equals(that: Any) = {
     that match {
-      case (Letter(chr, vl)) => (chr == letter)
+      case (Letter(chr, vl)) => (chr == letter) && (value == value)
       case _ => false
     }
   }
