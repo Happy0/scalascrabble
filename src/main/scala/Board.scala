@@ -86,11 +86,8 @@ object Board {
 
       val board = all.foldLeft(Map.empty[Pos, Square]) {
         case (map, (x, y)) =>
-          val special = bonusSquares.get(x, y)
-          val square: Square = special match {
-            case None => NormalSquare(None)
-            case Some(x) => x
-          }
+          val special = bonusSquares.get(x, y)         
+          val square: Square = special.fold[Square](NormalSquare(None))(special => special)
           val entry = Pos.posAt(x, y).get -> square
 
           map + entry

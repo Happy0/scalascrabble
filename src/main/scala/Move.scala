@@ -31,7 +31,7 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
                 // give the player letters
                 val (given, newbag) = game.bag.remove(amountPlaced)
                 val newplayer = player.copy(letters = player.letters ++ given, score = player.score + scr.overAllScore)
-                val nextPlayer = game.nextPlayer
+                val nextPlayer = game.nextPlayerNo
                 val players = game.players.updated(game.playersMove, newplayer)
                 game.copy(players = players, board = board, playersMove = nextPlayer, bag = newbag, moves = game.moves + 1)
             }

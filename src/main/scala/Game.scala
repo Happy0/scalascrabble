@@ -8,11 +8,7 @@ case class Game private (
   moves: Int) {
 
   val currentPlayer = players(playersMove)
-  
-  private val moveOrder = Stream.continually((1 to players.size).toStream).flatten
-  
-  val nextPlayer: Int = moveOrder.take(1).head
-
+  val nextPlayerNo: Int = (playersMove + 1) % (players.size)
 }
 
 object Game {
