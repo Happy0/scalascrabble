@@ -15,10 +15,10 @@ case class Board(
 
   def squareAt(pos: Pos): Square = squares.get(pos).get
 
-  def LettersAbove(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.up, List())
-  def LettersBelow(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.down, List())
-  def LettersLeft(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.left, List())
-  def LettersRight(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.right, List())
+  def LettersAbove(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.up, Nil)
+  def LettersBelow(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.down, Nil)
+  def LettersLeft(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.left, Nil)
+  def LettersRight(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.right, Nil)
 
   private def findAdjacentLetters(pos: Pos, direction: Pos => Option[Pos], gathered: List[(Pos, Tile)]): List[(Pos, Tile)] = {
     val nextTo: Option[Pos] = direction(pos)
@@ -87,7 +87,7 @@ object Board {
       val board = all.foldLeft(Map.empty[Pos, Square]) {
         case (map, (x, y)) =>
           val special = bonusSquares.get(x, y)         
-          val square: Square = special.fold[Square](NormalSquare(None))(special => special)
+          val square: Square = special getOrElse NormalSquare(None)
           val entry = Pos.posAt(x, y).get -> square
 
           map + entry

@@ -21,8 +21,8 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
    */
   def makeMove: Try[(Game)] = {
 
-    if (!obeysFirstMovePositionRule) throw (FirstMovePositionWrong()) else {
-      if (!alreadyOccupiedSquares.isEmpty) throw (SquareOccupiedClientError()) else {
+    if (!obeysFirstMovePositionRule) Failure (FirstMovePositionWrong()) else {
+      if (!alreadyOccupiedSquares.isEmpty) Failure (SquareOccupiedClientError()) else {
 
         score.flatMap {
           scr =>
@@ -52,7 +52,7 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
           /* Split the remaining player's letters up till it matches one of their placed letters. */
           val (upTo, after) = remainingLetters.span { let => let != y._2 }
 
-          if (upTo.size == remainingLetters.size) throw (playerDoesNotHaveLettersClientError()) else {
+          if (upTo.size == remainingLetters.size) Failure (playerDoesNotHaveLettersClientError()) else {
             val newLetters: List[Tile] = upTo ::: after.drop(1)
             place(rest, newLetters, board.placeLetter(y._1, y._2))
           }
@@ -73,7 +73,7 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
   lazy val score: Try[Score] = {
     def toWord(list: List[(Pos, Tile)]): String = list.map { case (pos, letter) => letter.letter }.mkString
 
-    formedWords.map {
+    formedWords.flatMap {
       lists =>
         val (score, lsts, badwords) = lists.foldLeft((0, List.empty[(String, Int)], List.empty[String])) {
           case ((acc, lsts, badwords), (xs)) =>
@@ -105,7 +105,7 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
         }
         val the_score: Score = if (sevenLetterBonus) Score(score + 50, lsts) else Score(score, lsts)
 
-        if (badwords.isEmpty) the_score else throw WordsNotInDictionary(badwords, the_score)
+        if (badwords.isEmpty) Success(the_score) else Failure(WordsNotInDictionary(badwords, the_score))
 
     }
 
@@ -138,15 +138,15 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
       if (horizontal) {
         if (!above.isEmpty || !below.isEmpty) {
           above ::: pos -> let :: below
-        } else List()
+        } else Nil
       } else {
         if (!left.isEmpty || !right.isEmpty) {
           left ::: pos -> let :: right
-        } else List()
+        } else Nil
       }
     }
 
-    if (!horizontal && !vertical) throw NotLinear() else {
+    if (!horizontal && !vertical) Failure (NotLinear()) else {
 
       val startList: List[(Pos, Tile)] = (if (horizontal) board.LettersLeft(placedProcessed(0)._1) else
         board.LettersBelow(placedProcessed(0)._1)) :+ (first._1, first._2)
@@ -158,7 +158,7 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
       val lists: (Int, Int, List[List[(Pos, Tile)]]) = placedProcessed.tail.foldLeft(startx, starty, startWith) {
         case ((lastx, lasty, (x :: xs)), (pos: Pos, let)) =>
           val isLinear = if (horizontal) pos.y == lasty else pos.x == lastx
-          if (!isLinear) return throw (MisPlacedLetters(pos.x, pos.y))
+          if (!isLinear) Failure (MisPlacedLetters(pos.x, pos.y))
 
           val comesAfter = if (horizontal) pos.x == lastx + 1 else pos.y == lasty + 1
 
@@ -179,7 +179,7 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
               println("Pos is " + pos)
               x =>
                 val position = if (horizontal) Pos.posAt(x, pos.y) else Pos.posAt(pos.x, x)
-                if (board.squareAt(position.get).isEmpty) return throw (MisPlacedLetters(pos.x, pos.y))
+                if (board.squareAt(position.get).isEmpty) Failure (MisPlacedLetters(pos.x, pos.y))
                 val sq = board.squareAt(position.get)
                 Pos.posAt(pos.x, x).get -> sq.tile.get
             }
@@ -193,7 +193,7 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
 
       }
 
-      if (lists._3.size <= 1 && game.moves >= 1) throw NotAttachedToWord() else Success(lists._3)
+      if (lists._3.size <= 1 && game.moves >= 1) Failure( NotAttachedToWord()) else Success(lists._3)
     }
   }
 
@@ -226,7 +226,7 @@ object Main {
       Pos.posAt(1, 2).get -> Letter('G', 1))
     // Pos.posAt(1, 5).get -> Tile('D', 1))
 
-    val blanks = List()
+    val blanks = Nil
 
     val move = PlaceLettersMove((game.copy(board = testBoard)), placed)
     val words = (move.formedWords)

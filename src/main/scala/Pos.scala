@@ -10,7 +10,6 @@ sealed case class Pos private (x: Int, y: Int, gridCordinates: String) {
   lazy val left: Option[Pos] = posAt(x - 1, y)
   lazy val right: Option[Pos] = posAt(x + 1, y)
 
-
   //override def toString = gridCordinates
 
 }
@@ -25,7 +24,7 @@ object Pos {
   // All the positions in the 15 x 15 board
   val all: List[(Int, Int)] = for { i <- List.range(1, 16); j <- List.range(1, 16) } yield i -> j
 
-  lazy val allPositions: Map[(Int, Int), Pos] =
+  val allPositions: Map[(Int, Int), Pos] =
     {
       // Letters mapped to columns, for displaying the move log
       val gridCoords = (List.range(1, 16) zip List.range('A', 'P')).toMap
