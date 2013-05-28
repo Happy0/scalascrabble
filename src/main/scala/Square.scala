@@ -19,24 +19,24 @@ abstract class Square() extends Ordered[Square] {
 
 case class NormalSquare(tile: Option[Tile]) extends Square {
   val bonusString = "N"
-  def setLetter(letter: Tile) = NormalSquare(Some(letter))
+  def setLetter(letter: Tile) = copy(tile = Some(letter))
 }
 
 case class DoubleLetterSquare(tile: Option[Tile]) extends Square {
   val bonusString = "DL"
-  def setLetter(letter: Tile) = DoubleLetterSquare(Some(letter))
+  def setLetter(letter: Tile) = copy(tile = Some(letter))
 }
 case class TripleLetterSquare(tile: Option[Tile]) extends Square {
   val bonusString = "TL"
-  def setLetter(letter: Tile) = TripleLetterSquare(Some(letter))
+  def setLetter(letter: Tile) = copy(tile = Some(letter))
 }
 
 case class DoubleWordSquare(tile: Option[Tile]) extends Square {
   val bonusString = "DW"
-  def setLetter(letter: Tile) = DoubleWordSquare(Some(letter))
+  def setLetter(letter: Tile) = copy(tile = Some(letter))
 }
 
-case class TripleWordSquare(override val tile: Option[Tile] = None) extends Square {
+case class TripleWordSquare(tile: Option[Tile] = None) extends Square {
   val bonusString = "TW"
-  def setLetter(letter: Tile) = TripleWordSquare(Some(letter))
+  def setLetter(letter: Tile) = copy(tile = Some(letter))
 }
