@@ -20,7 +20,7 @@ class BoardTest extends ScrabbleTest {
 
     "place 1 tile in" in {
       board.placeLetter(Pos.posAt(3, 3).get, Letter('a', 1)
-          ).squares.toIterable must contain( (tup: (Pos, Square)) => tup._2.tile mustNotEqual None ).exactlyOnce 
+          ).squares.toTraversable must contain( (tup: (Pos, Square)) => tup._2.tile mustNotEqual None ).exactlyOnce
           
     }
 
