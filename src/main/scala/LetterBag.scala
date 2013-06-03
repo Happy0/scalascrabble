@@ -12,7 +12,7 @@ case class LetterBag(letters: List[Tile], size: Int, tileSet: Map[Char, Letter])
    *  and the resulting letter bag
    */
   def remove(num: Int): (List[Tile], LetterBag) = {
-    val split = letters.splitAt(num - 1)
+    val split = letters.splitAt(num)
     val removedLetters = split._1
     val newSize = if (size - num <= 0) 0 else size - num;
     val newBag = copy(letters = split._2, size = newSize)
@@ -21,14 +21,17 @@ case class LetterBag(letters: List[Tile], size: Int, tileSet: Map[Char, Letter])
   }
 
   /** Exchange @exchanged letters for the same number of letters from the bag. Returns the new bag after shuffling its contents. */
-  def exchange(exchanged: List[Tile]): (List[Tile], LetterBag) =
-    {
+  def exchange(exchanged: List[Tile]): Option[(List[Tile], LetterBag)] = {
+    if (exchanged.size > size) None else {
+
       val (given, bag) = remove(exchanged.size)
-      val newLetters = util.Random.shuffle(bag.letters ::: exchanged)
-      (given, copy( letters =  newLetters))
+      val newLetters = util.Random.shuffle(exchanged ::: bag.letters)
+      Some((given, copy(letters = newLetters)))
     }
-  
-  def letterFor(letter: Char) : Option[Letter] = tileSet get letter 
+
+  }
+
+  def letterFor(letter: Char): Option[Letter] = tileSet get letter
 
 }
 
@@ -45,7 +48,7 @@ object LetterBag {
     val fourPoints = List('F', 'H', 'V', 'W', 'Y').map(ch => (ch, 4, 2))
     val fivePoints = List('K').map(ch => (ch, 5, 1))
     val eightPoints = List('J', 'X').map(ch => (ch, 8, 1))
-    val tenPoints = List('Q', 'Z').map(ch => (ch, 10, 10))
+    val tenPoints = List('Q', 'Z').map(ch => (ch, 10, 1))
 
     val all: List[(Char, Int, Int)] = blankPoints ::: onePoints ::: twoPoints ::: threePoints ::: fourPoints ::: fivePoints ::: eightPoints ::: tenPoints
 
@@ -54,8 +57,8 @@ object LetterBag {
       case (list, (chr: Char, vl: Int, dst: Int)) =>
         list ::: List.fill(dst)(if (chr == '_') BlankLetter(chr) else Letter(chr, vl))
     }
-    
-    val tileSet: Map[Char,Letter] = all.map{case (chr, vl, dst) => chr -> Letter(chr,vl)} toMap
+
+    val tileSet: Map[Char, Letter] = all.map { case (chr, vl, dst) => chr -> Letter(chr, vl) } toMap
 
     // Construct with a randomised list
     LetterBag(util.Random.shuffle(letters), letters.size, tileSet)

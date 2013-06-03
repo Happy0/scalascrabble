@@ -125,8 +125,8 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
 
   // @TODO: Absolutely hurrendous looking. Need to tidy it up.
   private def buildWords: Try[List[List[(Pos, Tile)]]] = {
-    
-    def isLastPlaced(pos: Pos): Boolean = pos.x == endx && pos.y == endy 
+
+    def isLastPlaced(pos: Pos): Boolean = pos.x == endx && pos.y == endy
 
     def afterEnd(pos: Pos) = (if ((pos.x, pos.y) == (endx, endy)) (if (horizontal) board.LettersRight(pos) else board.LettersAbove(pos)) else List.empty[(Pos, Tile)])
 
@@ -216,19 +216,23 @@ object Main {
     val board = Board.init
 
     val newBrd = board.squares ++ List(
-      Pos.posAt(1, 3).get -> NormalSquare(Some(Letter('S', 1))),
-      Pos.posAt(1, 4).get -> NormalSquare(Some(Letter('T', 1))),
-      Pos.posAt(1, 5).get -> NormalSquare(Some(Letter('E', 1))),
-      Pos.posAt(1, 6).get -> NormalSquare(Some(Letter('D', 1))))
+      Pos.posAt(1, 3).get -> NormalSquare(Some(Letter('L', 1))),
+      Pos.posAt(2, 3).get -> NormalSquare(Some(Letter('A', 1))),
+      Pos.posAt(3, 3).get -> NormalSquare(Some(Letter('S', 1))),
+      Pos.posAt(4, 3).get -> NormalSquare(Some(Letter('T', 1))),
+      Pos.posAt(5, 3).get -> NormalSquare(Some(Letter('E', 1))),
+      Pos.posAt(6, 3).get -> NormalSquare(Some(Letter('D', 1))))
 
     val testBoard = Board(newBrd)
 
     println(testBoard)
 
     val placed = List(
-      Pos.posAt(1, 1).get -> Letter('L', 1),
-      Pos.posAt(1, 2).get -> Letter('A', 1))
-    // Pos.posAt(1, 5).get -> Tile('D', 1))
+      Pos.posAt(6, 1).get -> Letter('A', 1),
+      Pos.posAt(6, 2).get -> Letter('D', 1),
+    
+      Pos.posAt(6,4).get -> Letter('E', 1),
+      Pos.posAt(6,5).get -> Letter('D',1))
 
     val blanks = Nil
 

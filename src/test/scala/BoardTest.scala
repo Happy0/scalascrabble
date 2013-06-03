@@ -1,35 +1,10 @@
 package scrabble
 import org.specs2.matcher.ContainExactlyOnceMatcher
 
+
 class BoardTest extends ScrabbleTest {
 
-  val board = Board.init
   val oneLetterPlaced = board.placeLetter(Pos.posAt(3, 3).get, Letter('a', 1))
-  
-  val crossedWords : Board = {
-    val historyPos = (3 until 3 + "history".length()) map(x => pos(x,5)) toList
-    val tiles = "history".toList.map(c => Letter(c,1))
-    
-    // Needs fixed
-    val scoresPos = (3 until "scores".length()) map (x => pos(7,x)) toList
-    val downTiles = "scores".toList.map(c => Letter(c,1))
-    
-    val horPlacements = historyPos zip tiles
-    val downPlacements = scoresPos zip downTiles
-    val b = placeSquares(board, horPlacements)
-    val newb = placeSquares(b, downPlacements)
-    println(newb)
-    
-    newb
-  }
-
-  /** Place tiles on the board at the specified positions */
-  def placeSquares(board: Board, placed: List[(Pos, Tile)]): Board = placed.foldLeft(board) {
-    case (b, placed) =>
-      b.placeLetter(placed._1, placed._2)
-  }
-
-  def pos(x: Int, y: Int) = Pos.posAt(x, y).get
 
   val normal = NormalSquare(None)
   val tripleWord = TripleWordSquare(None)
@@ -38,23 +13,22 @@ class BoardTest extends ScrabbleTest {
   val tripleLetter = TripleLetterSquare(None)
 
   "a board" should {
-    
+
     "find letters above a position" in {
-      crossedWords.LettersAbove(pos(8,5)).map(tup => tup._2.letter).mkString must be ("sc")
-    } 
-    
+      crossedWords.LettersAbove(pos(7, 5)).map(tup => tup._2.letter).mkString must beEqualTo("res")
+    }
+
     "find letters below a position" in {
-      
+      crossedWords.LettersBelow(pos(7, 5)).map(tup => tup._2.letter).mkString must beEqualTo("cs")
     }
-    
+
     "find letters left of a position" in {
-      
+      crossedWords.LettersLeft(pos(7, 5)).map(tup => tup._2.letter).mkString must beEqualTo("tsih")
     }
-    
+
     "find letters right of a position" in {
-      
+      crossedWords.LettersRight(pos(7, 5)).map(tup => tup._2.letter).mkString must beEqualTo("ry")
     }
-    
 
     /* Tedious, but important test to make sure all the special squares are positioned correctly */
     "should position special squares correctly" in {
@@ -135,13 +109,13 @@ class BoardTest extends ScrabbleTest {
         pos(12, 15) -> doubleLetter,
         pos(15, 15) -> tripleWord)
     }
-    
+
     "have 61 special squares" in {
-      board.squares.toTraversable filter(p => p._2 != normal) must have size 61
+      board.squares.toTraversable filter (p => p._2 != normal) must have size 61
     }
-    
+
     "have and 164 normal squares" in {
-      board.squares.toTraversable filter(p => p._2 == normal) must have size 164
+      board.squares.toTraversable filter (p => p._2 == normal) must have size 164
     }
 
     "have 225 squares" in {
@@ -149,15 +123,15 @@ class BoardTest extends ScrabbleTest {
     }
 
     "place 1 tile" in {
-      oneLetterPlaced.squares.toTraversable filter(p => !p._2.isEmpty) must have size 1
+      oneLetterPlaced.squares.toTraversable filter (p => !p._2.isEmpty) must have size 1
     }
 
     "place Tile in the correct position" in {
       oneLetterPlaced.squareAt(pos(3, 3)).tile must beEqualTo(Some(Letter('a', 1)))
     }
-    
+
     "retrieve an occupied square" in {
-      oneLetterPlaced.squareAt(pos(3,3)).tile must beEqualTo(Some(Letter('a', 1)))
+      oneLetterPlaced.squareAt(pos(3, 3)).tile must beEqualTo(Some(Letter('a', 1)))
     }
 
   }
