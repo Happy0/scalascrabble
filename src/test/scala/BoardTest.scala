@@ -19,11 +19,11 @@ class BoardTest extends ScrabbleTest {
     }
 
     "find letters below a position" in {
-      crossedWords.LettersBelow(pos(7, 5)).map(tup => tup._2.letter).mkString must beEqualTo("CS")
+      crossedWords.LettersBelow(pos(7, 5)).map(tup => tup._2.letter).mkString must beEqualTo("SC")
     }
 
     "find letters left of a position" in {
-      crossedWords.LettersLeft(pos(7, 5)).map(tup => tup._2.letter).mkString must beEqualTo("TSIH")
+      crossedWords.LettersLeft(pos(7, 5)).map(tup => tup._2.letter).mkString must beEqualTo("HIST")
     }
 
     "find letters right of a position" in {

@@ -157,7 +157,7 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
 
       if (horizontal) {
         if (!above.isEmpty || !below.isEmpty) {
-          above ::: pos -> let :: below
+          below ::: pos -> let :: above
         } else Nil
       } else {
         if (!left.isEmpty || !right.isEmpty) {

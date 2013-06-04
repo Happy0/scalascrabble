@@ -16,8 +16,8 @@ case class Board(
   def squareAt(pos: Pos): Square = squares.get(pos).get
 
   def LettersAbove(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.up, Nil)
-  def LettersBelow(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.down, Nil)
-  def LettersLeft(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.left, Nil)
+  def LettersBelow(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.down, Nil) reverse
+  def LettersLeft(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.left, Nil) reverse
   def LettersRight(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.right, Nil)
 
   private def findAdjacentLetters(pos: Pos, direction: Pos => Option[Pos], gathered: List[(Pos, Tile)]): List[(Pos, Tile)] = {
