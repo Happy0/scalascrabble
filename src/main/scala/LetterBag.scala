@@ -20,7 +20,10 @@ case class LetterBag(letters: List[Tile], size: Int, tileSet: Map[Char, Letter])
     (removedLetters, newBag)
   }
 
-  /** Exchange @exchanged letters for the same number of letters from the bag. Returns the new bag after shuffling its contents. */
+  /**
+   * Exchange @exchanged letters for the same number of letters from the bag. Returns None if there is
+   *   not enough letters in the bag to exchange. Otherwise, returns the new bag after shuffling its contents.
+   */
   def exchange(exchanged: List[Tile]): Option[(List[Tile], LetterBag)] = {
     if (exchanged.size > size) None else {
 

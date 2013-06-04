@@ -15,19 +15,19 @@ class BoardTest extends ScrabbleTest {
   "a board" should {
 
     "find letters above a position" in {
-      crossedWords.LettersAbove(pos(7, 5)).map(tup => tup._2.letter).mkString must beEqualTo("res")
+      crossedWords.LettersAbove(pos(7, 5)).map(tup => tup._2.letter).mkString must beEqualTo("RES")
     }
 
     "find letters below a position" in {
-      crossedWords.LettersBelow(pos(7, 5)).map(tup => tup._2.letter).mkString must beEqualTo("cs")
+      crossedWords.LettersBelow(pos(7, 5)).map(tup => tup._2.letter).mkString must beEqualTo("CS")
     }
 
     "find letters left of a position" in {
-      crossedWords.LettersLeft(pos(7, 5)).map(tup => tup._2.letter).mkString must beEqualTo("tsih")
+      crossedWords.LettersLeft(pos(7, 5)).map(tup => tup._2.letter).mkString must beEqualTo("TSIH")
     }
 
     "find letters right of a position" in {
-      crossedWords.LettersRight(pos(7, 5)).map(tup => tup._2.letter).mkString must beEqualTo("ry")
+      crossedWords.LettersRight(pos(7, 5)).map(tup => tup._2.letter).mkString must beEqualTo("RY")
     }
 
     /* Tedious, but important test to make sure all the special squares are positioned correctly */

@@ -6,6 +6,8 @@ abstract class Move(game: Game) {
 
   def makeMove: Try[Game]
 
+  val meetsEndCondition: Boolean
+
 }
 
 case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(game) {
@@ -33,12 +35,24 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
                 val newplayer = player.copy(letters = player.letters ++ given, score = player.score + scr.overAllScore)
                 val nextPlayer = game.nextPlayerNo
                 val players = game.players.updated(game.playersMove, newplayer)
-                game.copy(players = players, board = board, playersMove = nextPlayer, bag = newbag, moves = game.moves + 1)
+                game.copy(players = players, board = board, playersMove = nextPlayer, bag = newbag, moves = game.moves + 1,
+                  consecutivePasses = 0)
             }
         }
       }
     }
 
+  }
+
+  /* @TODO: Think about whether we should determine whether a valid move is possible for any player from the position, 
+   * or perhaps end on multiple consecutive passes */ 
+  lazy val meetsEndCondition: Boolean = {
+
+    makeMove match {
+      case Success(newGame) =>
+        if (newGame.bag.size == 0 && newGame.players.get(game.playersMove).get.letters.size == 0) true else false
+      case _ => false
+    }
   }
 
   /** Removes letters from player's letter rack and updates the board. Returns an error if the player does not have the letters  */
@@ -110,8 +124,12 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
     }
 
   }
+
+  private lazy val obeysFirstMovePositionRule = if (game.moves > 0) true else {
+    placed.find { case (pos, let) => pos == startPosition } isDefined
+  }
+
   private lazy val alreadyOccupiedSquares = placed.find { case (pos: Pos, letter: Tile) => !(board.squareAt(pos).isEmpty) }
-  private lazy val obeysFirstMovePositionRule = if (game.moves > 0) true else if (game.moves == 0 && placedProcessed(0)._1 == startPosition) true else false
   private lazy val startPosition = Pos.posAt(8, 8).get
   private lazy val sevenLetterBonus: Boolean = amountPlaced == 7
   private val board = game.board
@@ -203,10 +221,14 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
 
 case class PassMove(game: Game) extends Move(game) {
   def makeMove: Try[Game] = ???
+
+  val meetsEndCondition: Boolean = ???
 }
 
 case class ExchangeMove(game: Game, exchangeLetters: List[Tile]) extends Move(game) {
   def makeMove: Try[Game] = ???
+
+  val meetsEndCondition = ???
 }
 
 object Main {
@@ -230,9 +252,9 @@ object Main {
     val placed = List(
       Pos.posAt(6, 1).get -> Letter('A', 1),
       Pos.posAt(6, 2).get -> Letter('D', 1),
-    
-      Pos.posAt(6,4).get -> Letter('E', 1),
-      Pos.posAt(6,5).get -> Letter('D',1))
+
+      Pos.posAt(6, 4).get -> Letter('E', 1),
+      Pos.posAt(6, 5).get -> Letter('D', 1))
 
     val blanks = Nil
 

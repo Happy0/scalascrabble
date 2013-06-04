@@ -6,22 +6,29 @@ import scala.util.{ Try, Success, Failure }
 
 trait ScrabbleTest extends Specification {
   val board = Board.init
-  
+
+  val letterBag = LetterBag.init
+
   def pos(x: Int, y: Int) = Pos.posAt(x, y).get
 
+  val game = Game.make(List("jim", "joe"), Dictionary.load("Dict/en.txt"), LetterBag.init).get
+  
+  def letterFor(c: Char) = letterBag.tileSet.get(c).get
+
+  // Helper method to place a spread of letters on the board
+  def toPlace(word: String, horizontal: Boolean, from: Pos): List[(Pos, Tile)] = {
+    val positions = if (!horizontal) (from.y to from.y + word.size).map(c => pos(from.x,c))
+    else (from.x to from.x + word.size).map(c => pos(c, from.y))
+    
+    positions zip word.toUpperCase.toList.map(c => letterFor(c)) toList
+  }
+
   val crossedWords: Board = {
-    val historyPos = (3 until 3 + "history".length()) map (x => pos(x, 5)) toList
-    val tiles = "history".toList.map(c => Letter(c, 1))
-
-    // Needs fixed
-    val scoresPos = (3 until 3 + "scores".length()) map (x => pos(7, x)) toList
-    val downTiles = "scores".toList.map(c => Letter(c, 1))
-
-    val horPlacements = historyPos zip tiles
-    val downPlacements = scoresPos zip downTiles
+    val horPlacements = toPlace("history", true, pos(3,5))
+    val downPlacements = toPlace("scores", false, pos(7,3))
+    
     val b = placeSquares(board, horPlacements)
     val newb = placeSquares(b, downPlacements)
-    println(newb)
 
     newb
   }
