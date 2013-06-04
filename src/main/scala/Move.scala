@@ -21,7 +21,7 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
    * Returns the updated game if the move is a valid scrabble move, otherwise returns an InvalidMove
    * with an explanation of why the move is invalid
    */
-  def makeMove: Try[(Game)] = {
+  def makeMove: Try[Game] = {
 
     if (!obeysFirstMovePositionRule) Failure(FirstMovePositionWrong()) else {
       if (!alreadyOccupiedSquares.isEmpty) Failure(SquareOccupiedClientError()) else {
@@ -45,7 +45,7 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
   }
 
   /* @TODO: Think about whether we should determine whether a valid move is possible for any player from the position, 
-   * or perhaps end on multiple consecutive passes */ 
+   * or perhaps end on multiple consecutive passes */
   lazy val meetsEndCondition: Boolean = {
 
     makeMove match {
@@ -212,23 +212,30 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
           }
 
       }
+      
+      // If the placed letters extend a linear word, or are placed at right angles to another word (forming more words)
+      lazy val isAttachedToWord = lists._3(0).size > placed.size || lists._3.size > 1
 
-      if (lists._3.size <= 1 && game.moves >= 1) Failure(NotAttachedToWord()) else Success(lists._3)
+      if (!isAttachedToWord) Failure(NotAttachedToWord()) else Success(lists._3)
     }
   }
 
 }
 
 case class PassMove(game: Game) extends Move(game) {
-  def makeMove: Try[Game] = ???
+  def makeMove: Try[Game] = {
+    Success(game.copy(consecutivePasses = game.consecutivePasses + 1, playersMove = game.nextPlayerNo,
+        moves = game.moves + 1))
+  }
 
-  val meetsEndCondition: Boolean = ???
+  // Each player scoring 0 for three consecutive turns ends the game
+  val meetsEndCondition: Boolean = game.consecutivePasses == game.players.size * 3 
 }
 
 case class ExchangeMove(game: Game, exchangeLetters: List[Tile]) extends Move(game) {
   def makeMove: Try[Game] = ???
 
-  val meetsEndCondition = ???
+  val meetsEndCondition = false
 }
 
 object Main {

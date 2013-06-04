@@ -20,6 +20,7 @@ object Game {
    */
   def make(playerNames: List[String], dictionary: Dictionary, letterbag: LetterBag): Option[Game] = {
     if (!(2 to 4 contains playerNames.size)) None else {
+
       // Distribute letters from the bag to the players
       val (players: List[(Int, Player)], remainingBag: LetterBag, player_no: Int) =
 

@@ -14,13 +14,15 @@ trait ScrabbleTest extends Specification {
   val game = Game.make(List("jim", "joe"), Dictionary.load("Dict/en.txt"), LetterBag.init).get
   
   def letterFor(c: Char) = letterBag.tileSet.get(c).get
+  
+  def toLetters(str: String) = str.toUpperCase.toList.map(c => letterFor(c))
 
   // Helper method to place a spread of letters on the board
   def toPlace(word: String, horizontal: Boolean, from: Pos): List[(Pos, Tile)] = {
     val positions = if (!horizontal) (from.y to from.y + word.size).map(c => pos(from.x,c))
     else (from.x to from.x + word.size).map(c => pos(c, from.y))
     
-    positions zip word.toUpperCase.toList.map(c => letterFor(c)) toList
+    positions zip toLetters(word) toList
   }
 
   val crossedWords: Board = {
