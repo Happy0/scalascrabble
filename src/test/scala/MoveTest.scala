@@ -186,7 +186,6 @@ class MoveTest extends ScrabbleTest {
       val multipleWordScore = PlaceLettersMove(playedFurther, multipleWordPlace).score.get
 
       multipleWordScore.overAllScore must beEqualTo(19)
-
       multipleWordScore.individualScores must contain("YA" -> 13)
       multipleWordScore.individualScores must contain("WAS" -> 6)
 
