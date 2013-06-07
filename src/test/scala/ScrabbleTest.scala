@@ -13,7 +13,7 @@ trait ScrabbleTest extends Specification {
 
   val game = Game.make(List("jim", "joe"), Dictionary.load("Dict/en.txt"), LetterBag.init).get
   
-  def letterFor(c: Char) = letterBag.tileSet.get(c).get
+  def letterFor(c: Char) = letterBag.tileSet.get(c.toUpper).get
   
   def toLetters(str: String) = str.toUpperCase.toList.map(c => letterFor(c))
 

@@ -15,7 +15,7 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
   //@TODO:Think about how to record games. Tidy up buildWords function. Test it - properly.
 
   /** Processes the placed letters. Sorts them into positional order. */
-  private lazy val placedProcessed = placed.sortBy { case (pos: Pos, let: Tile) => (pos.x, pos.y) }
+  private lazy val placedProcessed = placed.sortBy { case (pos: Pos, _) => (pos.x, pos.y) }
 
   /**
    * Returns the updated game if the move is a valid scrabble move, otherwise returns an InvalidMove
@@ -173,12 +173,13 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
       val otherWords = allAdjacentTo(first._1, first._2)
       val startWith: List[List[(Pos, Tile)]] = if (otherWords.isEmpty) List(startList) else List(startList) :+ otherWords
 
-      println("startList " + startList)
-
+      /*@TODO: Replace this with a recursive function that returns Either[InvalidMove, ...] rather than break the fold with
+       * a return
+       */
       val lists: (Int, Int, List[List[(Pos, Tile)]]) = placedProcessed.tail.foldLeft(startx, starty, startWith) {
         case ((lastx, lasty, (x :: xs)), (pos: Pos, let)) =>
           val isLinear = if (horizontal) pos.y == lasty else pos.x == lastx
-          if (!isLinear) Failure(MisPlacedLetters(pos.x, pos.y))
+          if (!isLinear) return Failure(MisPlacedLetters(pos.x, pos.y))
 
           val comesAfter = if (horizontal) pos.x == lastx + 1 else pos.y == lasty + 1
 
@@ -188,20 +189,22 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
             val updatedList = newlist :: xs
             val otherWords = allAdjacentTo(pos, let)
 
-            println("otherwords" + otherWords)
             (pos.x, pos.y, if (!otherWords.isEmpty) updatedList :+ otherWords else updatedList)
 
           } else {
+            
+            println(" posx: " + pos.x + " posy: " + pos.y + " endx: " + endx + " endy: " + endy)
+            println("sorted: " + placedProcessed)
+
             val range = if (horizontal) List.range(lastx + 1, pos.x) else List.range(lasty + 1, pos.y)
 
             // Add the letters inbetween and the current char to the first list, then look for letters above and below the current char
             val between: List[(Pos, Tile)] = range.map {
-              println("Pos is " + pos)
               x =>
                 val position = if (horizontal) Pos.posAt(x, pos.y) else Pos.posAt(pos.x, x)
-                if (board.squareAt(position.get).isEmpty) Failure(MisPlacedLetters(pos.x, pos.y))
+                if (board.squareAt(position.get).isEmpty) return Failure(MisPlacedLetters(pos.x, pos.y))
                 val sq = board.squareAt(position.get)
-                Pos.posAt(pos.x, x).get -> sq.tile.get
+                position.get -> sq.tile.get
             }
 
             val newlist: List[(Pos, Tile)] = ((x ::: between)) ::: pos -> let :: (if (isLastPlaced(pos)) afterEnd(pos) else Nil)
@@ -209,10 +212,11 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
             val otherWords: List[(Pos, Tile)] = allAdjacentTo(pos, let)
 
             (pos.x, pos.y, if (!otherWords.isEmpty) updatedList :+ otherWords else updatedList)
+
           }
 
       }
-      
+
       // If the placed letters extend a linear word, or are placed at right angles to another word (forming more words)
       lazy val isAttachedToWord = lists._3(0).size > placed.size || lists._3.size > 1
 
@@ -225,11 +229,11 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
 case class PassMove(game: Game) extends Move(game) {
   def makeMove: Try[Game] = {
     Success(game.copy(consecutivePasses = game.consecutivePasses + 1, playersMove = game.nextPlayerNo,
-        moves = game.moves + 1))
+      moves = game.moves + 1))
   }
 
   // Each player scoring 0 for three consecutive turns ends the game
-  val meetsEndCondition: Boolean = game.consecutivePasses == game.players.size * 3 
+  val meetsEndCondition: Boolean = game.consecutivePasses == game.players.size * 3
 }
 
 case class ExchangeMove(game: Game, exchangeLetters: List[Tile]) extends Move(game) {
