@@ -1,11 +1,15 @@
 package scrabble
 
+import util.Random
+
 //@TODO: Think about how to generalise this to other languages. Perhaps using configuration files...
 
 /** tiles: The current tiles in the bag */
 case class LetterBag(letters: List[Tile], size: Int, tileSet: Map[Char, Letter]) {
 
   override def toString = letters.toString
+  
+  lazy val lettersAsString = letters.map(_.letter).mkString
 
   /**
    * Remove @num letters from the letter bag. Returns a list of removed letters (if available)

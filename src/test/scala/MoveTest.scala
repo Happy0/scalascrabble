@@ -141,7 +141,7 @@ class MoveTest extends ScrabbleTest {
     "reject invalid words" in {
       val res = gibberishWordsMove.makeMove
 
-      val words = ("TTESTS") :: ("TC") :: ("SE") :: ("TS") :: Nil
+      val words = "TTESTS" :: "TC" :: "SE" :: "TS" :: Nil
 
       res.get must throwA[WordsNotInDictionary].like {
         case e: WordsNotInDictionary =>
@@ -152,17 +152,63 @@ class MoveTest extends ScrabbleTest {
 
     "calculate scores correctly" in {
 
+      //  normal
+      val placeNormal = toPlace("wa", false, pos(5, 3)) ++ toPlace("p", false, pos(5, 6))
+      val normalScore = PlaceLettersMove(playedGame, placeNormal).score.get
+      normalScore.overAllScore must beEqualTo(9)
+
+      // double letter
+      val placeDoubleLetter = toPlace("tyle", true, pos(8, 3))
+      val doubleLetterScore = PlaceLettersMove(playedGame, placeDoubleLetter).score.get
+      doubleLetterScore.overAllScore must beEqualTo(12)
+
+      // Double word
+      val doublePlace = toPlace("stair", true, pos(2, 3))
+      val mv = PlaceLettersMove(playedGame, doublePlace)
+      val doubleWordScore = mv.score.get
+      doubleWordScore.overAllScore must beEqualTo(12)
+
+      // triple letter
+      val tripleLetterPlace = toPlace("ale", true, pos(9, 6))
+      val tripleLetterScore = PlaceLettersMove(playedGame, tripleLetterPlace).score.get
+      tripleLetterScore.overAllScore must beEqualTo(10)
+
+      // triple word
+      val tripleWordPlace = toPlace("TAO", false, pos(8, 1))
+      val tripleWordScore = PlaceLettersMove(playedGame, tripleWordPlace).score.get
+      tripleWordScore.overAllScore must beEqualTo(11)
+
+      // Multiple words
+      val playedFurther = game.copy(board = placeSquares(crossedWords,
+        toPlace("wa", false, pos(5, 3)) ++ toPlace("p", false, pos(5, 6))))
+
+      val multipleWordPlace = toPlace("YA", false, pos(6, 2))
+      val multipleWordScore = PlaceLettersMove(playedFurther, multipleWordPlace).score.get
+
+      multipleWordScore.overAllScore must beEqualTo(19)
+
+      multipleWordScore.individualScores must contain("YA" -> 13)
+      multipleWordScore.individualScores must contain("WAS" -> 6)
+
     }
 
     "replace the letters that a player played" in {
 
     }
-    
+
     "accept valid moves" in {
-      
+
     }
 
     "transition the game state correctly" in {
+
+    }
+
+    "handle pass moves correctly" in {
+
+    }
+
+    "handle exchange moves correctly" in {
 
     }
 

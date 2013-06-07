@@ -146,7 +146,9 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
 
     def isLastPlaced(pos: Pos): Boolean = pos.x == endx && pos.y == endy
 
-    def afterEnd(pos: Pos) = (if ((pos.x, pos.y) == (endx, endy)) (if (horizontal) board.LettersRight(pos) else board.LettersAbove(pos)) else List.empty[(Pos, Tile)])
+    def afterEnd(pos: Pos) = if ((pos.x, pos.y) == (endx, endy)) {
+      if (horizontal) board.LettersRight(pos) else board.LettersAbove(pos) 
+    } else Nil
 
     /** Returns words that are formed from the placement of a letter on a square on the board */
     def allAdjacentTo(pos: Pos, let: Tile): List[(Pos, Tile)] = {
