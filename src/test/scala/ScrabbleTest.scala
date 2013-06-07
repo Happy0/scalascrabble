@@ -5,17 +5,27 @@ import org.specs2.mutable.Specification
 import scala.util.{ Try, Success, Failure }
 
 trait ScrabbleTest extends Specification {
+  val enDict = Dictionary.load("Dict/en.txt")
+  
   val board = Board.init
 
   val letterBag = LetterBag.init
 
   def pos(x: Int, y: Int) = Pos.posAt(x, y).get
 
-  val game = Game.make(List("jim", "joe"), Dictionary.load("Dict/en.txt"), LetterBag.init).get
+  val game = Game.make(List("jim", "joe"), enDict, LetterBag.init).get
   
   def letterFor(c: Char) = letterBag.tileSet.get(c.toUpper).get
   
   def toLetters(str: String) = str.toUpperCase.toList.map(c => letterFor(c))
+  
+  val predictableLetterBag = LetterBag.fromLetters(
+      "LISVURDIGQAWLOEIYURADYEICBLEDHMSIXNFERAIWOANETGAELGFIUT_TJHAI_BDONENOECTRIEEREKOAZPVETONSASURAPMNOTO",
+          LetterBag.init.tileSet).get
+          
+  val predictableLetterbagGame = Game.make(List("jim", "joe"), enDict, predictableLetterBag).get
+          
+          
 
   // Helper method to place a spread of letters on the board
   def toPlace(word: String, horizontal: Boolean, from: Pos): List[(Pos, Tile)] = {

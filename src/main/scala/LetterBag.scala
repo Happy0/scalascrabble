@@ -62,7 +62,7 @@ object LetterBag {
     // Yield a list of all the letters in the bag, using the distribution to yield the right number of letters
     val letters = all.foldLeft(List.empty[Tile]) {
       case (list, (chr: Char, vl: Int, dst: Int)) =>
-        list ::: List.fill(dst)(if (chr == '_') BlankLetter(chr) else Letter(chr, vl))
+        List.fill(dst)(if (chr == '_') BlankLetter(chr) else Letter(chr, vl)) ::: list
     }
 
     val tileSet: Map[Char, Tile] = letters.map { tile => tile.letter -> tile } toMap
@@ -71,7 +71,11 @@ object LetterBag {
     LetterBag(util.Random.shuffle(letters), letters.size, tileSet)
   }
 
-  def fromLetters(letters: String, tileSet: Map[Char, Letter]): Option[LetterBag] = {
+  /**
+   * Constructs a letter bag from a string of letters in the order they should be taken from the bag.
+   *   Returns None if a character in the string is not part of the tile set
+   */
+  def fromLetters(letters: String, tileSet: Map[Char, Tile]): Option[LetterBag] = {
 
     def buildLetterBag(letters: List[Char], bag: LetterBag): Option[LetterBag] = {
       letters match {
@@ -80,7 +84,7 @@ object LetterBag {
           val tile = tileSet.get(c)
           tile.fold[Option[LetterBag]](None) {
             case t =>
-              buildLetterBag(cs, LetterBag(t :: bag.letters, bag.size + 1, tileSet))
+              buildLetterBag(cs, bag.copy(letters = t :: bag.letters, size = bag.size + 1))
           }
       }
     }
@@ -94,6 +98,6 @@ object LetterBag {
 
   def main(args: Array[String]) {
     val bag = LetterBag.init
-    println(bag)
+    println(bag.lettersAsString)
   }
 }

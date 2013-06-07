@@ -4,71 +4,79 @@ class LetterBagTest extends ScrabbleTest {
 
   val lettersOnly = letterBag.letters.map(c => c.letter)
 
-  def getTile(ch: Char) = letterBag.tileSet.get(ch).get
+  def getTile(ch: Char, letterBag: LetterBag) = letterBag.tileSet.get(ch).get
 
   def letterAppears(ch: Char, bag: LetterBag): Int = {
     bag.letters.foldLeft(0)((acc, let) =>
       if (let.letter == ch) acc + 1 else acc)
   }
 
+  def bagCorrectlyDistributed(letterBag: LetterBag) = {
+    letterAppears('A', letterBag) must beEqualTo(9)
+    letterAppears('B', letterBag) must beEqualTo(2)
+    letterAppears('C', letterBag) must beEqualTo(2)
+    letterAppears('D', letterBag) must beEqualTo(4)
+    letterAppears('E', letterBag) must beEqualTo(12)
+    letterAppears('F', letterBag) must beEqualTo(2)
+    letterAppears('G', letterBag) must beEqualTo(3)
+    letterAppears('H', letterBag) must beEqualTo(2)
+    letterAppears('I', letterBag) must beEqualTo(9)
+    letterAppears('J', letterBag) must beEqualTo(1)
+    letterAppears('K', letterBag) must beEqualTo(1)
+    letterAppears('L', letterBag) must beEqualTo(4)
+    letterAppears('M', letterBag) must beEqualTo(2)
+    letterAppears('N', letterBag) must beEqualTo(6)
+    letterAppears('O', letterBag) must beEqualTo(8)
+    letterAppears('P', letterBag) must beEqualTo(2)
+    letterAppears('Q', letterBag) must beEqualTo(1)
+    letterAppears('R', letterBag) must beEqualTo(6)
+    letterAppears('S', letterBag) must beEqualTo(4)
+    letterAppears('T', letterBag) must beEqualTo(6)
+    letterAppears('U', letterBag) must beEqualTo(4)
+    letterAppears('V', letterBag) must beEqualTo(2)
+    letterAppears('W', letterBag) must beEqualTo(2)
+    letterAppears('X', letterBag) must beEqualTo(1)
+    letterAppears('Y', letterBag) must beEqualTo(2)
+    letterAppears('Z', letterBag) must beEqualTo(1)
+  }
+
+  def bagCorrectlyValued(letterBag: LetterBag) = {
+    getTile('A', letterBag).value must beEqualTo(1)
+    getTile('B', letterBag).value must beEqualTo(3)
+    getTile('C', letterBag).value must beEqualTo(3)
+    getTile('D', letterBag).value must beEqualTo(2)
+    getTile('E', letterBag).value must beEqualTo(1)
+    getTile('F', letterBag).value must beEqualTo(4)
+    getTile('G', letterBag).value must beEqualTo(2)
+    getTile('H', letterBag).value must beEqualTo(4)
+    getTile('I', letterBag).value must beEqualTo(1)
+    getTile('J', letterBag).value must beEqualTo(8)
+    getTile('K', letterBag).value must beEqualTo(5)
+    getTile('L', letterBag).value must beEqualTo(1)
+    getTile('M', letterBag).value must beEqualTo(3)
+    getTile('N', letterBag).value must beEqualTo(1)
+    getTile('O', letterBag).value must beEqualTo(1)
+    getTile('P', letterBag).value must beEqualTo(3)
+    getTile('Q', letterBag).value must beEqualTo(10)
+    getTile('R', letterBag).value must beEqualTo(1)
+    getTile('S', letterBag).value must beEqualTo(1)
+    getTile('T', letterBag).value must beEqualTo(1)
+    getTile('U', letterBag).value must beEqualTo(1)
+    getTile('V', letterBag).value must beEqualTo(4)
+    getTile('W', letterBag).value must beEqualTo(4)
+    getTile('X', letterBag).value must beEqualTo(8)
+    getTile('Y', letterBag).value must beEqualTo(4)
+    getTile('Z', letterBag).value must beEqualTo(10)
+  }
+
   "a letterbag should" should {
 
-    "contain the right numbeEqualTor of each letter" in {
-      letterAppears('A', letterBag) must beEqualTo(9)
-      letterAppears('B', letterBag) must beEqualTo(2)
-      letterAppears('C', letterBag) must beEqualTo(2)
-      letterAppears('D', letterBag) must beEqualTo(4)
-      letterAppears('E', letterBag) must beEqualTo(12)
-      letterAppears('F', letterBag) must beEqualTo(2)
-      letterAppears('G', letterBag) must beEqualTo(3)
-      letterAppears('H', letterBag) must beEqualTo(2)
-      letterAppears('I', letterBag) must beEqualTo(9)
-      letterAppears('J', letterBag) must beEqualTo(1)
-      letterAppears('K', letterBag) must beEqualTo(1)
-      letterAppears('L', letterBag) must beEqualTo(4)
-      letterAppears('M', letterBag) must beEqualTo(2)
-      letterAppears('N', letterBag) must beEqualTo(6)
-      letterAppears('O', letterBag) must beEqualTo(8)
-      letterAppears('P', letterBag) must beEqualTo(2)
-      letterAppears('Q', letterBag) must beEqualTo(1)
-      letterAppears('R', letterBag) must beEqualTo(6)
-      letterAppears('S', letterBag) must beEqualTo(4)
-      letterAppears('T', letterBag) must beEqualTo(6)
-      letterAppears('U', letterBag) must beEqualTo(4)
-      letterAppears('V', letterBag) must beEqualTo(2)
-      letterAppears('W', letterBag) must beEqualTo(2)
-      letterAppears('X', letterBag) must beEqualTo(1)
-      letterAppears('Y', letterBag) must beEqualTo(2)
-      letterAppears('Z', letterBag) must beEqualTo(1)
+    "contain the right number of each letter" in {
+      bagCorrectlyDistributed(letterBag)
     }
 
     "have the right score for each Tile" in {
-      getTile('A').value must beEqualTo(1)
-      getTile('B').value must beEqualTo(3)
-      getTile('C').value must beEqualTo(3)
-      getTile('D').value must beEqualTo(2)
-      getTile('E').value must beEqualTo(1)
-      getTile('F').value must beEqualTo(4)
-      getTile('G').value must beEqualTo(2)
-      getTile('H').value must beEqualTo(4)
-      getTile('I').value must beEqualTo(1)
-      getTile('J').value must beEqualTo(8)
-      getTile('K').value must beEqualTo(5)
-      getTile('L').value must beEqualTo(1)
-      getTile('M').value must beEqualTo(3)
-      getTile('N').value must beEqualTo(1)
-      getTile('O').value must beEqualTo(1)
-      getTile('P').value must beEqualTo(3)
-      getTile('Q').value must beEqualTo(10)
-      getTile('R').value must beEqualTo(1)
-      getTile('S').value must beEqualTo(1)
-      getTile('T').value must beEqualTo(1)
-      getTile('U').value must beEqualTo(1)
-      getTile('V').value must beEqualTo(4)
-      getTile('W').value must beEqualTo(4)
-      getTile('X').value must beEqualTo(8)
-      getTile('Y').value must beEqualTo(4)
-      getTile('Z').value must beEqualTo(10)
+      bagCorrectlyValued(letterBag)
     }
 
     "contain 100 letter tiles" in {
@@ -151,8 +159,13 @@ class LetterBagTest extends ScrabbleTest {
 
       val exchangedWithSingle = strToLetters("ABCDE")
       val (_, exchBag) = newBag.exchange(exchangedWithSingle).get
-      
+
       exchBag.size must beEqualTo(94)
+    }
+
+    "construct a bag from a string of letters" in {
+      bagCorrectlyValued(predictableLetterBag)
+      bagCorrectlyDistributed(predictableLetterBag)
     }
 
   }

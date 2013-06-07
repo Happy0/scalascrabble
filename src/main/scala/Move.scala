@@ -147,7 +147,7 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
     def isLastPlaced(pos: Pos): Boolean = pos.x == endx && pos.y == endy
 
     def afterEnd(pos: Pos) = if ((pos.x, pos.y) == (endx, endy)) {
-      if (horizontal) board.LettersRight(pos) else board.LettersAbove(pos) 
+      if (horizontal) board.LettersRight(pos) else board.LettersAbove(pos)
     } else Nil
 
     /** Returns words that are formed from the placement of a letter on a square on the board */
@@ -194,9 +194,6 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
             (pos.x, pos.y, if (!otherWords.isEmpty) updatedList :+ otherWords else updatedList)
 
           } else {
-            
-            println(" posx: " + pos.x + " posy: " + pos.y + " endx: " + endx + " endy: " + endy)
-            println("sorted: " + placedProcessed)
 
             val range = if (horizontal) List.range(lastx + 1, pos.x) else List.range(lasty + 1, pos.y)
 
@@ -220,7 +217,7 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
       }
 
       // If the placed letters extend a linear word, or are placed at right angles to another word (forming more words)
-      lazy val isAttachedToWord = lists._3(0).size > placed.size || lists._3.size > 1
+      lazy val isAttachedToWord = lists._3(0).size > placed.size || lists._3.size > 1 || game.moves == 0
 
       if (!isAttachedToWord) Failure(NotAttachedToWord()) else Success(lists._3)
     }

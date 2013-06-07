@@ -191,15 +191,31 @@ class MoveTest extends ScrabbleTest {
 
     }
 
-    "replace the letters that a player played" in {
+    "handle blank letters" in {
 
     }
 
-    "accept valid moves" in {
+    val predictableGame = {
+      val place = toPlace("lurid", true, pos(8, 8))
+      PlaceLettersMove(predictableLetterbagGame, place).makeMove.get
+    }
 
+    "replace the letters that a player played" in {
+      val player = predictableGame.players.get(0).get
+
+      player.letters must containAllOf(toLetters("SV"))
+      player.letters must containAllOf(toLetters("EIYUR"))
     }
 
     "transition the game state correctly" in {
+    	predictableGame.moves must beEqualTo(1)
+    	predictableGame.board.LettersRight(pos(7,8)).map{case (pos, let) => let.letter}.mkString must beEqualTo("LURID")
+    	predictableGame.bag.lettersAsString must beEqualTo("ADYEICBLEDHMSIXNFERAIWOANETGAELGFIUT_TJHAI_BDONENOECTRIEEREKOAZPVETONSASURAPMNOTO")
+    	predictableGame.currentPlayer.letters.map(_.letter).mkString must beEqualTo("IGQAWLO")
+    	predictableGame.playersMove must beEqualTo(1)
+    }
+
+    "ends the game in the appropriate conditions" in {
 
     }
 
