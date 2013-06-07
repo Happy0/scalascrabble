@@ -191,6 +191,18 @@ class MoveTest extends ScrabbleTest {
 
     }
 
+    "place one letter" in {
+      val str = "JEARVINENVO_NILLEWBKONUIEUWEAZBDESIAPAEOOURGOCDSNIADOAACAR_RMYELTUTYTEREOSITNIRFGPHAQLHESOIITXFDMETG"
+      val bag = LetterBag.fromLetters(str, letterBag.tileSet)
+      val game = Game.make(List("a", "b", "c", "d"), enDict, bag.get).get
+      val game1 = PlaceLettersMove(game, toPlace("ravine", true, pos(8, 8))).makeMove.get
+
+      val blankMove = PlaceLettersMove(game1, pos(8, 7) -> BlankLetter('O') :: Nil)
+
+      builtToStr(blankMove.formedWords.get) must contain("OR")
+      blankMove.formedWords.get must have size 1
+    }
+
     "handle blank letters" in {
 
     }
@@ -208,11 +220,12 @@ class MoveTest extends ScrabbleTest {
     }
 
     "transition the game state correctly" in {
-    	predictableGame.moves must beEqualTo(1)
-    	predictableGame.board.LettersRight(pos(7,8)).map{case (pos, let) => let.letter}.mkString must beEqualTo("LURID")
-    	predictableGame.bag.lettersAsString must beEqualTo("ADYEICBLEDHMSIXNFERAIWOANETGAELGFIUT_TJHAI_BDONENOECTRIEEREKOAZPVETONSASURAPMNOTO")
-    	predictableGame.currentPlayer.letters.map(_.letter).mkString must beEqualTo("IGQAWLO")
-    	predictableGame.playersMove must beEqualTo(1)
+      predictableGame.moves must beEqualTo(1)
+      predictableGame.board.LettersRight(pos(7, 8)).map { case (pos, let) => let.letter }.mkString must beEqualTo("LURID")
+      predictableGame.bag.lettersAsString must beEqualTo(
+        "ADYEICBLEDHMSIXNFERAIWOANETGAELGFIUT_TJHAI_BDONENOECTRIEEREKOAZPVETONSASURAPMNOTO")
+      predictableGame.currentPlayer.letters.map(_.letter).mkString must beEqualTo("IGQAWLO")
+      predictableGame.playersMove must beEqualTo(1)
     }
 
     "ends the game in the appropriate conditions" in {

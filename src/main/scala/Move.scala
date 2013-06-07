@@ -139,6 +139,7 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
 
   private lazy val (startx, endx) = (placedProcessed(0)._1.x, placedProcessed(amountPlaced - 1)._1.x)
   private lazy val (starty, endy) = (placedProcessed(0)._1.y, placedProcessed(amountPlaced - 1)._1.y)
+  
   private lazy val (horizontal, vertical) = (starty == endy, startx == endx)
 
   // @TODO: Absolutely hurrendous looking. Need to tidy it up.

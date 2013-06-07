@@ -44,9 +44,7 @@ case class LetterBag(letters: List[Tile], size: Int, tileSet: Map[Char, Tile]) {
 
 object LetterBag {
 
-  /** Returns a new LetterBag in its intial state. List is in randomised order. */
-  val init: LetterBag = {
-
+  private val letters: List[Tile] = {
     // (Letter, Value, Distribution)
     val blankPoints = List(('_', 0, 2))
     val onePoints = List('E', 'A', 'I', 'O', 'N', 'R', 'T', 'L', 'S', 'U') zip List(12, 9, 9, 8, 6, 6, 6, 4, 4, 4) map { case (x, y) => (x, 1, y) }
@@ -60,15 +58,18 @@ object LetterBag {
     val all: List[(Char, Int, Int)] = blankPoints ::: onePoints ::: twoPoints ::: threePoints ::: fourPoints ::: fivePoints ::: eightPoints ::: tenPoints
 
     // Yield a list of all the letters in the bag, using the distribution to yield the right number of letters
-    val letters = all.foldLeft(List.empty[Tile]) {
+    all.foldLeft(List.empty[Tile]) {
       case (list, (chr: Char, vl: Int, dst: Int)) =>
         List.fill(dst)(if (chr == '_') BlankLetter(chr) else Letter(chr, vl)) ::: list
     }
+  }
 
-    val tileSet: Map[Char, Tile] = letters.map { tile => tile.letter -> tile } toMap
+  private val tileSet: Map[Char, Tile] = letters.map { tile => tile.letter -> tile } toMap
 
+  /** Returns a new LetterBag in its intial state. List is in randomised order. */
+  def init: LetterBag = {
     // Construct with a randomised list
-    LetterBag(util.Random.shuffle(letters), letters.size, tileSet)
+    LetterBag(util.Random.shuffle(letters), 100, tileSet)
   }
 
   /**
