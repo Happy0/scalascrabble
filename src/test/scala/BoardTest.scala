@@ -1,6 +1,4 @@
 package scrabble
-import org.specs2.matcher.ContainExactlyOnceMatcher
-
 
 class BoardTest extends ScrabbleTest {
 

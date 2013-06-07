@@ -110,7 +110,7 @@ class LetterBagTest extends ScrabbleTest {
 
     }
 
-    def exchangesProperly(exchanged: List[Letter], originalBag: LetterBag): Unit = {
+    def exchangesProperly(exchanged: List[Tile], originalBag: LetterBag): Unit = {
       val (received, newbag) = letterBag.exchange(exchanged).get
       exchanged.foreach {
         c =>
@@ -124,7 +124,7 @@ class LetterBagTest extends ScrabbleTest {
       newbag.size must beEqualTo(letterBag.size)
     }
 
-    def strToLetters(str: String): List[Letter] = str.toList map (c => letterBag.tileSet.get(c).get)
+    def strToLetters(str: String): List[Tile] = str.toList map (c => letterBag.tileSet.get(c).get)
 
     "properly exchange letters" in {
       val exchangedWithSingle = strToLetters("ABCDE")

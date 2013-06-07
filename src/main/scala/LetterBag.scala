@@ -5,10 +5,10 @@ import util.Random
 //@TODO: Think about how to generalise this to other languages. Perhaps using configuration files...
 
 /** tiles: The current tiles in the bag */
-case class LetterBag(letters: List[Tile], size: Int, tileSet: Map[Char, Letter]) {
+case class LetterBag(letters: List[Tile], size: Int, tileSet: Map[Char, Tile]) {
 
   override def toString = letters.toString
-  
+
   lazy val lettersAsString = letters.map(_.letter).mkString
 
   /**
@@ -38,7 +38,7 @@ case class LetterBag(letters: List[Tile], size: Int, tileSet: Map[Char, Letter])
 
   }
 
-  def letterFor(letter: Char): Option[Letter] = tileSet get letter
+  def letterFor(letter: Char): Option[Tile] = tileSet get letter
 
 }
 
@@ -65,10 +65,28 @@ object LetterBag {
         list ::: List.fill(dst)(if (chr == '_') BlankLetter(chr) else Letter(chr, vl))
     }
 
-    val tileSet: Map[Char, Letter] = all.map { case (chr, vl, dst) => chr -> Letter(chr, vl) } toMap
+    val tileSet: Map[Char, Tile] = letters.map { tile => tile.letter -> tile } toMap
 
     // Construct with a randomised list
     LetterBag(util.Random.shuffle(letters), letters.size, tileSet)
+  }
+
+  def fromLetters(letters: String, tileSet: Map[Char, Letter]): Option[LetterBag] = {
+
+    def buildLetterBag(letters: List[Char], bag: LetterBag): Option[LetterBag] = {
+      letters match {
+        case Nil => Some(bag.copy(letters = bag.letters))
+        case c :: cs =>
+          val tile = tileSet.get(c)
+          tile.fold[Option[LetterBag]](None) {
+            case t =>
+              buildLetterBag(cs, LetterBag(t :: bag.letters, bag.size + 1, tileSet))
+          }
+      }
+    }
+
+    buildLetterBag(letters.toList reverse, LetterBag(Nil, 0, tileSet))
+
   }
 
   //@TODO: Placeholder for other language generalisation
