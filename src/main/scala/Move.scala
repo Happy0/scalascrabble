@@ -1,6 +1,7 @@
 package scrabble
 
 import scala.util.{ Try, Success, Failure }
+import scalaz.NonEmptyList
 
 abstract class Move(game: Game) {
 
@@ -10,12 +11,12 @@ abstract class Move(game: Game) {
 
 }
 
-case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(game) {
+case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) extends Move(game) {
 
   //@TODO:Think about how to record games. Tidy up buildWords function. Test it - properly.
-
+  
   /** Processes the placed letters. Sorts them into positional order. */
-  private lazy val placedProcessed = placed.sortBy { case (pos: Pos, _) => (pos.x, pos.y) }
+  private lazy val placedProcessed = placed.list.sortBy { case (pos: Pos, _) => (pos.x, pos.y) }
 
   /**
    * Returns the updated game if the move is a valid scrabble move, otherwise returns an InvalidMove
@@ -126,10 +127,10 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
   }
 
   private lazy val obeysFirstMovePositionRule = if (game.moves > 0) true else {
-    placed.find { case (pos, let) => pos == startPosition } isDefined
+    placedProcessed.find { case (pos, let) => pos == startPosition } isDefined
   }
 
-  private lazy val alreadyOccupiedSquares = placed.find { case (pos: Pos, letter: Tile) => !(board.squareAt(pos).isEmpty) }
+  private lazy val alreadyOccupiedSquares = placedProcessed.find { case (pos: Pos, letter: Tile) => !(board.squareAt(pos).isEmpty) }
   private lazy val startPosition = Pos.posAt(8, 8).get
   private lazy val sevenLetterBonus: Boolean = amountPlaced == 7
   private val board = game.board
@@ -229,7 +230,7 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
       // If the placed letters extend a linear word, or are placed at right angles to another word (forming more words)
       lazy val isAttachedToWord = {
         println("attached: " + lists._3)
-        lists._3(0).size > placed.size || lists._3.size > 1 || game.moves == 0
+        lists._3(0).size > placedProcessed.size || lists._3.size > 1 || game.moves == 0
       }
 
       if (!isAttachedToWord) Failure(NotAttachedToWord()) else Success(lists._3)
@@ -272,7 +273,7 @@ object Main {
 
     println(testBoard)
 
-    val placed = List(
+    val placed = NonEmptyList(
       Pos.posAt(6, 1).get -> Letter('A', 1),
       Pos.posAt(6, 2).get -> Letter('D', 1),
 

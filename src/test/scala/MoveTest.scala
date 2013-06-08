@@ -122,13 +122,13 @@ class MoveTest extends ScrabbleTest {
     }
 
     "warn about misplaced letters" in {
-      val place = toPlace("test", true, pos(1, 1)).updated(1, pos(3, 2) -> letterFor('C'))
+      val place = toPlace("test", true, pos(1, 1)).updated(1, pos(3, 2) -> letterFor('C')) // Oh god...
       println("misplace" + place)
       val mv = PlaceLettersMove(playedGame, place)
 
       mv.makeMove must beEqualTo(Failure(MisPlacedLetters(3, 1))) // Square placed outside the 'line' (i.e above)
 
-      val mv2 = PlaceLettersMove(playedGame, toPlace("test", true, pos(1, 1)).updated(3, pos(5, 1) -> letterFor('C')))
+      val mv2 = PlaceLettersMove(playedGame, toPlace("test", true, pos(1, 1)).list.updated(3, pos(5, 1) -> letterFor('C')).toNel.get)
       mv2.makeMove must beEqualTo(Failure(MisPlacedLetters(5, 1))) // linear, but missing a square to complete the the 'line'
 
       // Start to complete a word at one side, but misplace letter at the other
@@ -201,7 +201,7 @@ class MoveTest extends ScrabbleTest {
 
       val game1 = PlaceLettersMove(blankGame, toPlace("ravine", true, pos(8, 8))).makeMove.get
 
-      val place = pos(8, 7) -> letterBag.letterFor('O').get :: Nil
+      val place = (pos(8, 7) -> letterBag.letterFor('O').get :: Nil).toNel.get
       val blankMove = PlaceLettersMove(game1, place)
 
       builtToStr(blankMove.formedWords.get) must contain("OR")
