@@ -41,9 +41,8 @@ trait ScrabbleTest extends Specification with NonEmptyLists with Lists {
     val downPlacements = toPlace("scores", false, pos(7, 3))
 
     val b = placeSquares(board, horPlacements)
-    val newb = placeSquares(b, downPlacements)
 
-    newb
+    placeSquares(b, downPlacements)
   }
 
   /** Place tiles on the board at the specified positions */
@@ -64,7 +63,7 @@ trait ScrabbleTest extends Specification with NonEmptyLists with Lists {
   implicit def playedGame(game: Game) = new {
 
     /** Place words on the board*/
-    def playBoardMoves(placed: List[(Pos, Tile)]*): Try[Game] = ???
+    def playMoves(placed: List[(Pos, Tile)]*): Try[Game] = ???
 
   }
 

@@ -14,6 +14,20 @@ class MoveTest extends ScrabbleTest {
     PlaceLettersMove(playedGame, place)
   }
 
+  val blankGame: Game = {
+    val str = "JEARVINENVO_NILLEWBKONUIEUWEAZBDESIAPAEOOURGOCDSNIADOAACAR_RMYELTUTYTEREOSITNIRFGPHAQLHESOIITXFDMETG"
+    val bag = LetterBag.fromLetters(str, letterBag.tileSet)
+    Game.make(List("a", "b", "c", "d"), enDict, bag.get).get
+  }
+
+  val coversTwoBonuses: PlaceLettersMove = {
+    val game1 = PlaceLettersMove(blankGame, toPlace("ravine", true, pos(8, 8))).makeMove.get
+    val place = toPlace("ven", false, pos(11, 5)) ++ toPlace(
+      "son", false, pos(11, 9)).updated(0, pos(11, 9) -> BlankLetter('S'))
+
+    PlaceLettersMove(game1, place)
+  }
+
   val modifiedPlayer = playedGame.currentPlayer.replaceLetters(toLetters("tory"))
   val modifiedGame = playedGame.copy(players = playedGame.players.updated(playedGame.playersMove, modifiedPlayer))
 
@@ -32,7 +46,6 @@ class MoveTest extends ScrabbleTest {
 
     "not place letters that the player does not have" in {
       val place = toPlace("tone", true, pos(8, 3))
-      println(place)
 
       PlaceLettersMove(modifiedGame, place).makeMove must beEqualTo(Failure(playerDoesNotHaveLettersClientError(7)))
     }
@@ -53,7 +66,6 @@ class MoveTest extends ScrabbleTest {
       val built = mv.formedWords.get
       val words = builtToStr(built)
 
-      println(words)
       words must contain("TO")
       words must contain("ORE")
       words must contain("RE")
@@ -91,7 +103,6 @@ class MoveTest extends ScrabbleTest {
       val place = toPlace("sdf", false, pos(7, 9))
       val mv = PlaceLettersMove(playedGame, place)
 
-      println(mv.formedWords)
       val built = mv.formedWords.get
       val words = builtToStr(built)
 
@@ -123,7 +134,6 @@ class MoveTest extends ScrabbleTest {
 
     "warn about misplaced letters" in {
       val place = toPlace("test", true, pos(1, 1)).updated(1, pos(3, 2) -> letterFor('C')) // Oh god...
-      println("misplace" + place)
       val mv = PlaceLettersMove(playedGame, place)
 
       mv.makeMove must beEqualTo(Failure(MisPlacedLetters(3, 1))) // Square placed outside the 'line' (i.e above)
@@ -189,23 +199,20 @@ class MoveTest extends ScrabbleTest {
       multipleWordScore.individualScores must contain("YA" -> 13)
       multipleWordScore.individualScores must contain("WAS" -> 6)
 
-    }
+      // Covering multiple bonus squares
+      coversTwoBonuses.score.get.overAllScore must beEqualTo(36)
 
-    val blankGame: Game = {
-      val str = "JEARVINENVO_NILLEWBKONUIEUWEAZBDESIAPAEOOURGOCDSNIADOAACAR_RMYELTUTYTEREOSITNIRFGPHAQLHESOIITXFDMETG"
-      val bag = LetterBag.fromLetters(str, letterBag.tileSet)
-      Game.make(List("a", "b", "c", "d"), enDict, bag.get).get
     }
 
     "place one letter" in {
-
       val game1 = PlaceLettersMove(blankGame, toPlace("ravine", true, pos(8, 8))).makeMove.get
 
       val place = (pos(8, 7) -> letterBag.letterFor('O').get :: Nil).toNel.get
-      val blankMove = PlaceLettersMove(game1, place)
 
-      builtToStr(blankMove.formedWords.get) must contain("OR")
-      blankMove.formedWords.get must have size 1
+      val oneLetterMove = PlaceLettersMove(game1, place)
+
+      builtToStr(oneLetterMove.formedWords.get) must contain("OR")
+      oneLetterMove.formedWords.get must have size 1
 
       // Horizontal single letter
 
@@ -213,6 +220,9 @@ class MoveTest extends ScrabbleTest {
     }
 
     "handle blank letters" in {
+      // ENVO_NIL
+
+      builtToStr(coversTwoBonuses.formedWords.get) must contain("VENISON")
 
     }
 

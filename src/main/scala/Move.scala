@@ -14,7 +14,7 @@ abstract class Move(game: Game) {
 case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) extends Move(game) {
 
   //@TODO:Think about how to record games. Tidy up buildWords function. Test it - properly.
-  
+
   /** Processes the placed letters. Sorts them into positional order. */
   private lazy val placedProcessed = placed.list.sortBy { case (pos: Pos, _) => (pos.x, pos.y) }
 
@@ -97,25 +97,27 @@ case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) exten
             val squares = xs.map { case (pos, let) => pos -> board.squareAt(pos).setLetter(let) }
 
             // Sort to put the word bonus squares last
-            val score = squares.sortWith { case ((pos, sq), (pos2, sq2)) => sq < sq2 }.foldLeft(0) {
-              case (scr, (pos, sq)) =>
+            val (score, wordBonuses) = squares.sortWith { case ((pos, sq), (pos2, sq2)) => sq < sq2 }.foldLeft(0, List.empty[Int => Int]) {
+              case ((scr, wordBonuses), (pos, sq)) =>
                 val square = board.squareAt(pos)
 
                 // If the bonus has already been used, ignore the bonus square
-                if (!board.squareAt(pos).isEmpty) scr + square.tile.get.value else {
+                if (!board.squareAt(pos).isEmpty) (scr + square.tile.get.value, wordBonuses) else {
 
                   sq match {
-                    case (NormalSquare(x)) => scr + sq.tile.get.value
-                    case (DoubleLetterSquare(x)) => scr + (sq.tile.get.value * 2)
-                    case (TripleLetterSquare(x)) => scr + (sq.tile.get.value * 3)
-                    case (DoubleWordSquare(x)) => (scr + sq.tile.get.value) * 2
-                    case (TripleWordSquare(x)) => (scr + sq.tile.get.value) * 3
+                    case (NormalSquare(x)) => (scr + sq.tile.get.value, wordBonuses)
+                    case (DoubleLetterSquare(x)) => (scr + (sq.tile.get.value * 2), wordBonuses)
+                    case (TripleLetterSquare(x)) => (scr + (sq.tile.get.value * 3), wordBonuses)
+                    case (DoubleWordSquare(x)) => (scr + sq.tile.get.value, ((i: Int) => i * 2) :: wordBonuses)
+                    case (TripleWordSquare(x)) => (scr + sq.tile.get.value, ((i: Int) => i * 3) :: wordBonuses)
                   }
                 }
 
             }
+            
+            val finalScore = wordBonuses.foldLeft(score){case (score, func)  => func(score)}
 
-            (acc + score, lsts :+ (word, score), bdwords)
+            (acc + finalScore, lsts :+ (word, finalScore), bdwords)
 
         }
         val the_score: Score = if (sevenLetterBonus) Score(score + 50, lsts) else Score(score, lsts)
@@ -183,7 +185,7 @@ case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) exten
       //@TODO: Tidy this up
       val startList: List[(Pos, Tile)] = ((if (horizontal) board.LettersLeft(placedProcessed(0)._1) else
         board.LettersBelow(placedProcessed(0)._1)) :+ (first._1, first._2)) ::: afterEnd(placedProcessed(0)._1)
-      val otherWords = allAdjacentTo(first._1, first._2) 
+      val otherWords = allAdjacentTo(first._1, first._2)
       val startWith: List[List[(Pos, Tile)]] = if (otherWords.isEmpty) List(startList) else List(startList) :+ otherWords
 
       /*@TODO: Replace this with a recursive function that returns Either[InvalidMove, ...] rather than break the fold with
