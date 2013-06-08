@@ -97,7 +97,7 @@ case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) exten
             val squares = xs.map { case (pos, let) => pos -> board.squareAt(pos).setLetter(let) }
 
             // Sort to put the word bonus squares last
-            val (score, wordBonuses) = squares.sortWith { case ((pos, sq), (pos2, sq2)) => sq < sq2 }.foldLeft(0, List.empty[Int => Int]) {
+            val (score, wordBonuses) = squares.foldLeft(0, List.empty[Int => Int]) {
               case ((scr, wordBonuses), (pos, sq)) =>
                 val square = board.squareAt(pos)
 
@@ -114,8 +114,8 @@ case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) exten
                 }
 
             }
-            
-            val finalScore = wordBonuses.foldLeft(score){case (score, func)  => func(score)}
+
+            val finalScore = wordBonuses.foldLeft(score) { case (score, func) => func(score) }
 
             (acc + finalScore, lsts :+ (word, finalScore), bdwords)
 
