@@ -102,17 +102,15 @@ case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) exten
                 val square = board.squareAt(pos)
 
                 // If the bonus has already been used, ignore the bonus square
-                if (!board.squareAt(pos).isEmpty) (scr + square.tile.get.value, wordBonuses) else {
-
+                board.squareAt(pos).tile.fold {
                   sq match {
-                    case (NormalSquare(x)) => (scr + sq.tile.get.value, wordBonuses)
-                    case (DoubleLetterSquare(x)) => (scr + (sq.tile.get.value * 2), wordBonuses)
-                    case (TripleLetterSquare(x)) => (scr + (sq.tile.get.value * 3), wordBonuses)
-                    case (DoubleWordSquare(x)) => (scr + sq.tile.get.value, ((i: Int) => i * 2) :: wordBonuses)
-                    case (TripleWordSquare(x)) => (scr + sq.tile.get.value, ((i: Int) => i * 3) :: wordBonuses)
+                    case NormalSquare(x) => (scr + sq.tile.get.value, wordBonuses)
+                    case DoubleLetterSquare(x) => (scr + (sq.tile.get.value * 2), wordBonuses)
+                    case TripleLetterSquare(x) => (scr + (sq.tile.get.value * 3), wordBonuses)
+                    case DoubleWordSquare(x) => (scr + sq.tile.get.value, ((i: Int) => i * 2) :: wordBonuses)
+                    case TripleWordSquare(x) => (scr + sq.tile.get.value, ((i: Int) => i * 3) :: wordBonuses)
                   }
-                }
-
+                }(tile => (scr + tile.value, wordBonuses))
             }
 
             val finalScore = wordBonuses.foldLeft(score) { case (score, func) => func(score) }
