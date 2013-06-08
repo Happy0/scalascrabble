@@ -50,8 +50,7 @@ case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) exten
   lazy val meetsEndCondition: Boolean = {
 
     makeMove match {
-      case Success(newGame) =>
-        if (newGame.bag.size == 0 && newGame.players.get(game.playersMove).get.letters.size == 0) true else false
+      case Success(newGame) => (newGame.bag.size == 0 && newGame.players.get(game.playersMove).get.letters.size == 0)
       case _ => false
     }
   }
@@ -91,7 +90,7 @@ case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) exten
     formedWords.flatMap {
       lists =>
         val (score, lsts, badwords) = lists.foldLeft((0, List.empty[(String, Int)], List.empty[String])) {
-          case ((acc, lsts, badwords), (xs)) =>
+          case ((acc, lsts, badwords), xs) =>
             val word = toWord(xs)
             val bdwords = if (!game.dictionary.isValidWord(word)) word :: badwords else badwords
             val squares = xs.map { case (pos, let) => pos -> board.squareAt(pos).setLetter(let) }
@@ -104,11 +103,11 @@ case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) exten
                 // If the bonus has already been used, ignore the bonus square
                 board.squareAt(pos).tile.fold {
                   sq match {
-                    case NormalSquare(x) => (scr + sq.tile.get.value, wordBonuses)
-                    case DoubleLetterSquare(x) => (scr + (sq.tile.get.value * 2), wordBonuses)
-                    case TripleLetterSquare(x) => (scr + (sq.tile.get.value * 3), wordBonuses)
-                    case DoubleWordSquare(x) => (scr + sq.tile.get.value, ((i: Int) => i * 2) :: wordBonuses)
-                    case TripleWordSquare(x) => (scr + sq.tile.get.value, ((i: Int) => i * 3) :: wordBonuses)
+                    case NormalSquare(Some(x)) => (scr + x.value, wordBonuses)
+                    case DoubleLetterSquare(Some(x)) => (scr + (x.value * 2), wordBonuses)
+                    case TripleLetterSquare(Some(x)) => (scr + (x.value * 3), wordBonuses)
+                    case DoubleWordSquare(Some(x)) => (scr + x.value, ((i: Int) => i * 2) :: wordBonuses)
+                    case TripleWordSquare(Some(x)) => (scr + x.value, ((i: Int) => i * 3) :: wordBonuses)
                   }
                 }(tile => (scr + tile.value, wordBonuses))
             }
@@ -253,40 +252,6 @@ case class ExchangeMove(game: Game, exchangeLetters: List[Tile]) extends Move(ga
   def makeMove: Try[Game] = ???
 
   val meetsEndCondition = false
-}
-
-object Main {
-  def main(args: Array[String]) {
-    val game = Game.make(List("jim", "joe"), Dictionary.load("Dict/en.txt"), LetterBag.init).get
-
-    val board = Board.init
-
-    val newBrd = board.squares ++ List(
-      Pos.posAt(1, 3).get -> NormalSquare(Some(Letter('L', 1))),
-      Pos.posAt(2, 3).get -> NormalSquare(Some(Letter('A', 1))),
-      Pos.posAt(3, 3).get -> NormalSquare(Some(Letter('S', 1))),
-      Pos.posAt(4, 3).get -> NormalSquare(Some(Letter('T', 1))),
-      Pos.posAt(5, 3).get -> NormalSquare(Some(Letter('E', 1))),
-      Pos.posAt(6, 3).get -> NormalSquare(Some(Letter('D', 1))))
-
-    val testBoard = Board(newBrd)
-
-    println(testBoard)
-
-    val placed = NonEmptyList(
-      Pos.posAt(6, 1).get -> Letter('A', 1),
-      Pos.posAt(6, 2).get -> Letter('D', 1),
-
-      Pos.posAt(6, 4).get -> Letter('E', 1),
-      Pos.posAt(6, 5).get -> Letter('D', 1))
-
-    val blanks = Nil
-
-    val move = PlaceLettersMove((game.copy(board = testBoard)), placed)
-    val words = (move.formedWords)
-
-    println(move.score)
-  }
 }
 
 
