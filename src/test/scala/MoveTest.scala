@@ -191,16 +191,25 @@ class MoveTest extends ScrabbleTest {
 
     }
 
-    "place one letter" in {
+    val blankGame: Game = {
       val str = "JEARVINENVO_NILLEWBKONUIEUWEAZBDESIAPAEOOURGOCDSNIADOAACAR_RMYELTUTYTEREOSITNIRFGPHAQLHESOIITXFDMETG"
       val bag = LetterBag.fromLetters(str, letterBag.tileSet)
-      val game = Game.make(List("a", "b", "c", "d"), enDict, bag.get).get
-      val game1 = PlaceLettersMove(game, toPlace("ravine", true, pos(8, 8))).makeMove.get
+      Game.make(List("a", "b", "c", "d"), enDict, bag.get).get
+    }
 
-      val blankMove = PlaceLettersMove(game1, pos(8, 7) -> BlankLetter('O') :: Nil)
+    "place one letter" in {
+
+      val game1 = PlaceLettersMove(blankGame, toPlace("ravine", true, pos(8, 8))).makeMove.get
+
+      val place = pos(8, 7) -> letterBag.letterFor('O').get :: Nil
+      val blankMove = PlaceLettersMove(game1, place)
 
       builtToStr(blankMove.formedWords.get) must contain("OR")
       blankMove.formedWords.get must have size 1
+
+      // Horizontal single letter
+
+      // Build multiple words
     }
 
     "handle blank letters" in {

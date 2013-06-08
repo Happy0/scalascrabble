@@ -139,17 +139,25 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
 
   private lazy val (startx, endx) = (placedProcessed(0)._1.x, placedProcessed(amountPlaced - 1)._1.x)
   private lazy val (starty, endy) = (placedProcessed(0)._1.y, placedProcessed(amountPlaced - 1)._1.y)
-  
-  private lazy val (horizontal, vertical) = (starty == endy, startx == endx)
+
+  private lazy val (horizontal, vertical): (Boolean, Boolean) = {
+    if (amountPlaced == 1) {
+      val horizontal = !board.LettersLeft(first._1).isEmpty || !board.LettersRight(first._1).isEmpty
+      val vertical = !board.LettersAbove(first._1).isEmpty || !board.LettersBelow(first._1).isEmpty
+
+      (horizontal, vertical)
+    } else (starty == endy, startx == endx)
+  }
 
   // @TODO: Absolutely hurrendous looking. Need to tidy it up.
   private def buildWords: Try[List[List[(Pos, Tile)]]] = {
 
     def isLastPlaced(pos: Pos): Boolean = pos.x == endx && pos.y == endy
 
-    def afterEnd(pos: Pos) = if ((pos.x, pos.y) == (endx, endy)) {
-      if (horizontal) board.LettersRight(pos) else board.LettersAbove(pos)
-    } else Nil
+    def afterEnd(pos: Pos) =
+      if ((pos.x, pos.y) == (endx, endy)) {
+        if (horizontal) board.LettersRight(pos) else board.LettersAbove(pos)
+      } else Nil
 
     /** Returns words that are formed from the placement of a letter on a square on the board */
     def allAdjacentTo(pos: Pos, let: Tile): List[(Pos, Tile)] = {
@@ -171,9 +179,10 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
 
     if (!horizontal && !vertical) Failure(NotLinear()) else {
 
-      val startList: List[(Pos, Tile)] = (if (horizontal) board.LettersLeft(placedProcessed(0)._1) else
-        board.LettersBelow(placedProcessed(0)._1)) :+ (first._1, first._2)
-      val otherWords = allAdjacentTo(first._1, first._2)
+      //@TODO: Tidy this up
+      val startList: List[(Pos, Tile)] = ((if (horizontal) board.LettersLeft(placedProcessed(0)._1) else
+        board.LettersBelow(placedProcessed(0)._1)) :+ (first._1, first._2)) ::: afterEnd(placedProcessed(0)._1)
+      val otherWords = allAdjacentTo(first._1, first._2) 
       val startWith: List[List[(Pos, Tile)]] = if (otherWords.isEmpty) List(startList) else List(startList) :+ otherWords
 
       /*@TODO: Replace this with a recursive function that returns Either[InvalidMove, ...] rather than break the fold with
@@ -207,7 +216,7 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
                 position.get -> sq.tile.get
             }
 
-            val newlist: List[(Pos, Tile)] = ((x ::: between)) ::: pos -> let :: (if (isLastPlaced(pos)) afterEnd(pos) else Nil)
+            val newlist: List[(Pos, Tile)] = ((x ::: between)) ::: pos -> let :: afterEnd(pos)
             val updatedList = newlist :: xs
             val otherWords: List[(Pos, Tile)] = allAdjacentTo(pos, let)
 
@@ -218,7 +227,10 @@ case class PlaceLettersMove(game: Game, placed: List[(Pos, Tile)]) extends Move(
       }
 
       // If the placed letters extend a linear word, or are placed at right angles to another word (forming more words)
-      lazy val isAttachedToWord = lists._3(0).size > placed.size || lists._3.size > 1 || game.moves == 0
+      lazy val isAttachedToWord = {
+        println("attached: " + lists._3)
+        lists._3(0).size > placed.size || lists._3.size > 1 || game.moves == 0
+      }
 
       if (!isAttachedToWord) Failure(NotAttachedToWord()) else Success(lists._3)
     }
