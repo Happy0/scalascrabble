@@ -13,7 +13,7 @@ case class Board(
     }.toString
   }
 
-  def squareAt(pos: Pos): Square = squares.get(pos).get
+  def squareAt(pos: Pos) = squares.get(pos).get // arghghgh
 
   def LettersAbove(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.up, Nil)
   def LettersBelow(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.down, Nil) reverse
@@ -23,10 +23,20 @@ case class Board(
   private def findAdjacentLetters(pos: Pos, direction: Pos => Option[Pos], gathered: List[(Pos, Tile)]): List[(Pos, Tile)] = {
     val nextTo: Option[Pos] = direction(pos)
 
+    /*nextTo.flatMap { p =>
+      squareAt(p).flatMap {
+        sq =>
+          sq.tile.map {
+            tile =>
+              p -> tile :: findAdjacentLetters(p, direction, gathered)
+          }
+      }
+    }.fold[List[(Pos, Tile)]](gathered)(a => a) */
+
     nextTo.fold(gathered) { p =>
       squareAt(p).tile.fold(gathered) {
         tile =>
-          p -> tile :: findAdjacentLetters(nextTo.get, direction, gathered)
+          p -> tile :: findAdjacentLetters(p, direction, gathered)
       }
     }
 
