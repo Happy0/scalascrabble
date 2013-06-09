@@ -13,6 +13,8 @@ abstract class Move(game: Game) {
 
 case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) extends Move(game) {
 
+  def horizontalElseVertical[A](horizontal: => A)(vertical: => A): A = if (this.horizontal) horizontal else vertical
+
   //@TODO:Think about how to record games. Tidy up buildWords function. Test it - properly.
 
   /** Processes the placed letters. Sorts them into positional order. */
@@ -156,7 +158,7 @@ case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) exten
 
     def afterEnd(pos: Pos) =
       if ((pos.x, pos.y) == (endx, endy)) {
-        if (horizontal) board.LettersRight(pos) else board.LettersAbove(pos)
+        horizontalElseVertical(board.LettersRight(pos))(board.LettersAbove(pos))
       } else Nil
 
     /** Returns words that are formed from the placement of a letter on a square on the board */
@@ -166,22 +168,22 @@ case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) exten
       lazy val left = board.LettersLeft(pos)
       lazy val right = board.LettersRight(pos)
 
-      if (horizontal) {
+      horizontalElseVertical {
         if (!above.isEmpty || !below.isEmpty) {
           below ::: pos -> let :: above
         } else Nil
-      } else {
+      } {
         if (!left.isEmpty || !right.isEmpty) {
           left ::: pos -> let :: right
         } else Nil
       }
+
     }
 
     if (!horizontal && !vertical) Failure(NotLinear()) else {
 
-      //@TODO: Tidy this up
-      val startList: List[(Pos, Tile)] = ((if (horizontal) board.LettersLeft(placedProcessed(0)._1) else
-        board.LettersBelow(placedProcessed(0)._1)) :+ (first._1, first._2)) ::: afterEnd(placedProcessed(0)._1)
+      //@TODO: Tidy this up. My god.
+      val startList: List[(Pos, Tile)] = ((horizontalElseVertical(board.LettersLeft(placedProcessed(0)._1))(board.LettersBelow(placedProcessed(0)._1))) :+ (first._1, first._2)) ::: afterEnd(placedProcessed(0)._1)
       val otherWords = allAdjacentTo(first._1, first._2)
       val startWith: List[List[(Pos, Tile)]] = if (otherWords.isEmpty) List(startList) else List(startList) :+ otherWords
 
@@ -190,10 +192,10 @@ case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) exten
        */
       val lists: (Int, Int, List[List[(Pos, Tile)]]) = placedProcessed.tail.foldLeft(startx, starty, startWith) {
         case ((lastx, lasty, (x :: xs)), (pos: Pos, let)) =>
-          val isLinear = if (horizontal) pos.y == lasty else pos.x == lastx
+          val isLinear = horizontalElseVertical(pos.y == lasty)(pos.x == lastx)
           if (!isLinear) return Failure(MisPlacedLetters(pos.x, pos.y))
 
-          val comesAfter = if (horizontal) pos.x == lastx + 1 else pos.y == lasty + 1
+          val comesAfter = horizontalElseVertical(pos.x == lastx + 1)(pos.y == lasty + 1)
 
           if (comesAfter) {
             // Add the letter to the first list
@@ -205,12 +207,12 @@ case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) exten
 
           } else {
 
-            val range = if (horizontal) List.range(lastx + 1, pos.x) else List.range(lasty + 1, pos.y)
+            val range = horizontalElseVertical(List.range(lastx + 1, pos.x))(List.range(lasty + 1, pos.y))
 
             // Add the letters inbetween and the current char to the first list, then look for letters above and below the current char
             val between: List[(Pos, Tile)] = range.map {
               x =>
-                val position = if (horizontal) Pos.posAt(x, pos.y) else Pos.posAt(pos.x, x)
+                val position = horizontalElseVertical(Pos.posAt(x, pos.y))(Pos.posAt(pos.x, x))
                 if (board.squareAt(position.get).isEmpty) return Failure(MisPlacedLetters(pos.x, pos.y))
                 val sq = board.squareAt(position.get)
                 position.get -> sq.tile.get

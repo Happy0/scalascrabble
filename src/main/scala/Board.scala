@@ -23,8 +23,13 @@ case class Board(
   private def findAdjacentLetters(pos: Pos, direction: Pos => Option[Pos], gathered: List[(Pos, Tile)]): List[(Pos, Tile)] = {
     val nextTo: Option[Pos] = direction(pos)
 
-    if (nextTo.isEmpty || squareAt(nextTo.get).isEmpty) gathered
-    else nextTo.get -> squareAt(nextTo.get).tile.get :: findAdjacentLetters(nextTo.get, direction, gathered)
+    nextTo.fold(gathered) { p =>
+      squareAt(p).tile.fold(gathered) {
+        tile =>
+          p -> tile :: findAdjacentLetters(nextTo.get, direction, gathered)
+      }
+    }
+
   }
 
   def placeLetter(pos: Pos, let: Tile): Board = copy(squares = squares.updated(pos, squareAt(pos).setLetter(let)))
