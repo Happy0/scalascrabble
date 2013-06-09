@@ -15,10 +15,10 @@ case class Board(
 
   def squareAt(pos: Pos) = squares.get(pos).get // arghghgh
 
-  def LettersAbove(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.up, Nil)
-  def LettersBelow(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.down, Nil) reverse
-  def LettersLeft(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.left, Nil) reverse
-  def LettersRight(pos: Pos): List[(Pos, Tile)] = findAdjacentLetters(pos, pos => pos.right, Nil)
+  def LettersAbove(pos: Pos): List[(Pos, Tile)] = walkTiles(pos, pos => pos.up)
+  def LettersBelow(pos: Pos): List[(Pos, Tile)] = walkTiles(pos, pos => pos.down) reverse
+  def LettersLeft(pos: Pos): List[(Pos, Tile)] = walkTiles(pos, pos => pos.left) reverse
+  def LettersRight(pos: Pos): List[(Pos, Tile)] = walkTiles(pos, pos => pos.right)
 
   private def tileAt(pos: Pos) = squares get pos flatMap (_.tile)
 
