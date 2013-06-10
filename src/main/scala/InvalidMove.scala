@@ -42,3 +42,7 @@ case class playerDoesNotHaveLettersClientError(errorcode: Int = 7) extends Inval
 case class LetterNotInTileSetClientError(errorcode: Int = 8) extends InvalidMove(errorcode) {
   def defaultMessage = "Letter not in the tileset for this game. Client error or malicious client."
 }
+
+case class UnlikelyInternalError(errorcode: Int = 9) extends InvalidMove(errorcode) {
+  def defaultMessage = "The compiler and I had a disagreement, and the compiler won the argument."
+}

@@ -13,22 +13,31 @@ case class Board(
     }.toString
   }
 
-  def squareAt(pos: Pos) = squares get pos get
+  // *shakes fist at Ornicar and the compiler*
+  def squareAt(pos: Pos): Option[Square] = squares get pos
 
   private def tileAt(pos: Pos) = squares get pos flatMap (_.tile)
 
-  def LettersAbove(pos: Pos): List[(Pos, Tile)] = walkTiles(pos, pos => pos.up)
-  def LettersBelow(pos: Pos): List[(Pos, Tile)] = walkTiles(pos, pos => pos.down) reverse
-  def LettersLeft(pos: Pos): List[(Pos, Tile)] = walkTiles(pos, pos => pos.left) reverse
-  def LettersRight(pos: Pos): List[(Pos, Tile)] = walkTiles(pos, pos => pos.right)
+  def LettersAbove(pos: Pos): List[(Pos, Square, Tile)] = walkTiles(pos, pos => pos.up)
+  def LettersBelow(pos: Pos): List[(Pos, Square, Tile)] = walkTiles(pos, pos => pos.down) reverse
+  def LettersLeft(pos: Pos): List[(Pos, Square, Tile)] = walkTiles(pos, pos => pos.left) reverse
+  def LettersRight(pos: Pos): List[(Pos, Square, Tile)] = walkTiles(pos, pos => pos.right)
 
-  private def walkTiles(from: Pos, to: Direction): PosTiles =
+  private def walkTiles(from: Pos, to: Direction): PosSquares =
     to(from) ?? { pos =>
-      tileAt(pos) ?? { tile => pos -> tile :: walkTiles(pos, to) }
+      squareAt(pos) ?? {
+        sq =>
+          tileAt(pos) ?? {
+            tile =>
+              (pos, sq, tile) :: walkTiles(pos, to)
+          }
+
+      }
     }
 
   //  squareAt(pos) map {sq => copy(squares = squares.updated(pos, sq.setLetter(let))) }
-  def placeLetter(pos: Pos, let: Tile): Board = copy(squares = squares.updated(pos, squareAt(pos).setLetter(let)))
+  def placeLetter(pos: Pos, let: Tile): Option[Board] =
+    squareAt(pos).fold[Option[Board]](None)(sq => Some(copy(squares = squares.updated(pos, sq.setLetter(let)))))
 
 }
 

@@ -17,6 +17,8 @@ sealed case class Pos private (x: Int, y: Int, gridCordinates: String) {
 object Pos {
   val min: Int = 1
   val max: Int = 15
+  
+  val startPosition : Pos = Pos(8,8, "H8")
 
   /** Returns the position object at location (x,y) if it exists, else returns None (if it is out of the bounds of the board) */
   def posAt(x: Int, y: Int): Option[Pos] = allPositions get (x, y)
