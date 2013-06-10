@@ -8,7 +8,9 @@ case class Game private (
   consecutivePasses: Int,
   moves: Int) {
 
-  val currentPlayer = players(playersMove)
+  def getPlayer(playerNo: Int) : Option[Player] = players get playerNo 
+  
+  val currentPlayer = players get playersMove
   val nextPlayerNo: Int = (playersMove + 1) % (players.size)
 }
 

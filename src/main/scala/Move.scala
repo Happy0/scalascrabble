@@ -57,37 +57,43 @@ case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Square, 
 
   /* @TODO: Think about whether we should determine whether a valid move is possible for any player from the position, 
    * or perhaps end on multiple consecutive passes */
-  lazy val meetsEndCondition: Boolean = {
+  lazy val meetsEndCondition: Try[Boolean] = {
 
-    makeMove match {
-      case Success(newGame) => (newGame.bag.size == 0 && newGame.players.get(game.playersMove).get.letters.size == 0)
-      case _ => false
+    makeMove flatMap {
+      newGame =>
+        newGame.getPlayer(game.playersMove).fold[Try[Boolean]](Failure(UnlikelyInternalError())) {
+          player =>
+            Success(newGame.bag.size == 0 && player.letters.size == 0)
+        }
     }
   }
 
   /** Removes letters from player's letter rack and updates the board. Returns an error if the player does not have the letters  */
   private lazy val placeLetters: Try[(Board, Player)] = {
-    val currentPlayer = game.currentPlayer
-    val playerLetters = currentPlayer.letters
+    game.currentPlayer.fold[Try[(Board, Player)]](Failure(UnlikelyInternalError())) {
+      currentPlayer =>
+        val playerLetters = currentPlayer.letters
 
-    def place(placed: List[(Pos, Square, Tile)], remainingLetters: List[Tile], board: Board): Try[(Board, Player)] = {
-      placed match {
-        case y :: rest =>
-          /* Split the remaining player's letters up till it matches one of their placed letters. */
-          val (upTo, after) = remainingLetters.span { let => let != y._2 }
+        def place(placed: List[(Pos, Square, Tile)], remainingLetters: List[Tile], board: Board): Try[(Board, Player)] = {
+          placed match {
+            case y :: rest =>
+              /* Split the remaining player's letters up till it matches one of their placed letters. */
+              val (upTo, after) = remainingLetters.span { let => let != y._2 }
 
-          if (upTo.size == remainingLetters.size) Failure(playerDoesNotHaveLettersClientError()) else {
-            val newLetters: List[Tile] = upTo ::: after.drop(1)
+              if (upTo.size == remainingLetters.size) Failure(playerDoesNotHaveLettersClientError()) else {
+                val newLetters: List[Tile] = upTo ::: after.drop(1)
 
-            board.placeLetter(y._1, y._3).fold[Try[(Board, Player)]](Failure(UnlikelyInternalError())) {
-              board => place(rest, newLetters, board)
-            }
+                board.placeLetter(y._1, y._3).fold[Try[(Board, Player)]](Failure(UnlikelyInternalError())) {
+                  board => place(rest, newLetters, board)
+                }
 
+              }
+            case Nil => Success(board, currentPlayer.replaceLetters(remainingLetters))
           }
-        case Nil => Success(board, currentPlayer.replaceLetters(remainingLetters))
-      }
+        }
+        place(placedProcessed, playerLetters, board)
     }
-    place(placedProcessed, playerLetters, board)
+
   }
 
   /**
