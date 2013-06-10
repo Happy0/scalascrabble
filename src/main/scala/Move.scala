@@ -11,9 +11,13 @@ abstract class Move(game: Game) {
 
 }
 
+
+
 case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) extends Move(game) {
 
-  def horizontalElseVertical[A](horizontal: => A)(vertical: => A): A = if (this.horizontal) horizontal else vertical
+  def horizontalElseVertical[A](horizontal: => A)(vertical: => A): A = {
+    if (this.horizontal) horizontal else vertical
+  }
 
   //@TODO:Think about how to record games. Tidy up buildWords function. Test it - properly.
 

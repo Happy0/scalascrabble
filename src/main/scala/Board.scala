@@ -13,42 +13,21 @@ case class Board(
     }.toString
   }
 
-  def squareAt(pos: Pos) = squares.get(pos).get // arghghgh
+  def squareAt(pos: Pos) = squares get pos get
+
+  private def tileAt(pos: Pos) = squares get pos flatMap (_.tile)
 
   def LettersAbove(pos: Pos): List[(Pos, Tile)] = walkTiles(pos, pos => pos.up)
   def LettersBelow(pos: Pos): List[(Pos, Tile)] = walkTiles(pos, pos => pos.down) reverse
   def LettersLeft(pos: Pos): List[(Pos, Tile)] = walkTiles(pos, pos => pos.left) reverse
   def LettersRight(pos: Pos): List[(Pos, Tile)] = walkTiles(pos, pos => pos.right)
 
-  private def tileAt(pos: Pos) = squares get pos flatMap (_.tile)
-
   private def walkTiles(from: Pos, to: Direction): PosTiles =
     to(from) ?? { pos =>
       tileAt(pos) ?? { tile => pos -> tile :: walkTiles(pos, to) }
     }
 
-  private def findAdjacentLetters(pos: Pos, direction: Pos => Option[Pos], gathered: List[(Pos, Tile)]): List[(Pos, Tile)] = {
-    val nextTo: Option[Pos] = direction(pos)
-
-    /*nextTo.flatMap { p =>
-      squareAt(p).flatMap {
-        sq =>
-          sq.tile.map {
-            tile =>
-              p -> tile :: findAdjacentLetters(p, direction, gathered)
-          }
-      }
-    }.fold[List[(Pos, Tile)]](gathered)(a => a) */
-
-    nextTo.fold(gathered) { p =>
-      squareAt(p).tile.fold(gathered) {
-        tile =>
-          p -> tile :: findAdjacentLetters(p, direction, gathered)
-      }
-    }
-
-  }
-
+  //  squareAt(pos) map {sq => copy(squares = squares.updated(pos, sq.setLetter(let))) }
   def placeLetter(pos: Pos, let: Tile): Board = copy(squares = squares.updated(pos, squareAt(pos).setLetter(let)))
 
 }
