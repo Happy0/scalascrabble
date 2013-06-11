@@ -3,8 +3,6 @@ package scrabble
 import scala.util.{ Try, Success, Failure }
 import scalaz.NonEmptyList
 import scalaz.NonEmptyLists
-import scalaz.Lists
-import scalaz.Identity
 
 abstract class Move(game: Game) {
 
@@ -14,7 +12,7 @@ abstract class Move(game: Game) {
 
 }
 
-case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) extends Lists {
+case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) {
 
   def validate: Try[ValidPlaceLettersMove] = {
 
@@ -26,17 +24,22 @@ case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) exten
 
     def toOption(list: List[(Pos, Tile)]): Option[NonEmptyList[(Pos, Square, Tile)]] = {
 
-      val startwith = unwrap(placed.head._1, placed.head._2) flatMap {
-        case (pos, sq, tile) => Some(NonEmptyList(((pos, sq, tile))))
+      val startwith = unwrap(placed.head._1, placed.head._2) map {
+        case (pos, sq, tile) => NonEmptyList(((pos, sq, tile)))
       }
 
-      list.tail.foldLeft(startwith) {
-        case (Some(acc), (pos, tile)) => unwrap(pos, tile) flatMap {
-          case (ps, square, tl) => Some((pos, square, tile) <:: acc)
+      list match {
+        case Nil => None
+        case x :: xs =>
+          xs.foldLeft(startwith) {
+            case (Some(acc), (pos, tile)) => unwrap(pos, tile) map {
+              case (ps, square, tl) => (pos, square, tile) <:: acc
 
-        }
-        case _ => None
+            }
+            case _ => None
+          }
       }
+
     }
 
     toOption(placed.list).fold[Try[ValidPlaceLettersMove]](
@@ -107,7 +110,7 @@ case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Square, 
           placed match {
             case y :: rest =>
               /* Split the remaining player's letters up till it matches one of their placed letters. */
-              val (upTo, after) = remainingLetters.span { let => let != y._2 }
+              val (upTo, after) = remainingLetters.span { let => let != y._3 }
 
               if (upTo.size == remainingLetters.size) Failure(playerDoesNotHaveLettersClientError()) else {
                 val newLetters: List[Tile] = upTo ::: after.drop(1)
@@ -142,23 +145,24 @@ case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Square, 
           case ((acc, lsts, badwords), xs) =>
             val word = toWord(xs)
             val bdwords = if (!game.dictionary.isValidWord(word)) word :: badwords else badwords
-            val squares = xs.map { case (pos, sq, let) => pos -> sq.setLetter(let) }
+            //   val squares = xs.map { case (pos, sq, let) => pos -> sq.setLetter(let) }
 
             // Sort to put the word bonus squares last
-            val (score, wordBonuses) = squares.foldLeft(0, List.empty[Int => Int]) {
-              case ((scr, wordBonuses), (pos, sq)) =>
-                val square = board.squareAt(pos)
+            val (score, wordBonuses) = xs.foldLeft(0, List.empty[Int => Int]) {
+              case ((scr, wordBonuses), (pos, sq, tile)) =>
+                // val square = board.squareAt(pos)
 
                 // If the bonus has already been used, ignore the bonus square
                 sq.tile.fold {
                   sq match {
-                    case NormalSquare(Some(x)) => (scr + x.value, wordBonuses)
-                    case DoubleLetterSquare(Some(x)) => (scr + (x.value * 2), wordBonuses)
-                    case TripleLetterSquare(Some(x)) => (scr + (x.value * 3), wordBonuses)
-                    case DoubleWordSquare(Some(x)) => (scr + x.value, ((i: Int) => i * 2) :: wordBonuses)
-                    case TripleWordSquare(Some(x)) => (scr + x.value, ((i: Int) => i * 3) :: wordBonuses)
+                    case NormalSquare(None) => (scr + tile.value, wordBonuses)
+                    case DoubleLetterSquare(None) => (scr + (tile.value * 2), wordBonuses)
+                    case TripleLetterSquare(None) => (scr + (tile.value * 3), wordBonuses)
+                    case DoubleWordSquare(None) => (scr + tile.value, ((i: Int) => i * 2) :: wordBonuses)
+                    case TripleWordSquare(None) => (scr + tile.value, ((i: Int) => i * 3) :: wordBonuses)
                   }
-                }(tile => (scr + tile.value, wordBonuses))
+                }(currentTile =>
+                  (scr + currentTile.value, wordBonuses))
             }
 
             val finalScore = wordBonuses.foldLeft(score) { case (score, func) => func(score) }
@@ -178,7 +182,10 @@ case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Square, 
     placedProcessed.find { case (pos, _, let) => pos == startPosition } isDefined
   }
 
-  private lazy val alreadyOccupiedSquares = placedProcessed.find { case (pos: Pos, _, _) => !(board.squareAt(pos).isEmpty) }
+  private lazy val alreadyOccupiedSquares = placedProcessed.find {
+    case (pos: Pos, sq, _) => !(sq.isEmpty)
+  }
+
   private lazy val startPosition = Pos.startPosition
   private lazy val sevenLetterBonus: Boolean = amountPlaced == 7
   private val board = game.board
@@ -187,7 +194,7 @@ case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Square, 
   private lazy val amountPlaced = placedProcessed.size
 
   private lazy val startPos = placedProcessed(0)._1
-  private lazy val endPos = placedProcessed(0)._1
+  private lazy val endPos = placedProcessed(amountPlaced - 1)._1
 
   private lazy val (startx, endx) = (placedProcessed(0)._1.x, placedProcessed(amountPlaced - 1)._1.x)
   private lazy val (starty, endy) = (placedProcessed(0)._1.y, placedProcessed(amountPlaced - 1)._1.y)
@@ -242,6 +249,7 @@ case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Square, 
         startWith: List[List[(Pos, Square, Tile)]]): Try[List[List[(Pos, Square, Tile)]]] = {
 
         (placed, startWith) match {
+          case (_, Nil) => Failure(UnlikelyInternalError())
           case (Nil, xs) => Success(xs)
 
           case (((pos, sq, let) :: rest), (x :: xs)) =>
@@ -260,15 +268,23 @@ case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Square, 
               findWords(rest, pos, if (!otherWords.isEmpty) updatedList :+ otherWords else updatedList)
 
             } else {
+              println("Doesn't come after: " + rest)
 
               // val range = horizontalElseVertical(List.range(lastx + 1, pos.x))(List.range(lasty + 1, pos.y))
               val predicesor = horizontalElseVertical(pos.left)(pos.down)
               // Add the letters inbetween and the current char to the first list, then look for letters above and below the current char
-              val between: List[(Pos, Square, Tile)] = horizontalElseVertical(board.LettersRight(lastPos))(board.LettersAbove(lastPos))
-              val valid = between.find { case (ps, sq, tile) => Some(ps) == predicesor }
 
-              valid.fold[Try[List[List[(Pos, Square, Tile)]]]](Failure(MisPlacedLetters(pos.x, pos.y))) {
-                case _ =>
+              val between = predicesor flatMap {
+                predicsorPos =>
+                  val between: List[(Pos, Square, Tile)] =
+                    horizontalElseVertical(board.LettersRight(lastPos))(board.LettersAbove(lastPos))
+                  between.find { case (ps, sq, tile) => ps == predicsorPos } map (_ => between)
+              }
+
+              between.fold[Try[List[List[(Pos, Square, Tile)]]]] {
+                Failure(MisPlacedLetters(pos.x, pos.y))
+              } {
+                case between =>
                   val newlist: List[(Pos, Square, Tile)] = ((x ::: between)) ::: (pos, sq, let) :: afterEnd(pos)
                   val updatedList = newlist :: xs
                   val otherWords: List[(Pos, Square, Tile)] = allAdjacentTo(pos, sq, let)
@@ -283,8 +299,15 @@ case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Square, 
 
       // If the placed letters extend a linear word, or are placed at right angles to another word (forming more words)
 
-      findWords(placedProcessed.tail, startPos, startWith) flatMap {
+      val words = placedProcessed match {
+        case Nil => Failure(UnlikelyInternalError())
+        case x :: xs =>
+          findWords(xs, startPos, startWith)
+      }
+
+      words flatMap {
         lists =>
+          //@TODO: lists(0) is unsafe
           lazy val isAttachedToWord = lists(0).size > placedProcessed.size || lists.size > 1 || game.moves == 0
 
           if (!isAttachedToWord) Failure(NotAttachedToWord()) else Success(lists)

@@ -11,6 +11,8 @@ sealed case class Pos private (x: Int, y: Int, gridCordinates: String) {
   lazy val right: Option[Pos] = posAt(x + 1, y)
 
   //override def toString = gridCordinates
+  
+  
 
 }
 

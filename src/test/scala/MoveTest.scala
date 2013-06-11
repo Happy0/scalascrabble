@@ -57,12 +57,13 @@ class MoveTest extends ScrabbleTest {
     }
 
     def builtToStr(lists: List[List[(Pos, Square, Tile)]]): List[String] = lists.map { list =>
-      list.map { case (pos,sq, letter) => letter.letter }.mkString
+      list.map { case (pos, sq, letter) => letter.letter }.mkString
     }
 
     "build multiple words from letters placed adjacent to other squares from horizontally placed letters" in {
       val place = toPlace("o", true, pos(6, 6)) ++ toPlace("e", true, pos(8, 6))
       val mv = PlaceLettersMove(playedGame, place).validate.get
+
       val built = mv.formedWords.get
       val words = builtToStr(built)
 
@@ -75,8 +76,9 @@ class MoveTest extends ScrabbleTest {
     }
 
     "build multiple words from letters placed adjacent to other squares from vertically placed letters " in {
-
+      print("mv: " + gibberishWordsMove.formedWords)
       val built = gibberishWordsMove.formedWords.get
+
       val words = builtToStr(built)
 
       words must contain("TTESTS")
@@ -240,7 +242,7 @@ class MoveTest extends ScrabbleTest {
 
     "transition the game state correctly" in {
       predictableGame.moves must beEqualTo(1)
-      predictableGame.board.LettersRight(pos(7, 8)).map { case (pos,sq, let) => let.letter }.mkString must beEqualTo("LURID")
+      predictableGame.board.LettersRight(pos(7, 8)).map { case (pos, sq, let) => let.letter }.mkString must beEqualTo("LURID")
       predictableGame.bag.lettersAsString must beEqualTo(
         "ADYEICBLEDHMSIXNFERAIWOANETGAELGFIUT_TJHAI_BDONENOECTRIEEREKOAZPVETONSASURAPMNOTO")
       predictableGame.currentPlayer.get.letters.map(_.letter).mkString must beEqualTo("IGQAWLO")
