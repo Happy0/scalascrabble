@@ -7,5 +7,7 @@ package object scrabble extends scalaz.Zeros {
   implicit final class ScrabblePimpedOption[A](o: Option[A]) {
 
     def ??[B: scalaz.Zero](f: A => B): B = o.fold(mzero[B])(f)
+    
+    
   }
 }

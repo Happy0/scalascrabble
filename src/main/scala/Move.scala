@@ -2,18 +2,47 @@ package scrabble
 
 import scala.util.{ Try, Success, Failure }
 import scalaz.NonEmptyList
+import scalaz.NonEmptyLists
+import scalaz.Lists
+import scalaz.Identity
 
 abstract class Move(game: Game) {
 
   def makeMove: Try[Game]
 
-  val meetsEndCondition: Boolean
+  def meetsEndCondition: Try[Boolean]
 
 }
 
-case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) {
+case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) extends Lists {
 
-  def validate: Try[ValidPlaceLettersMove] = ???
+  def validate: Try[ValidPlaceLettersMove] = {
+
+    val list = placed.map { case (pos, tile) => (pos, game.board.squareAt(pos), tile) }
+
+    def unwrap(pos: Pos, tile: Tile): Option[(Pos, Square, Tile)] = {
+      game.board.squareAt(pos) flatMap { sq => Some(pos, sq, tile) }
+    }
+
+    def toOption(list: List[(Pos, Tile)]): Option[NonEmptyList[(Pos, Square, Tile)]] = {
+
+      val startwith = unwrap(placed.head._1, placed.head._2) flatMap {
+        case (pos, sq, tile) => Some(NonEmptyList(((pos, sq, tile))))
+      }
+
+      list.tail.foldLeft(startwith) {
+        case (Some(acc), (pos, tile)) => unwrap(pos, tile) flatMap {
+          case (ps, square, tl) => Some((pos, square, tile) <:: acc)
+
+        }
+        case _ => None
+      }
+    }
+
+    toOption(placed.list).fold[Try[ValidPlaceLettersMove]](
+      Failure(UnlikelyInternalError()))(lst => Try(ValidPlaceLettersMove(game, lst)))
+
+  }
 
 }
 
@@ -254,7 +283,7 @@ case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Square, 
 
       // If the placed letters extend a linear word, or are placed at right angles to another word (forming more words)
 
-      findWords(placedProcessed, startPos, startWith) flatMap {
+      findWords(placedProcessed.tail, startPos, startWith) flatMap {
         lists =>
           lazy val isAttachedToWord = lists(0).size > placedProcessed.size || lists.size > 1 || game.moves == 0
 
@@ -273,13 +302,13 @@ case class PassMove(game: Game) extends Move(game) {
   }
 
   // Each player scoring 0 for three consecutive turns ends the game
-  val meetsEndCondition: Boolean = game.consecutivePasses == game.players.size * 3
+  def meetsEndCondition: Try[Boolean] = Success(game.consecutivePasses == game.players.size * 3)
 }
 
 case class ExchangeMove(game: Game, exchangeLetters: List[Tile]) extends Move(game) {
   def makeMove: Try[Game] = ???
 
-  val meetsEndCondition = false
+  def meetsEndCondition = Success(false)
 }
 
 

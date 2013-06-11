@@ -48,7 +48,7 @@ trait ScrabbleTest extends Specification with NonEmptyLists with Lists {
   /** Place tiles on the board at the specified positions */
   def placeSquares(board: Board, placed: NonEmptyList[(Pos, Tile)]): Board = placed.list.foldLeft(board) {
     case (b, placed) =>
-      b.placeLetter(placed._1, placed._2)
+      b.placeLetter(placed._1, placed._2).get
   }
 
   implicit def pimpNonEmptyList[A](nel: NonEmptyList[A]) = G(nel)

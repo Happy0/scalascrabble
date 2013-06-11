@@ -2,7 +2,7 @@ package scrabble
 
 class BoardTest extends ScrabbleTest {
 
-  val oneLetterPlaced = board.placeLetter(Pos.posAt(3, 3).get, Letter('a', 1))
+  val oneLetterPlaced = board.placeLetter(Pos.posAt(3, 3).get, Letter('a', 1)).get
 
   val normal = NormalSquare(None)
   val tripleWord = TripleWordSquare(None)
@@ -13,19 +13,19 @@ class BoardTest extends ScrabbleTest {
   "a board" should {
 
     "find letters above a position" in {
-      crossedWords.LettersAbove(pos(7, 5)).map(tup => tup._2.letter).mkString must beEqualTo("RES")
+      crossedWords.LettersAbove(pos(7, 5)).map(tup => tup._3.letter).mkString must beEqualTo("RES")
     }
 
     "find letters below a position" in {
-      crossedWords.LettersBelow(pos(7, 5)).map(tup => tup._2.letter).mkString must beEqualTo("SC")
+      crossedWords.LettersBelow(pos(7, 5)).map(tup => tup._3.letter).mkString must beEqualTo("SC")
     }
 
     "find letters left of a position" in {
-      crossedWords.LettersLeft(pos(7, 5)).map(tup => tup._2.letter).mkString must beEqualTo("HIST")
+      crossedWords.LettersLeft(pos(7, 5)).map(tup => tup._3.letter).mkString must beEqualTo("HIST")
     }
 
     "find letters right of a position" in {
-      crossedWords.LettersRight(pos(7, 5)).map(tup => tup._2.letter).mkString must beEqualTo("RY")
+      crossedWords.LettersRight(pos(7, 5)).map(tup => tup._3.letter).mkString must beEqualTo("RY")
     }
 
     /* Tedious, but important test to make sure all the special squares are positioned correctly */
@@ -125,11 +125,11 @@ class BoardTest extends ScrabbleTest {
     }
 
     "place Tile in the correct position" in {
-      oneLetterPlaced.squareAt(pos(3, 3)).tile must beEqualTo(Some(Letter('a', 1)))
+      oneLetterPlaced.squareAt(pos(3, 3)).get.tile must beEqualTo(Some(Letter('a', 1)))
     }
 
     "retrieve an occupied square" in {
-      oneLetterPlaced.squareAt(pos(3, 3)).tile must beEqualTo(Some(Letter('a', 1)))
+      oneLetterPlaced.squareAt(pos(3, 3)).get.tile must beEqualTo(Some(Letter('a', 1)))
     }
 
   }
