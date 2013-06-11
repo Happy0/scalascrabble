@@ -21,7 +21,9 @@ To run the tests:
 
     test
 
-Inspired by Ornicar's chess API: https://github.com/ornicar/scalachess/ 
+Inspired by [Ornicar's chess API](http://www.github.com/Ornicar/scalachess) : https://github.com/ornicar/scalachess/ 
 
-Credits:
-Ornicar: For inspiring me to learn Scala, and allowing me to be his Scala and functional programming apprentice with his code reviews, and for his coding contributions.
+Credits
+-------
+
+-[Ornicar](http://www.github.com/Ornicar): For inspiring me to learn Scala, and allowing me to be his Scala and functional programming apprentice with his code reviews, and for his coding contributions.
