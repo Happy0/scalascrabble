@@ -2,6 +2,8 @@ package scrabble
 
 import scala.util.{ Try, Success, Failure }
 import scala.util.Failure
+import scalaz.NonEmptyList
+import org.specs2.matcher.MatchResult
 
 import org.specs2.matcher.TraversableMatchers
 
@@ -24,54 +26,142 @@ class MoveTest extends ScrabbleTest {
           }
         }
 
-        place map {
+        place flatMap {
           place =>
-            PlaceLettersMove(playedGame, place).validate.get
+            PlaceLettersMove(playedGame, place).validate.toOption
         }
     }
 
   }
 
-  val blankGame: Game = {
+  val blankGame: Option[Game] = {
     val str = "JEARVINENVO_NILLEWBKONUIEUWEAZBDESIAPAEOOURGOCDSNIADOAACAR_RMYELTUTYTEREOSITNIRFGPHAQLHESOIITXFDMETG"
     val bag = LetterBag.fromLetters(str, letterBag.tileSet)
-    Game.make(List("a", "b", "c", "d"), enDict, bag.get).get
+
+    bag flatMap {
+      bag =>
+        Game.make(List("a", "b", "c", "d"), enDict, bag)
+    }
+
   }
 
-  val coversTwoBonuses: ValidPlaceLettersMove = {
-    val game1 = PlaceLettersMove(blankGame, toPlace("ravine", true, pos(8, 8))).validate.get.makeMove.get
-    val place = toPlace("ven", false, pos(11, 5)) ++ toPlace(
-      "son", false, pos(11, 9)).updated(0, pos(11, 9) -> BlankLetter('S'))
+  val ravinePlaced = {
+    blankGame flatMap {
+      game =>
+        toPlace("ravine", true, pos(8, 8)) flatMap {
+          place =>
+            PlaceLettersMove(game, place).validate flatMap (_.makeMove) toOption
+        }
+    }
 
-    PlaceLettersMove(game1, place).validate.get
   }
 
-  val modifiedPlayer = playedGame.currentPlayer.get.replaceLetters(toLetters("tory"))
-  val modifiedGame = playedGame.copy(players = playedGame.players.updated(playedGame.playersMove, modifiedPlayer))
+  val coversTwoBonuses: Option[ValidPlaceLettersMove] = {
+
+    val place = addPlaceLists(toPlace("ven", false, pos(11, 5)), toPlace(
+      "son", false, pos(11, 9)))
+
+    val placed = place flatMap {
+      placed =>
+        pos(11, 9) map {
+          pos =>
+            placed.updated(3, pos -> BlankLetter('S'))
+
+        }
+    }
+
+    placed flatMap {
+      placed =>
+        ravinePlaced flatMap {
+          game1 =>
+            PlaceLettersMove(game1, placed).validate.toOption
+        }
+    }
+
+  }
+
+  val modifiedPlayer = playedGame flatMap (_.currentPlayer.map(_.replaceLetters(toLetters("tory"))))
+
+  val modifiedGame = {
+    modifiedPlayer flatMap {
+      player => playedGame map (g => g.copy(players = g.players.updated(g.playersMove, player)))
+
+    }
+  }
 
   "a move should" should {
 
     "fail if the first move does not intersect with the star square" in {
       val place = toPlace("test", true, pos(11, 2))
 
-      PlaceLettersMove(game, place).validate.get.makeMove must beEqualTo(Failure(FirstMovePositionWrong(0)))
+      place flatMap {
+        place =>
+          game map {
+            game =>
+              PlaceLettersMove(game, place).validate flatMap (_.makeMove) must beEqualTo(Failure(FirstMovePositionWrong(0)))
+
+          }
+      } should beSome
+
     }
 
     "not place letters on top of occupied squares" in {
-      PlaceLettersMove(playedGame, toPlace("hello", true,
-        pos(3, 5))).validate.get.makeMove must beEqualTo(Failure(SquareOccupiedClientError(6)))
+      playedGame flatMap {
+        game =>
+          toPlace("hello", true, pos(3, 5)) map {
+            place =>
+              PlaceLettersMove(game,
+                place).validate.flatMap(_.makeMove) must beEqualTo(Failure(SquareOccupiedClientError(6)))
+
+          }
+
+      } must beSome
+
     }
 
     "not place letters that the player does not have" in {
       val place = toPlace("tone", true, pos(8, 3))
 
-      PlaceLettersMove(modifiedGame, place).validate.get.makeMove must beEqualTo(Failure(playerDoesNotHaveLettersClientError(7)))
+      place.flatMap {
+        place =>
+          modifiedGame map {
+            game =>
+              PlaceLettersMove(game,
+                place).validate flatMap (_.makeMove) must beEqualTo(Failure(playerDoesNotHaveLettersClientError(7)))
+
+          }
+      } must beSome
+
     }
 
     "fail if the word is not attached to an existing word" in {
       val place = toPlace("test", true, pos(1, 1))
 
-      PlaceLettersMove(playedGame, place).validate.get.makeMove must beEqualTo(Failure(NotAttachedToWord(2)))
+      place flatMap {
+        place =>
+          playedGame map {
+            game =>
+              PlaceLettersMove(game, place).validate.flatMap(_.makeMove) must beEqualTo(Failure(NotAttachedToWord(2)))
+
+          }
+      } must beSome
+
+    }
+
+    def withGameAndPositions(game: Option[Game], placed: Option[NonEmptyList[(Pos, Tile)]],
+        behaviour: ValidPlaceLettersMove => Try[MatchResult[Any]]) = {
+      placed flatMap {
+        place =>
+          game map {
+            game =>
+              PlaceLettersMove(game, place).validate map {
+                move =>
+                  behaviour(move)
+              }
+
+          }
+
+      } must beSome
     }
 
     def builtToStr(lists: List[List[(Pos, Square, Tile)]]): List[String] = lists.map { list =>
@@ -79,17 +169,28 @@ class MoveTest extends ScrabbleTest {
     }
 
     "build multiple words from letters placed adjacent to other squares from horizontally placed letters" in {
-      val place = toPlace("o", true, pos(6, 6)) ++ toPlace("e", true, pos(8, 6))
-      val mv = PlaceLettersMove(playedGame, place).validate.get
+      val place = addPlaceLists(toPlace("o", true, pos(6, 6)), toPlace("e", true, pos(8, 6)))
 
-      val built = mv.formedWords.get
-      val words = builtToStr(built)
+      // val mv = PlaceLettersMove(playedGame, place).validate.get
 
-      words must contain("TO")
-      words must contain("ORE")
-      words must contain("RE")
+      withGameAndPositions(playedGame, place,
+        {
+          move =>
 
-      words must have size 3
+           move.formedWords map {
+              built: List[List[(scrabble.Pos, scrabble.Square, scrabble.Tile)]] =>
+
+                val words = builtToStr(built)
+
+                words must contain("TO")
+                words must contain("ORE")
+                words must contain("RE")
+
+                words must have size 3
+            }
+
+        }
+      )
 
     }
 
