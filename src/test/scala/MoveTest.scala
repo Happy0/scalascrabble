@@ -148,17 +148,13 @@ class MoveTest extends ScrabbleTest {
 
     }
 
-    def withGameAndPositions(game: Option[Game], placed: Option[NonEmptyList[(Pos, Tile)]],
-        behaviour: ValidPlaceLettersMove => Try[MatchResult[Any]]) = {
+    def withGameAndPositions(game: Option[Game], placed: Option[NonEmptyList[(Pos, Tile)]])(
+      behaviour: ValidPlaceLettersMove => Try[MatchResult[Any]]) = {
       placed flatMap {
         place =>
           game map {
             game =>
-              PlaceLettersMove(game, place).validate map {
-                move =>
-                  behaviour(move)
-              }
-
+              PlaceLettersMove(game, place).validate map behaviour
           }
 
       } must beSome
@@ -173,114 +169,151 @@ class MoveTest extends ScrabbleTest {
 
       // val mv = PlaceLettersMove(playedGame, place).validate.get
 
-      withGameAndPositions(playedGame, place,
-        {
-          move =>
+      withGameAndPositions(playedGame, place) {
+        move =>
 
-           move.formedWords map {
-              built: List[List[(scrabble.Pos, scrabble.Square, scrabble.Tile)]] =>
+          move.formedWords map {
+            built: List[List[(scrabble.Pos, scrabble.Square, scrabble.Tile)]] =>
 
-                val words = builtToStr(built)
+              val words = builtToStr(built)
 
-                words must contain("TO")
-                words must contain("ORE")
-                words must contain("RE")
+              words must contain("TO")
+              words must contain("ORE")
+              words must contain("RE")
 
-                words must have size 3
-            }
+              words must have size 3
+          }
 
-        }
-      )
+      }
 
     }
 
     "build multiple words from letters placed adjacent to other squares from vertically placed letters " in {
-      print("mv: " + gibberishWordsMove.formedWords)
-      val built = gibberishWordsMove.formedWords.get
+      //   print("mv: " + gibberishWordsMove.formedWords)
 
-      val words = builtToStr(built)
+      gibberishWordsMove flatMap {
+        move =>
 
-      words must contain("TTESTS")
-      words must contain("TC")
-      words must contain("ER")
-      words must contain("SE")
-      words must contain("TS")
+          move.formedWords.map {
+            built =>
+              val words = builtToStr(built)
 
-      words must have size 5
+              words must contain("TTESTS")
+              words must contain("TC")
+              words must contain("ER")
+              words must contain("SE")
+              words must contain("TS")
+
+              words must have size 5
+          } toOption
+      } must beSome
 
     }
 
     "extend an existing word horizontally" in {
       val place = toPlace("tares", true, pos(8, 8))
-      val mv = PlaceLettersMove(playedGame, place).validate.get
-      val built = mv.formedWords.get
-      val words = builtToStr(built)
 
-      words must contain("STARES")
-      words must have size 1
+      withGameAndPositions(playedGame, place) {
+        move =>
+          move.formedWords map {
+            built =>
+              val words = builtToStr(built)
+
+              words must contain("STARES")
+              words must have size 1
+          }
+
+      }
+
     }
 
     "extend an existing word vertically" in {
       val place = toPlace("sdf", false, pos(7, 9))
-      val mv = PlaceLettersMove(playedGame, place).validate.get
 
-      val built = mv.formedWords.get
-      val words = builtToStr(built)
+      withGameAndPositions(playedGame, place) {
+        move =>
+          move.formedWords map {
+            built =>
+              val words = builtToStr(built)
 
-      words must contain("SCORESSDF")
-      words must have size 1
+              words must contain("SCORESSDF")
+              words must have size 1
+          }
+      }
+
     }
 
     "extend an existing word on the left and right" in {
-      val place = toPlace("SM", true, pos(1, 5)) ++ toPlace("S", true, pos(10, 5))
-      val mv = PlaceLettersMove(playedGame, place).validate.get
+      val place = addPlaceLists(toPlace("SM", true, pos(1, 5)), toPlace("S", true, pos(10, 5)))
+      withGameAndPositions(playedGame, place) {
+        move =>
+          move.formedWords map {
+            built =>
+              val words = builtToStr(built)
 
-      val built = mv.formedWords.get
-      val words = builtToStr(built)
-
-      words must contain("SMHISTORYS")
-      words must have size 1
-    }
-
-    "extend an existing word above and below" in {
-      val place = toPlace("SM", false, pos(7, 1)) ++ toPlace("ST", false, pos(7, 9))
-      val mv = PlaceLettersMove(playedGame, place).validate.get
-
-      val built = mv.formedWords.get
-      val words = builtToStr(built)
-
-      words must contain("SMSCORESST")
-      words must have size 1
-    }
-
-    "warn about misplaced letters" in {
-      val place = toPlace("test", true, pos(1, 1)).updated(1, pos(3, 2) -> letterFor('C')) // Oh god...
-      val mv = PlaceLettersMove(playedGame, place)
-
-      mv.validate.get.makeMove must beEqualTo(Failure(MisPlacedLetters(3, 1))) // Square placed outside the 'line' (i.e above)
-
-      val mv2 = PlaceLettersMove(playedGame, toPlace("test", true, pos(1, 1)).list.updated(3, pos(5, 1) -> letterFor('C')).toNel.get)
-      mv2.validate.get.makeMove must beEqualTo(Failure(MisPlacedLetters(5, 1))) // linear, but missing a square to complete the the 'line'
-
-      // Start to complete a word at one side, but misplace letter at the other
-      val toPlace3 = toPlace("T", true, pos(2, 5)) ++ toPlace("fd", true, pos(11, 5))
-      val mv3 = PlaceLettersMove(playedGame, toPlace3)
-
-      mv3.validate.get.makeMove must beEqualTo(Failure(MisPlacedLetters(11, 5)))
-    }
-
-    "reject invalid words" in {
-      val res = gibberishWordsMove.makeMove
-
-      val words = "TTESTS" :: "TC" :: "SE" :: "TS" :: Nil
-
-      res.get must throwA[WordsNotInDictionary].like {
-        case e: WordsNotInDictionary =>
-          e.words must have size 4 // 'RE' should be the only valid word
-          e.words must containAllOf(words)
+              words must contain("SMHISTORYS")
+              words must have size 1
+          }
       }
     }
 
+    "extend an existing word above and below" in {
+      val place = addPlaceLists(toPlace("SM", false, pos(7, 1)), toPlace("ST", false, pos(7, 9)))
+      withGameAndPositions(playedGame, place) {
+        move =>
+          move.formedWords map {
+            built =>
+              val words = builtToStr(built)
+
+              words must contain("SMSCORESST")
+              words must have size 1
+          }
+      }
+    }
+
+    "warn about misplaced letters" in {
+
+      val place = toPlace("test", true, pos(1, 1))
+      val first = safeUpdateTile(place, 1, Pos.posAt(3, 2), 'C')
+
+      withGameAndPositions(playedGame, place) {
+        move =>
+          // Square placed outside the 'line' (i.e above)
+          Try(move.makeMove must beEqualTo(Failure(MisPlacedLetters(3, 1))))
+      }
+
+      val place2 = toPlace("test", true, pos(1, 1))
+      val second = safeUpdateTile(place2, 3, pos(5, 1), 'C')
+
+      withGameAndPositions(playedGame, place2) {
+        move =>
+          // linear, but missing a square to complete the the 'line'
+          Try(move.makeMove must beEqualTo(Failure(MisPlacedLetters(5, 1))))
+      }
+
+      // Start to complete a word at one side, but misplace letter at the other
+      val toPlace3 = addPlaceLists(toPlace("T", true, pos(2, 5)), toPlace("fd", true, pos(11, 5)))
+      withGameAndPositions(playedGame, toPlace3) {
+        move =>
+          Try(move must beEqualTo(Failure(MisPlacedLetters(11, 5))))
+      }
+
+    }
+
+    "reject invalid words" in {
+      gibberishWordsMove map {
+        move =>
+          val words = "TTESTS" :: "TC" :: "SE" :: "TS" :: Nil
+
+          move.makeMove.get must throwA[WordsNotInDictionary].like {
+            case e: WordsNotInDictionary =>
+              e.words must have size 4 // 'RE' should be the only valid word
+              e.words must containAllOf(words)
+          }
+      } must beSome
+
+    }
+/*
     "calculate scores correctly" in {
 
       //  normal
@@ -379,7 +412,8 @@ class MoveTest extends ScrabbleTest {
     "handle exchange moves correctly" in {
 
     }
-
+    * 
+    */
   }
 
 }

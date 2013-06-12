@@ -31,16 +31,24 @@ trait ScrabbleTest extends Specification with NonEmptyLists with Lists {
         Game.make(List("jim", "joe"), enDict, bag)
     }
   }
-  
-  def addPlaceLists(place1: Option[NonEmptyList[(Pos, Tile)]], place2: Option[NonEmptyList[(Pos, Tile)]] ) = {
-    
-    place1 flatMap {
-      a =>
-        place2 map {
-          b => a :::> b.list
-        }
+
+  def safeUpdateTile(list: Option[NonEmptyList[(Pos, Tile)]], i: Int, pos: Option[Pos], char: Char) = {
+    list map {
+      list =>
+        list.list.zipWithIndex map {
+          case ((pos, tile), index) =>
+            if (index == i) (pos, letterFor(char)) else (pos, tile) // Oh god...
+        } toNel
     }
-    
+
+  }
+
+  def addPlaceLists(place1: Option[NonEmptyList[(Pos, Tile)]], place2: Option[NonEmptyList[(Pos, Tile)]]) = {
+
+    place1 |@| place2 apply {
+      case (a, b) => a :::> b.list
+    }
+
   }
 
   // Helper method to place a spread of letters on the board
