@@ -13,43 +13,63 @@ trait ScrabbleTest extends Specification with NonEmptyLists with Lists {
 
   val letterBag = LetterBag.init
 
-  def pos(x: Int, y: Int) = Pos.posAt(x, y).get
+  def pos(x: Int, y: Int) = Pos.posAt(x, y)
 
-  val game = Game.make(List("jim", "joe"), enDict, LetterBag.init).get
+  val game = Game.make(List("jim", "joe"), enDict, LetterBag.init)
 
-  def letterFor(c: Char) = letterBag.tileSet.get(c.toUpper).get
+  def letterFor(c: Char) = letterBag.tileSet.get(c.toUpper)
 
-  def toLetters(str: String) = str.toUpperCase.toList.map(c => letterFor(c))
+  def toLetters(str: String): List[Tile] = str.toUpperCase.toList.map(c => letterFor(c)) flatten
 
   val predictableLetterBag = LetterBag.fromLetters(
     "LISVURDIGQAWLOEIYURADYEICBLEDHMSIXNFERAIWOANETGAELGFIUT_TJHAI_BDONENOECTRIEEREKOAZPVETONSASURAPMNOTO",
-    LetterBag.init.tileSet).get
+    LetterBag.init.tileSet)
 
-  val predictableLetterbagGame = Game.make(List("jim", "joe"), enDict, predictableLetterBag).get
+  val predictableLetterbagGame = {
+    predictableLetterBag flatMap {
+      bag =>
+        Game.make(List("jim", "joe"), enDict, bag)
+    }
+  }
 
   // Helper method to place a spread of letters on the board
-  def toPlace(word: String, horizontal: Boolean, from: Pos): NonEmptyList[(Pos, Tile)] = {
-    val positions = if (!horizontal) (from.y to from.y + word.size).map(c => pos(from.x, c))
-    else (from.x to from.x + word.size).map(c => pos(c, from.y))
+  def toPlace(word: String, horizontal: Boolean, from: Option[Pos]): Option[NonEmptyList[(Pos, Tile)]] = {
 
-    (positions zip toLetters(word) toList).toNel.get
+    from flatMap {
+      from =>
+        val positions = (if (!horizontal) (from.y to from.y + word.size).map(c => pos(from.x, c))
+        else (from.x to from.x + word.size).map(c => pos(c, from.y))).flatten
+
+        (positions zip toLetters(word)).toList.toNel
+    }
 
   }
 
-  val crossedWords: Board = {
+  val crossedWords: Option[Board] = {
     val horPlacements = toPlace("history", true, pos(3, 5))
     val downPlacements = toPlace("scores", false, pos(7, 3))
 
-    val b = placeSquares(board, horPlacements)
+    horPlacements flatMap {
+      hor =>
+        placeSquares(board, hor) flatMap {
+          boa =>
+            downPlacements.flatMap {
+              place => placeSquares(boa, place)
+            }
 
-    placeSquares(b, downPlacements)
+        }
+
+    }
+
   }
 
   /** Place tiles on the board at the specified positions */
-  def placeSquares(board: Board, placed: NonEmptyList[(Pos, Tile)]): Board = placed.list.foldLeft(board) {
-    case (b, placed) =>
-      b.placeLetter(placed._1, placed._2).get
-  }
+  def placeSquares(board: Board, placed: NonEmptyList[(Pos, Tile)]): Option[Board] =
+    placed.list.foldLeft[Option[Board]](Some(board)) {
+      case (Some(b), placed) =>
+        b.placeLetter(placed._1, placed._2)
+      case (None, _) => None
+    }
 
   implicit def pimpNonEmptyList[A](nel: NonEmptyList[A]) = G(nel)
 

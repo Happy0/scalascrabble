@@ -2,7 +2,6 @@ package scrabble
 
 import scala.util.{ Try, Success, Failure }
 import scalaz.NonEmptyList
-import scalaz.NonEmptyLists
 
 abstract class Move(game: Game) {
 
@@ -153,11 +152,11 @@ case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Square, 
                 // If the bonus has already been used, ignore the bonus square
                 sq.tile.fold {
                   sq match {
-                    case NormalSquare(None) => (scr + tile.value, wordBonuses)
-                    case DoubleLetterSquare(None) => (scr + (tile.value * 2), wordBonuses)
-                    case TripleLetterSquare(None) => (scr + (tile.value * 3), wordBonuses)
-                    case DoubleWordSquare(None) => (scr + tile.value, ((i: Int) => i * 2) :: wordBonuses)
-                    case TripleWordSquare(None) => (scr + tile.value, ((i: Int) => i * 3) :: wordBonuses)
+                    case NormalSquare(_) => (scr + tile.value, wordBonuses)
+                    case DoubleLetterSquare(_) => (scr + (tile.value * 2), wordBonuses)
+                    case TripleLetterSquare(_) => (scr + (tile.value * 3), wordBonuses)
+                    case DoubleWordSquare(_) => (scr + tile.value, ((i: Int) => i * 2) :: wordBonuses)
+                    case TripleWordSquare(_) => (scr + tile.value, ((i: Int) => i * 3) :: wordBonuses)
                   }
                 }(currentTile =>
                   (scr + currentTile.value, wordBonuses))
@@ -176,7 +175,7 @@ case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Square, 
 
   }
 
-  private lazy val obeysFirstMovePositionRule = if (game.moves > 0) true else {
+  private lazy val obeysFirstMovePositionRule = (game.moves > 0) || {
     placedProcessed.find { case (pos, _, let) => pos == startPosition } isDefined
   }
 
@@ -214,7 +213,7 @@ case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Square, 
     def isLastPlaced(pos: Pos): Boolean = pos.x == endx && pos.y == endy
 
     def afterEnd(pos: Pos) =
-      if ((pos.x, pos.y) == (endx, endy)) {
+      if (isLastPlaced(pos)) {
         horizontalElseVertical(board.LettersRight(pos))(board.LettersAbove(pos))
       } else Nil
 
@@ -226,11 +225,11 @@ case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Square, 
       lazy val right = board.LettersRight(pos)
 
       horizontalElseVertical {
-        if (!above.isEmpty || !below.isEmpty) {
+        if (above.nonEmpty || below.nonEmpty) {
           below ::: (pos, sq, let) :: above
         } else Nil
       } {
-        if (!left.isEmpty || !right.isEmpty) {
+        if (left.nonEmpty || right.nonEmpty) {
           left ::: (pos, sq, let) :: right
         } else Nil
       }

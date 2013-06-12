@@ -15,36 +15,49 @@ class GameTest extends ScrabbleTest {
     }
 
     "Initialise a game properly" in {
-      game.bag.size must beEqualTo(100 - 14) // Distribute the initial tiles
+      game map {
+        game =>
+          game.bag.size must beEqualTo(100 - 14) // Distribute the initial tiles
 
-      game.players must haveKeys(0, 1)
+          game.players must haveKeys(0, 1)
 
-      game.players(0).letters must have size 7
-      game.players(1).letters must have size 7
+          game.players(0).letters must have size 7
+          game.players(1).letters must have size 7
 
-      game.board must beEqualTo(Board.init)
+          game.board must beEqualTo(Board.init)
 
-      game.playersMove must beEqualTo(0)
+          game.playersMove must beEqualTo(0)
 
-      game.moves must beEqualTo(0)
+          game.moves must beEqualTo(0)
 
-      game.consecutivePasses must beEqualTo(0)
+          game.consecutivePasses must beEqualTo(0)
+      } must beSome
+
     }
 
     def setPlayer(game: Game, mv: Int) = game.copy(playersMove = mv)
 
     "keep track of the next player" in {
-      (0 to 1).foreach { i =>
-        val gm = setPlayer(game, i)
-        if (i == 0) gm.nextPlayerNo must beEqualTo(1) else gm.nextPlayerNo must beEqualTo(0)
-      }
 
-      val fourPlayerGame = Game.make(List("jim", "joe", "charlie", "noam"),  Dictionary.load("Dict/en.txt"), LetterBag.init).get
-      
-      (0 to 3).foreach { i =>
-        val gm = setPlayer(fourPlayerGame, i)
-        if (i == 3) gm.nextPlayerNo must beEqualTo(0) else gm.nextPlayerNo must beEqualTo(i + 1)
-      }
+      game map {
+        game =>
+          (0 to 1).foreach { i =>
+            val gm = setPlayer(game, i)
+            if (i == 0) gm.nextPlayerNo must beEqualTo(1) else gm.nextPlayerNo must beEqualTo(0)
+          }
+
+      } must beSome
+
+      val fourPlayerGame = Game.make(List("jim", "joe", "charlie", "noam"), Dictionary.load("Dict/en.txt"), LetterBag.init)
+
+      fourPlayerGame map {
+        fourPlayerGame =>
+          (0 to 3).foreach { i =>
+            val gm = setPlayer(fourPlayerGame, i)
+            if (i == 3) gm.nextPlayerNo must beEqualTo(0) else gm.nextPlayerNo must beEqualTo(i + 1)
+          }
+      } must beSome
+
     }
   }
 

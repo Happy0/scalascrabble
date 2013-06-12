@@ -26,4 +26,4 @@ Inspired by [Ornicar's chess API](http://www.github.com/Ornicar/scalachess) : ht
 Credits
 -------
 
--[Ornicar](http://www.github.com/Ornicar): For inspiring me to learn Scala, and allowing me to be his Scala and functional programming apprentice with his code reviews, and for his coding contributions.
+- [Ornicar](http://www.github.com/Ornicar): For inspiring me to learn Scala, and allowing me to be his Scala and functional programming apprentice with his code reviews, and for his coding contributions.

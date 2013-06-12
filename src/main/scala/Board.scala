@@ -18,10 +18,10 @@ case class Board(
 
   def tileAt(pos: Pos) = squares get pos flatMap (_.tile)
 
-  def LettersAbove(pos: Pos): List[(Pos, Square, Tile)] = walkTiles(pos, pos => pos.up)
-  def LettersBelow(pos: Pos): List[(Pos, Square, Tile)] = walkTiles(pos, pos => pos.down) reverse
-  def LettersLeft(pos: Pos): List[(Pos, Square, Tile)] = walkTiles(pos, pos => pos.left) reverse
-  def LettersRight(pos: Pos): List[(Pos, Square, Tile)] = walkTiles(pos, pos => pos.right)
+  def LettersAbove(pos: Pos): List[PosSquare] = walkTiles(pos, pos => pos.up)
+  def LettersBelow(pos: Pos): List[PosSquare] = walkTiles(pos, pos => pos.down) reverse
+  def LettersLeft(pos: Pos): List[PosSquare] = walkTiles(pos, pos => pos.left) reverse
+  def LettersRight(pos: Pos): List[PosSquare] = walkTiles(pos, pos => pos.right)
 
   private def walkTiles(from: Pos, to: Direction): PosSquares =
     to(from) ?? { pos =>

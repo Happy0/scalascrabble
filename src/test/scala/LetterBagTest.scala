@@ -1,10 +1,12 @@
 package scrabble
 
+import scalaz.MA
+
 class LetterBagTest extends ScrabbleTest {
 
   val lettersOnly = letterBag.letters.map(c => c.letter)
 
-  def getTile(ch: Char, letterBag: LetterBag) = letterBag.tileSet.get(ch).get
+  def getTile(ch: Char, letterBag: LetterBag) = letterBag.tileSet.get(ch)
 
   def letterAppears(ch: Char, bag: LetterBag): Int = {
     bag.letters.foldLeft(0)((acc, let) =>
@@ -41,32 +43,32 @@ class LetterBagTest extends ScrabbleTest {
   }
 
   def bagCorrectlyValued(letterBag: LetterBag) = {
-    getTile('A', letterBag).value must beEqualTo(1)
-    getTile('B', letterBag).value must beEqualTo(3)
-    getTile('C', letterBag).value must beEqualTo(3)
-    getTile('D', letterBag).value must beEqualTo(2)
-    getTile('E', letterBag).value must beEqualTo(1)
-    getTile('F', letterBag).value must beEqualTo(4)
-    getTile('G', letterBag).value must beEqualTo(2)
-    getTile('H', letterBag).value must beEqualTo(4)
-    getTile('I', letterBag).value must beEqualTo(1)
-    getTile('J', letterBag).value must beEqualTo(8)
-    getTile('K', letterBag).value must beEqualTo(5)
-    getTile('L', letterBag).value must beEqualTo(1)
-    getTile('M', letterBag).value must beEqualTo(3)
-    getTile('N', letterBag).value must beEqualTo(1)
-    getTile('O', letterBag).value must beEqualTo(1)
-    getTile('P', letterBag).value must beEqualTo(3)
-    getTile('Q', letterBag).value must beEqualTo(10)
-    getTile('R', letterBag).value must beEqualTo(1)
-    getTile('S', letterBag).value must beEqualTo(1)
-    getTile('T', letterBag).value must beEqualTo(1)
-    getTile('U', letterBag).value must beEqualTo(1)
-    getTile('V', letterBag).value must beEqualTo(4)
-    getTile('W', letterBag).value must beEqualTo(4)
-    getTile('X', letterBag).value must beEqualTo(8)
-    getTile('Y', letterBag).value must beEqualTo(4)
-    getTile('Z', letterBag).value must beEqualTo(10)
+    getTile('A', letterBag) map (_.value) must beSome(1)
+    getTile('B', letterBag) map (_.value) must beSome(3)
+    getTile('C', letterBag) map (_.value) must beSome(3)
+    getTile('D', letterBag) map (_.value) must beSome(2)
+    getTile('E', letterBag) map (_.value) must beSome(1)
+    getTile('F', letterBag) map (_.value) must beSome(4)
+    getTile('G', letterBag) map (_.value) must beSome(2)
+    getTile('H', letterBag) map (_.value) must beSome(4)
+    getTile('I', letterBag) map (_.value) must beSome(1)
+    getTile('J', letterBag) map (_.value) must beSome(8)
+    getTile('K', letterBag) map (_.value) must beSome(5)
+    getTile('L', letterBag) map (_.value) must beSome(1)
+    getTile('M', letterBag) map (_.value) must beSome(3)
+    getTile('N', letterBag) map (_.value) must beSome(1)
+    getTile('O', letterBag) map (_.value) must beSome(1)
+    getTile('P', letterBag) map (_.value) must beSome(3)
+    getTile('Q', letterBag) map (_.value) must beSome(10)
+    getTile('R', letterBag) map (_.value) must beSome(1)
+    getTile('S', letterBag) map (_.value) must beSome(1)
+    getTile('T', letterBag) map (_.value) must beSome(1)
+    getTile('U', letterBag) map (_.value) must beSome(1)
+    getTile('V', letterBag) map (_.value) must beSome(4)
+    getTile('W', letterBag) map (_.value) must beSome(4)
+    getTile('X', letterBag) map (_.value) must beSome(8)
+    getTile('Y', letterBag) map (_.value) must beSome(4)
+    getTile('Z', letterBag) map (_.value) must beSome(10)
   }
 
   "a letterbag should" should {
@@ -119,20 +121,24 @@ class LetterBagTest extends ScrabbleTest {
     }
 
     def exchangesProperly(exchanged: List[Tile], originalBag: LetterBag): Unit = {
-      val (received, newbag) = letterBag.exchange(exchanged).get
-      exchanged.foreach {
-        c =>
-          val newAmount = letterAppears(c.letter, newbag)
+      val exch = letterBag.exchange(exchanged) map {
+        case (received, newbag) =>
 
-          newAmount must beEqualTo((letterAppears(c.letter, letterBag) + exchanged.filter(_ == c).size)
-            - received.filter(_ == c).size)
+          exchanged.foreach {
+            c =>
+              val newAmount = letterAppears(c.letter, newbag)
 
+              newAmount must beEqualTo((letterAppears(c.letter, letterBag) + exchanged.filter(_ == c).size)
+                - received.filter(_ == c).size)
+
+          }
+          newbag.size must beEqualTo(letterBag.size)
       }
 
-      newbag.size must beEqualTo(letterBag.size)
+      exch must beSome
     }
 
-    def strToLetters(str: String): List[Tile] = str.toList map (c => letterBag.tileSet.get(c).get)
+    def strToLetters(str: String) = str.toList.map { c => letterBag.tileSet.get(c) }.flatten
 
     "properly exchange letters" in {
       val exchangedWithSingle = strToLetters("ABCDE")
@@ -158,14 +164,22 @@ class LetterBagTest extends ScrabbleTest {
       emptyBag.size must beEqualTo(0)
 
       val exchangedWithSingle = strToLetters("ABCDE")
-      val (_, exchBag) = newBag.exchange(exchangedWithSingle).get
+      val res = newBag.exchange(exchangedWithSingle) map {
+        case (_, exchBag) =>
+          exchBag.size must beEqualTo(94)
+      }
 
-      exchBag.size must beEqualTo(94)
+      res must beSome
+
     }
 
     "construct a bag from a string of letters" in {
-      bagCorrectlyValued(predictableLetterBag)
-      bagCorrectlyDistributed(predictableLetterBag)
+      predictableLetterBag map {
+        bag =>
+          bagCorrectlyValued(bag)
+          bagCorrectlyDistributed(bag)
+      } must beSome
+
     }
 
   }
