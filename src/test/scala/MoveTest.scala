@@ -7,11 +7,29 @@ import org.specs2.matcher.TraversableMatchers
 
 class MoveTest extends ScrabbleTest {
 
-  val playedGame = game.copy(board = crossedWords, moves = 1)
+  val playedGame = game.flatMap { game =>
+    crossedWords.map {
+      words =>
+        game.copy(board = words, moves = 1)
+    }
 
-  val gibberishWordsMove: ValidPlaceLettersMove = {
-    val place = toPlace("T", false, pos(6, 4)) ++ toPlace("ESTS", false, pos(6, 6))
-    PlaceLettersMove(playedGame, place).validate.get
+  }
+
+  val gibberishWordsMove: Option[ValidPlaceLettersMove] = {
+    playedGame flatMap {
+      playedGame =>
+        val place = toPlace("T", false, pos(6, 4)) flatMap { a =>
+          toPlace("ESTS", false, pos(6, 6)) map { b =>
+            a ++ b
+          }
+        }
+
+        place map {
+          place =>
+            PlaceLettersMove(playedGame, place).validate.get
+        }
+    }
+
   }
 
   val blankGame: Game = {
