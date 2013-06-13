@@ -9,12 +9,39 @@ import org.specs2.matcher.TraversableMatchers
 
 class MoveTest extends ScrabbleTest {
 
+  def withGameAndPositions(game: Option[Game], placed: Option[NonEmptyList[(Pos, Tile)]])(
+    behaviour: ValidPlaceLettersMove => Try[MatchResult[Any]]) = {
+    placed flatMap {
+      place =>
+        game map {
+          game =>
+            PlaceLettersMove(game, place).validate map behaviour
+        }
+
+    } must beSome
+  }
+
+  def builtToStr(lists: List[List[(Pos, Square, Tile)]]): List[String] = lists.map { list =>
+    list.map { case (pos, sq, letter) => letter.letter }.mkString
+  }
+
   val playedGame = game.flatMap { game =>
     crossedWords.map {
       words =>
         game.copy(board = words, moves = 1)
     }
 
+  }
+
+  def furtherGame(game: Option[Game], place: Option[NonEmptyList[PosTile]]): Option[Game] = {
+    game flatMap {
+      game =>
+        place flatMap {
+          place =>
+            PlaceLettersMove(game, place).validate flatMap (_.makeMove) toOption
+
+        }
+    }
   }
 
   val gibberishWordsMove: Option[ValidPlaceLettersMove] = {
@@ -61,15 +88,14 @@ class MoveTest extends ScrabbleTest {
     val place = addPlaceLists(toPlace("ven", false, pos(11, 5)), toPlace(
       "son", false, pos(11, 9)))
 
-    val placed = place flatMap {
-      placed =>
-        pos(11, 9) map {
-          pos =>
-            // safeUpdateTile(list, i, pos, char)
+    val placed = pos(11, 9) flatMap {
+      pos =>
+        // safeUpdateTile(list, i, pos, char)
+        // @TODO: Safe update
 
-            placed.updated(3, pos -> BlankLetter('S'))
+        safeUpdateTile(place, 3, BlankLetter('S'))
+      //  placed.updated(3, pos -> BlankLetter('S'))
 
-        }
     }
 
     placed flatMap {
@@ -148,22 +174,6 @@ class MoveTest extends ScrabbleTest {
           }
       } must beSome
 
-    }
-
-    def withGameAndPositions(game: Option[Game], placed: Option[NonEmptyList[(Pos, Tile)]])(
-      behaviour: ValidPlaceLettersMove => Try[MatchResult[Any]]) = {
-      placed flatMap {
-        place =>
-          game map {
-            game =>
-              PlaceLettersMove(game, place).validate map behaviour
-          }
-
-      } must beSome
-    }
-
-    def builtToStr(lists: List[List[(Pos, Square, Tile)]]): List[String] = lists.map { list =>
-      list.map { case (pos, sq, letter) => letter.letter }.mkString
     }
 
     "build multiple words from letters placed adjacent to other squares from horizontally placed letters" in {
@@ -298,7 +308,7 @@ class MoveTest extends ScrabbleTest {
 
       // Square placed outside the 'line' (i.e above)
       checkMisplaced(playedGame, first, (3, 1))
-      
+
       // linear, but missing a square to complete the the 'line'
       checkMisplaced(playedGame, second, (5, 1))
 
@@ -375,17 +385,6 @@ class MoveTest extends ScrabbleTest {
 
     }
 
-    def furtherGame(game: Option[Game], place: Option[NonEmptyList[PosTile]]): Option[Game] = {
-      game flatMap {
-        game =>
-          place flatMap {
-            place =>
-              PlaceLettersMove(game, place).validate flatMap (_.makeMove) toOption
-
-          }
-      }
-    }
-
     "place one letter" in {
 
       val game1 = furtherGame(blankGame, toPlace("ravine", true, pos(8, 8)))
@@ -456,6 +455,10 @@ class MoveTest extends ScrabbleTest {
           predictableGame.playersMove must beEqualTo(1)
       } must beSome
 
+    }
+    
+    "Sort the PosTile input before passing it to the ValidPlaceMove" in {
+      
     }
 
     "ends the game in the appropriate conditions" in {

@@ -31,6 +31,15 @@ trait ScrabbleTest extends Specification with NonEmptyLists with Lists {
         Game.make(List("jim", "joe"), enDict, bag)
     }
   }
+  
+  def safeUpdateTile(list: Option[NonEmptyList[(Pos, Tile)]], i: Int, tileReplace: Tile) = {
+    list flatMap {
+      list => list.list.zipWithIndex map {
+        case ((pos, tile), index) =>
+          if (index == i) pos -> tileReplace else pos -> tile
+      } toNel
+    }
+  }
 
   def safeUpdateTile(list: Option[NonEmptyList[(Pos, Tile)]], i: Int, posReplace: Option[Pos], char: Char) = {
     list flatMap {

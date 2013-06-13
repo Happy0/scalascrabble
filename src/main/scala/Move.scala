@@ -2,6 +2,7 @@ package scrabble
 
 import scala.util.{ Try, Success, Failure }
 import scalaz.NonEmptyList
+import scalaz.Lists
 
 abstract class Move(game: Game) {
 
@@ -11,46 +12,29 @@ abstract class Move(game: Game) {
 
 }
 
-case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) {
+case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) extends Lists {
 
   def validate: Try[ValidPlaceLettersMove] = {
 
-    val list = placed.map { case (pos, tile) => (pos, game.board.squareAt(pos), tile) }
-
-    def unwrap(pos: Pos, tile: Tile): Option[(Pos, Square, Tile)] = {
-      game.board.squareAt(pos) flatMap { sq => Some(pos, sq, tile) }
-    }
-
-    def toOption(list: List[(Pos, Tile)]): Option[NonEmptyList[(Pos, Square, Tile)]] = {
-
-      val startwith = unwrap(placed.head._1, placed.head._2) map {
-        case (pos, sq, tile) => NonEmptyList(((pos, sq, tile)))
-      }
-
-      list match {
-        case Nil => None
-        case x :: xs =>
-          xs.foldLeft(startwith) {
-            case (Some(acc), (pos, tile)) => unwrap(pos, tile) map {
-              case (ps, square, tl) => (pos, square, tile) <:: acc
-
-            }
-            case _ => None
-          }
-      }
-
-    }
-
     val sortedList = placed.list.sortBy { case (pos: Pos, _) => (pos.x, pos.y) }
 
-    toOption(sortedList).fold[Try[ValidPlaceLettersMove]](
-      Failure(UnlikelyInternalError()))(list => Try(ValidPlaceLettersMove(game, list reverse)))
+    def unwrap(pos: Pos, tile: Tile): Option[(Pos, Square, Tile)] = {
+      game.board.squareAt(pos) map { sq => (pos, sq, tile) }
+    }
+    
+    def toOption : Option[NonEmptyList[(Pos, Square, Tile)]] = {
+      val unwrapped = sortedList map {case (pos, tile) => unwrap(pos, tile)} sequence 
+      
+      unwrapped flatMap (list => list.toNel)
+    }
 
+    toOption.fold[Try[ValidPlaceLettersMove]](
+      Failure(UnlikelyInternalError()))(list => Try(ValidPlaceLettersMove(game, list)))
   }
 
 }
 
-case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Square, Tile)]) extends Move(game) {
+sealed case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Square, Tile)]) extends Move(game) {
 
   def horizontalElseVertical[A](horizontal: => A)(vertical: => A): A = {
     if (this.horizontal) horizontal else vertical
