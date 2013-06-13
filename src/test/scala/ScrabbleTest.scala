@@ -32,12 +32,20 @@ trait ScrabbleTest extends Specification with NonEmptyLists with Lists {
     }
   }
 
-  def safeUpdateTile(list: Option[NonEmptyList[(Pos, Tile)]], i: Int, pos: Option[Pos], char: Char) = {
-    list map {
+  def safeUpdateTile(list: Option[NonEmptyList[(Pos, Tile)]], i: Int, posReplace: Option[Pos], char: Char) = {
+    list flatMap {
       list =>
-        list.list.zipWithIndex map {
+        list.list.zipWithIndex flatMap {
           case ((pos, tile), index) =>
-            if (index == i) (pos, letterFor(char)) else (pos, tile) // Oh god...
+            letterFor(char) flatMap {
+              c =>
+                posReplace map {
+                  posReplace =>
+                    if (index == i) (posReplace, c) else (pos, tile) // Oh god...
+
+                }
+
+            }
         } toNel
     }
 
@@ -68,26 +76,23 @@ trait ScrabbleTest extends Specification with NonEmptyLists with Lists {
     val horPlacements = toPlace("history", true, pos(3, 5))
     val downPlacements = toPlace("scores", false, pos(7, 3))
 
-    horPlacements flatMap {
-      hor =>
-        placeSquares(board, hor) flatMap {
-          boa =>
-            downPlacements.flatMap {
-              place => placeSquares(boa, place)
-            }
-
-        }
-
+    placeSquares(board, horPlacements) flatMap {
+      boa => placeSquares(boa, downPlacements)
     }
 
   }
 
   /** Place tiles on the board at the specified positions */
-  def placeSquares(board: Board, placed: NonEmptyList[(Pos, Tile)]): Option[Board] =
-    placed.list.foldLeft[Option[Board]](Some(board)) {
-      case (Some(b), placed) =>
-        b.placeLetter(placed._1, placed._2)
-      case (None, _) => None
+  def placeSquares(board: Board, placed: Option[NonEmptyList[(Pos, Tile)]]): Option[Board] =
+    {
+      placed flatMap {
+        placed =>
+          placed.list.foldLeft[Option[Board]](Some(board)) {
+            case (Some(b), placed) =>
+              b.placeLetter(placed._1, placed._2)
+            case (None, _) => None
+          }
+      }
     }
 
   implicit def pimpNonEmptyList[A](nel: NonEmptyList[A]) = G(nel)

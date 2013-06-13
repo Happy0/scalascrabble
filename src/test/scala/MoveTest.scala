@@ -65,6 +65,8 @@ class MoveTest extends ScrabbleTest {
       placed =>
         pos(11, 9) map {
           pos =>
+            // safeUpdateTile(list, i, pos, char)
+
             placed.updated(3, pos -> BlankLetter('S'))
 
         }
@@ -271,32 +273,37 @@ class MoveTest extends ScrabbleTest {
       }
     }
 
+    def checkMisplaced(game: Option[Game], place: Option[NonEmptyList[PosTile]], errorAt: (Int, Int)) = {
+      game flatMap {
+        game =>
+          place flatMap {
+            place =>
+              PlaceLettersMove(game, place).validate map {
+                move =>
+                  move.formedWords must beEqualTo(Failure(MisPlacedLetters(errorAt._1, errorAt._2)))
+              } toOption
+          }
+      } must beSome
+    }
+
     "warn about misplaced letters" in {
 
       val place = toPlace("test", true, pos(1, 1))
       val first = safeUpdateTile(place, 1, Pos.posAt(3, 2), 'C')
 
-      withGameAndPositions(playedGame, place) {
-        move =>
-          // Square placed outside the 'line' (i.e above)
-          Try(move.makeMove must beEqualTo(Failure(MisPlacedLetters(3, 1))))
-      }
-
       val place2 = toPlace("test", true, pos(1, 1))
       val second = safeUpdateTile(place2, 3, pos(5, 1), 'C')
 
-      withGameAndPositions(playedGame, place2) {
-        move =>
-          // linear, but missing a square to complete the the 'line'
-          Try(move.makeMove must beEqualTo(Failure(MisPlacedLetters(5, 1))))
-      }
+      val toPlace3 = addPlaceLists(toPlace("T", true, pos(2, 5)), toPlace("fd", true, pos(11, 5)))
+
+      // Square placed outside the 'line' (i.e above)
+      checkMisplaced(playedGame, first, (3, 1))
+      
+      // linear, but missing a square to complete the the 'line'
+      checkMisplaced(playedGame, second, (5, 1))
 
       // Start to complete a word at one side, but misplace letter at the other
-      val toPlace3 = addPlaceLists(toPlace("T", true, pos(2, 5)), toPlace("fd", true, pos(11, 5)))
-      withGameAndPositions(playedGame, toPlace3) {
-        move =>
-          Try(move must beEqualTo(Failure(MisPlacedLetters(11, 5))))
-      }
+      checkMisplaced(playedGame, toPlace3, (11, 5))
 
     }
 
@@ -342,16 +349,13 @@ class MoveTest extends ScrabbleTest {
       val playedFurther = game flatMap {
         game =>
           val place = addPlaceLists(toPlace("wa", false, pos(5, 3)), toPlace("p", false, pos(5, 6)))
-          place flatMap {
-            place =>
-              crossedWords flatMap {
-                words =>
-                  placeSquares(words, place) map {
-                    ohgodthemeanderingmapsareover =>
-                      game.copy(board = ohgodthemeanderingmapsareover)
-                  }
-
+          crossedWords flatMap {
+            words =>
+              placeSquares(words, place) map {
+                ohgodthemeanderingmapsareover =>
+                  game.copy(board = ohgodthemeanderingmapsareover)
               }
+
           }
 
       }
