@@ -313,92 +313,145 @@ class MoveTest extends ScrabbleTest {
       } must beSome
 
     }
-/*
+
     "calculate scores correctly" in {
 
       //  normal
-      val placeNormal = toPlace("wa", false, pos(5, 3)) ++ toPlace("p", false, pos(5, 6))
-      val normalScore = PlaceLettersMove(playedGame, placeNormal).validate.get.score.get
-      normalScore.overAllScore must beEqualTo(9)
+      val placeNormal = addPlaceLists(toPlace("wa", false, pos(5, 3)), toPlace("p", false, pos(5, 6)))
+      withGameAndPositions(playedGame, placeNormal)(_.score map (_.overAllScore must beEqualTo(9)))
 
       // double letter
       val placeDoubleLetter = toPlace("tyle", true, pos(8, 3))
-      val doubleLetterScore = PlaceLettersMove(playedGame, placeDoubleLetter).validate.get.score.get
-      doubleLetterScore.overAllScore must beEqualTo(12)
+      withGameAndPositions(playedGame, placeDoubleLetter)(_.score map (_.overAllScore must beEqualTo(12)))
 
       // Double word
       val doublePlace = toPlace("stair", true, pos(2, 3))
-      val mv = PlaceLettersMove(playedGame, doublePlace).validate.get
-      val doubleWordScore = mv.score.get
-      doubleWordScore.overAllScore must beEqualTo(12)
+      withGameAndPositions(playedGame, doublePlace)(_.score map (_.overAllScore must beEqualTo(12)))
 
       // triple letter
       val tripleLetterPlace = toPlace("ale", true, pos(9, 6))
-      val tripleLetterScore = PlaceLettersMove(playedGame, tripleLetterPlace).validate.get.score.get
-      tripleLetterScore.overAllScore must beEqualTo(10)
+      withGameAndPositions(playedGame, tripleLetterPlace)(_.score map (_.overAllScore must beEqualTo(10)))
 
       // triple word
       val tripleWordPlace = toPlace("TAO", false, pos(8, 1))
-      val tripleWordScore = PlaceLettersMove(playedGame, tripleWordPlace).validate.get.score.get
-      tripleWordScore.overAllScore must beEqualTo(11)
+      withGameAndPositions(playedGame, tripleWordPlace)(_.score map (_.overAllScore must beEqualTo(11)))
 
       // Multiple words
-      val playedFurther = game.copy(board = placeSquares(crossedWords,
-        toPlace("wa", false, pos(5, 3)) ++ toPlace("p", false, pos(5, 6))))
+
+      //@TODO: refactor
+      val playedFurther = game flatMap {
+        game =>
+          val place = addPlaceLists(toPlace("wa", false, pos(5, 3)), toPlace("p", false, pos(5, 6)))
+          place flatMap {
+            place =>
+              crossedWords flatMap {
+                words =>
+                  placeSquares(words, place) map {
+                    ohgodthemeanderingmapsareover =>
+                      game.copy(board = ohgodthemeanderingmapsareover)
+                  }
+
+              }
+          }
+
+      }
 
       val multipleWordPlace = toPlace("YA", false, pos(6, 2))
-      val multipleWordScore = PlaceLettersMove(playedFurther, multipleWordPlace).validate.get.score.get
-
-      multipleWordScore.overAllScore must beEqualTo(19)
-      multipleWordScore.individualScores must contain("YA" -> 13)
-      multipleWordScore.individualScores must contain("WAS" -> 6)
+      withGameAndPositions(playedFurther, multipleWordPlace) {
+        _.score map {
+          score =>
+            score.overAllScore must beEqualTo(19)
+            score.individualScores must contain("YA" -> 13)
+            score.individualScores must contain("WAS" -> 6)
+        }
+      }
 
       // Covering multiple bonus squares
-      coversTwoBonuses.score.get.overAllScore must beEqualTo(36)
+      coversTwoBonuses map (_.score map (_.overAllScore must beEqualTo(36))) must beSome
 
     }
 
+    def furtherGame(game: Option[Game], place: Option[NonEmptyList[PosTile]]): Option[Game] = {
+      game flatMap {
+        game =>
+          place flatMap {
+            place =>
+              PlaceLettersMove(game, place).validate flatMap (_.makeMove) toOption
+
+          }
+      }
+    }
+
     "place one letter" in {
-      val game1 = PlaceLettersMove(blankGame, toPlace("ravine", true, pos(8, 8))).validate.get.makeMove.get
 
-      val place = (pos(8, 7) -> letterBag.letterFor('O').get :: Nil).toNel.get
+      val game1 = furtherGame(blankGame, toPlace("ravine", true, pos(8, 8)))
 
-      val oneLetterMove = PlaceLettersMove(game1, place).validate.get
+      val place = toPlace("O", true, pos(8, 7))
 
-      builtToStr(oneLetterMove.formedWords.get) must contain("OR")
-      oneLetterMove.formedWords.get must have size 1
+      //val oneLetterMove = PlaceLettersMove(game1, place).validate.get
 
-      // Horizontal single letter
+      withGameAndPositions(game, place) {
+        move =>
+          move.formedWords map {
+            built =>
+              val words = builtToStr(built)
+              words must contain("OR")
+              words must have size 1
+          }
+      }
 
-      // Build multiple words
+      // @TODO: Horizontal single letter
+
+      // @TODO: Build multiple words
     }
 
     "handle blank letters" in {
       // ENVO_NIL
 
-      builtToStr(coversTwoBonuses.formedWords.get) must contain("VENISON")
+      coversTwoBonuses flatMap {
+        _.formedWords map {
+          words =>
+            builtToStr(words) must contain("VENISON")
+        } toOption
+      } must beSome
 
     }
 
     val predictableGame = {
       val place = toPlace("lurid", true, pos(8, 8))
-      PlaceLettersMove(predictableLetterbagGame, place).validate.get.makeMove.get
+      furtherGame(predictableLetterbagGame, place)
     }
 
     "replace the letters that a player played" in {
-      val player = predictableGame.players.get(0).get
+      predictableGame flatMap {
+        predictableGame =>
+          val player = predictableGame.players.get(0)
 
-      player.letters must containAllOf(toLetters("SV"))
-      player.letters must containAllOf(toLetters("EIYUR"))
+          player map {
+            player =>
+              player.letters must containAllOf(toLetters("SV"))
+              player.letters must containAllOf(toLetters("EIYUR"))
+          }
+
+      } must beSome
+
     }
 
     "transition the game state correctly" in {
-      predictableGame.moves must beEqualTo(1)
-      predictableGame.board.LettersRight(pos(7, 8)).map { case (pos, sq, let) => let.letter }.mkString must beEqualTo("LURID")
-      predictableGame.bag.lettersAsString must beEqualTo(
-        "ADYEICBLEDHMSIXNFERAIWOANETGAELGFIUT_TJHAI_BDONENOECTRIEEREKOAZPVETONSASURAPMNOTO")
-      predictableGame.currentPlayer.get.letters.map(_.letter).mkString must beEqualTo("IGQAWLO")
-      predictableGame.playersMove must beEqualTo(1)
+      predictableGame map {
+        predictableGame =>
+          predictableGame.moves must beEqualTo(1)
+          pos(7, 8) map {
+            pos =>
+              predictableGame.board.LettersRight(pos).map { case (pos, sq, let) => let.letter }.mkString must beEqualTo("LURID")
+          } must beSome
+
+          predictableGame.bag.lettersAsString must beEqualTo(
+            "ADYEICBLEDHMSIXNFERAIWOANETGAELGFIUT_TJHAI_BDONENOECTRIEEREKOAZPVETONSASURAPMNOTO")
+          predictableGame.currentPlayer map { _.letters.map(_.letter).mkString must beEqualTo("IGQAWLO") } must beSome
+          predictableGame.playersMove must beEqualTo(1)
+      } must beSome
+
     }
 
     "ends the game in the appropriate conditions" in {
@@ -412,8 +465,6 @@ class MoveTest extends ScrabbleTest {
     "handle exchange moves correctly" in {
 
     }
-    * 
-    */
   }
 
 }

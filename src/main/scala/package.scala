@@ -2,6 +2,7 @@ import scalaz.NonEmptyList
 
 package object scrabble extends scalaz.Zeros with scalaz.MABs {
 
+  type PosTile = (Pos,Tile)
   type PosSquare = (Pos, Square, Tile)
   type PosSquares = List[PosSquare]
   type Direction = Pos => Option[Pos]
