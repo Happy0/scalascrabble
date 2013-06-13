@@ -22,14 +22,13 @@ case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) exten
       game.board.squareAt(pos) map { sq => (pos, sq, tile) }
     }
     
-    def toOption : Option[NonEmptyList[(Pos, Square, Tile)]] = {
+    def processed : Option[NonEmptyList[(Pos, Square, Tile)]] = {
       val unwrapped = sortedList map {case (pos, tile) => unwrap(pos, tile)} sequence 
       
       unwrapped flatMap (list => list.toNel)
     }
 
-    toOption.fold[Try[ValidPlaceLettersMove]](
-      Failure(UnlikelyInternalError()))(list => Try(ValidPlaceLettersMove(game, list)))
+    processed.toTry(Failure(UnlikelyInternalError())){list => Try(ValidPlaceLettersMove(game, list))}
   }
 
 }

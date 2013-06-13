@@ -1,4 +1,6 @@
 import scalaz.NonEmptyList
+import scala.util.{ Try, Success, Failure }
+
 
 package object scrabble extends scalaz.Zeros with scalaz.MABs {
 
@@ -11,6 +13,7 @@ package object scrabble extends scalaz.Zeros with scalaz.MABs {
 
     def ??[B: scalaz.Zero](f: A => B): B = o.fold(mzero[B])(f)
     
+    def toTry[B]( failure: => Failure[B])(success: A => Try[B] ) = o.fold[Try[B]](failure){success}
     
   }
   
