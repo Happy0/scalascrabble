@@ -462,18 +462,17 @@ class MoveTest extends ScrabbleTest {
     }
 
     "handle exchange moves correctly" in {
-      predictableGame map {
+      predictableGame foreach {
         game =>
           val move = ExchangeMove(game, toLetters("IGQ"))
-          game.currentPlayer map {
+          game.currentPlayer foreach {
             player => println("letters: " + player.letters)
           }
 
-          move.makeMove map {
+          move.makeMove foreach {
             newGame =>
-              newGame.players get (game.playersMove) map {
+              newGame.players get (game.playersMove) foreach {
                 player =>
-                  print("Got herefsdf")
                   val test = player.letters map (c => c.letter) toString
 
                   test must beEqualTo("EIYAWLO")
