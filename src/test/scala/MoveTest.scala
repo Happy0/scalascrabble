@@ -462,6 +462,8 @@ class MoveTest extends ScrabbleTest {
     }
 
     "handle exchange moves correctly" in {
+      predictableGame must beSome
+
       predictableGame foreach {
         game =>
           val move = ExchangeMove(game, toLetters("IGQ"))
@@ -469,20 +471,29 @@ class MoveTest extends ScrabbleTest {
             player => println("letters: " + player.letters)
           }
 
+          val moveMade = move.makeMove
+
+          moveMade must not be equalTo(Some(Failure(PlayerDoesNotHaveLettersToExchange())))
+          moveMade must not be equalTo(Some(Failure(MustExchangeSameNumberofLetters())))
+
           move.makeMove foreach {
             newGame =>
-              newGame.players get (game.playersMove) foreach {
+              val player = newGame.players get (game.playersMove)
+              player must not beNone
+              
+              player foreach {
                 player =>
-                  val test = player.letters map (c => c.letter) toString
+                  val test = player.letters map (c => c.letter) mkString
 
-                  test must beEqualTo("EIYAWLO")
+                  test must beEqualTo("ADYAWLO")
 
               }
-              newGame.moves must beEqualTo(game.moves + 9000) // Y U NO FAIL
+              newGame.moves must beEqualTo(game.moves + 1) // Y U NO FAIL
               newGame.bag.letters.intersect(toLetters("IGQ") ::: game.bag.letters.drop(3)).size must beEqualTo(newGame.bag.size)
 
           }
-      } must not be equalTo(Some(Failure(PlayerDoesNotHaveLettersToExchange()))) and not be equalTo(Some(Failure(MustExchangeSameNumberofLetters())))
+      }
+
     }
 
     "handle pass moves correctly" in {

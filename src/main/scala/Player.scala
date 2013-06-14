@@ -10,17 +10,18 @@ case class Player(
   def replaceLetters(lettrs: List[Tile]): Player = copy(letters = lettrs)
 
   def exchangeLetters(replace: List[Tile], replaceWith: List[Tile]): Try[Player] =
-    if (replace.size == replaceWith.size) accumulateLetters(replace, replaceWith, Nil) else Failure(MustExchangeSameNumberofLetters())
+    if (replace.size == replaceWith.size) accumulateLetters(replace, replaceWith, letters)
+    else Failure(MustExchangeSameNumberofLetters())
 
-  def accumulateLetters(replace: List[Tile], replaceWith: List[Tile], newRack: List[Tile]): Try[Player] = {
-    (replace, replaceWith) match {
-      case (x :: xs, y :: ys) =>
-        val (before, after) = letters.span(let => let != x)
-        println("before: " + before + " after: " + after + " x: " + x + " letters " + letters)
+  def accumulateLetters(replace: List[Tile], replaceWith: List[Tile], playerLetters: List[Tile]): Try[Player] = {
+    (replace) match {
+      case (x :: xs) =>
+        val (before, after) = playerLetters.span(let => let != x)
+       
         if (after == Nil) Failure(PlayerDoesNotHaveLettersToExchange()) else {
-          accumulateLetters(xs, ys, before ::: (y :: after.drop(1)))
+          accumulateLetters(xs, replaceWith, before ::: after.drop(1))
         }
-      case _ => Success(copy(letters = newRack))
+      case _ => Success(copy(letters = replaceWith ::: playerLetters))
 
     }
   }
