@@ -11,6 +11,8 @@ case class Dictionary(dictionary: HashSet[String]) {
 	
 	/** Returns a list of invalid words in the input list of words. Returns an empty list if there are none. */
 	def invalidWords(words: List[String]) : List[String] =  words.filter(x => !isValidWord(x))
+	
+	override def toString = "Dictionary has " + dictionary.size + " letters."
 }
 
 object Dictionary {

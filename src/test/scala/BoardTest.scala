@@ -3,13 +3,15 @@ package scrabble
 class BoardTest extends ScrabbleTest {
 
   val oneLetterPlaced = {
-    val place = toPlace("a", true, pos(3,3))
+    val place = toPlace("a", true, pos(3, 3))
     placeSquares(board, place)
 
-  //  board.placeLetter(Pos.posAt(3, 3).get, Letter('a', 1)).get
+    //  board.placeLetter(Pos.posAt(3, 3).get, Letter('a', 1)).get
   }
 
   def checkNeighbours(word: String, direction: Pos => List[PosSquare], pos: Option[Pos]) = {
+    pos must beSome
+
     val res = pos flatMap {
       pos =>
         crossedWords.map {
@@ -67,10 +69,12 @@ class BoardTest extends ScrabbleTest {
     val tripleLetter = TripleLetterSquare(None)
 
     def checkSpecialSquare(pos: Option[Pos], square: Square) = {
-      pos map {
+      pos must beSome
+
+      pos foreach {
         pos =>
           board.squares must havePair(pos, square)
-      } must beSome
+      }
     }
 
     /* Tedious, but important test to make sure all the special squares are positioned correctly */
@@ -171,19 +175,22 @@ class BoardTest extends ScrabbleTest {
       oneLetterPlaced map (_.squares.toTraversable filter (p => !p._2.isEmpty) must have size 1) must beSome
     }
 
+    val placeAt = pos(3, 3)
+    placeAt must beSome
+    
     "place Tile in the correct position" in {
 
-      pos(3, 3) map {
+      placeAt foreach {
         p =>
           oneLetterPlaced map (_.squareAt(p) map (_.tile must beEqualTo(Some(Letter('A', 1)))))
-      } must beSome
+      }
 
     }
 
     "retrieve an occupied square" in {
-      pos(3, 3) map {
-        p => oneLetterPlaced map(_.squareAt(p) map (_.tile must beEqualTo(Some(Letter('A', 1)))))
-      } must beSome
+      placeAt foreach {
+        p => oneLetterPlaced map (_.squareAt(p) map (_.tile must beEqualTo(Some(Letter('A', 1)))))
+      }
     }
 
   }

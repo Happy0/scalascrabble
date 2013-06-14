@@ -16,6 +16,7 @@ trait ScrabbleTest extends Specification with NonEmptyLists with Lists {
   def pos(x: Int, y: Int) = Pos.posAt(x, y)
 
   val game = Game.make(List("jim", "joe"), enDict, LetterBag.init)
+  game must beSome
 
   def letterFor(c: Char) = letterBag.tileSet.get(c.toUpper)
 
@@ -24,6 +25,7 @@ trait ScrabbleTest extends Specification with NonEmptyLists with Lists {
   val predictableLetterBag = LetterBag.fromLetters(
     "LISVURDIGQAWLOEIYURADYEICBLEDHMSIXNFERAIWOANETGAELGFIUT_TJHAI_BDONENOECTRIEEREKOAZPVETONSASURAPMNOTO",
     LetterBag.init.tileSet)
+    predictableLetterBag must beSome
 
   val predictableLetterbagGame = {
     predictableLetterBag flatMap {
@@ -31,6 +33,7 @@ trait ScrabbleTest extends Specification with NonEmptyLists with Lists {
         Game.make(List("jim", "joe"), enDict, bag)
     }
   }
+  predictableLetterbagGame must beSome
   
   def safeUpdateTile(list: Option[NonEmptyList[(Pos, Tile)]], i: Int, tileReplace: Tile) = {
     list flatMap {
@@ -90,6 +93,7 @@ trait ScrabbleTest extends Specification with NonEmptyLists with Lists {
     }
 
   }
+  crossedWords must beSome
 
   /** Place tiles on the board at the specified positions */
   def placeSquares(board: Board, placed: Option[NonEmptyList[(Pos, Tile)]]): Option[Board] =

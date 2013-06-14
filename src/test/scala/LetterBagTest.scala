@@ -105,12 +105,12 @@ class LetterBagTest extends ScrabbleTest {
       newBag.letters must have size 97
       removed must have size 3
 
-      transitionBagProperly(removed, newBag, letterBag)
+      transitionBagProperly(removed, newBag, letterBag) must beEqualTo(true)
 
       val nextBag = newBag.remove(5)
       nextBag._2.letters must have size 92
 
-      transitionBagProperly(nextBag._1, nextBag._2, newBag)
+      transitionBagProperly(nextBag._1, nextBag._2, newBag) must beEqualTo(true)
     }
 
     "cope with boundary removal conditions" in {
@@ -123,7 +123,10 @@ class LetterBagTest extends ScrabbleTest {
     }
 
     def exchangesProperly(exchanged: List[Tile], originalBag: LetterBag): Unit = {
-      val exch = letterBag.exchange(exchanged) map {
+      val exch = letterBag.exchange(exchanged)
+      exch must not be equalTo(Failure(BagNotFullEnoughToExchange()))
+      
+      exch foreach {
         case (received, newbag) =>
 
           exchanged.foreach {
@@ -136,8 +139,6 @@ class LetterBagTest extends ScrabbleTest {
           }
           newbag.size must beEqualTo(letterBag.size)
       }
-
-      exch must not be equalTo(Failure(BagNotFullEnoughToExchange()))
     }
 
     def strToLetters(str: String) = str.toList.map { c => letterBag.tileSet.get(c) }.flatten
@@ -166,7 +167,10 @@ class LetterBagTest extends ScrabbleTest {
       emptyBag.size must beEqualTo(0)
 
       val exchangedWithSingle = strToLetters("ABCDE")
-      val res = newBag.exchange(exchangedWithSingle) map {
+      val bg = newBag.exchange(exchangedWithSingle)
+      bg must not be equalTo(Failure(BagNotFullEnoughToExchange()))
+      
+      val res = bg foreach {
         case (_, exchBag) =>
           exchBag.size must beEqualTo(94)
       }
