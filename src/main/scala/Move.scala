@@ -313,7 +313,7 @@ case class ExchangeMove(game: Game, exchanged: List[Tile]) extends Move(game) {
       player: Player =>
         game.bag.exchange(exchanged) flatMap {
           case (given, newBag) =>
-            player.exchangeLetters(given, exchanged) map {
+            player.exchangeLetters(exchanged, given ) map {
               ply =>
                 game.copy(players = game.players.updated(game.playersMove, ply),
                   playersMove = game.nextPlayerNo, moves = game.moves + 1, bag = newBag)

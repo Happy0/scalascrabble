@@ -4,8 +4,8 @@ import scala.util.{ Try, Success, Failure }
 import scala.util.Failure
 import scalaz.NonEmptyList
 import org.specs2.matcher.MatchResult
-
 import org.specs2.matcher.TraversableMatchers
+import org.specs2.matcher.BeEqualTo
 
 class MoveTest extends ScrabbleTest {
 
@@ -461,13 +461,35 @@ class MoveTest extends ScrabbleTest {
 
     }
 
+    "handle exchange moves correctly" in {
+      predictableGame map {
+        game =>
+          val move = ExchangeMove(game, toLetters("IGQ"))
+          game.currentPlayer map {
+            player => println("letters: " + player.letters)
+          }
+
+          move.makeMove map {
+            newGame =>
+              newGame.players get (game.playersMove) map {
+                player =>
+                  print("Got herefsdf")
+                  val test = player.letters map (c => c.letter) toString
+
+                  test must beEqualTo("EIYAWLO")
+
+              }
+              newGame.moves must beEqualTo(game.moves + 9000) // Y U NO FAIL
+              newGame.bag.letters.intersect(toLetters("IGQ") ::: game.bag.letters.drop(3)).size must beEqualTo(newGame.bag.size)
+
+          }
+      } must not be equalTo(Some(Failure(PlayerDoesNotHaveLettersToExchange()))) and not be equalTo(Some(Failure(MustExchangeSameNumberofLetters())))
+    }
+
     "handle pass moves correctly" in {
 
     }
 
-    "handle exchange moves correctly" in {
-
-    }
   }
 
 }

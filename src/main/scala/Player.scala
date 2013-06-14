@@ -16,6 +16,7 @@ case class Player(
     (replace, replaceWith) match {
       case (x :: xs, y :: ys) =>
         val (before, after) = letters.span(let => let != x)
+        println("before: " + before + " after: " + after + " x: " + x + " letters " + letters)
         if (after == Nil) Failure(PlayerDoesNotHaveLettersToExchange()) else {
           accumulateLetters(xs, ys, before ::: (y :: after.drop(1)))
         }
