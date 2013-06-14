@@ -16,19 +16,18 @@ case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) exten
 
   def validate: Try[ValidPlaceLettersMove] = {
 
+    // Makes sure the tiles are sorted into ascending order of position
     val sortedList = placed.list.sortBy { case (pos: Pos, _) => (pos.x, pos.y) }
 
-    def unwrap(pos: Pos, tile: Tile): Option[(Pos, Square, Tile)] = {
-      game.board.squareAt(pos) map { sq => (pos, sq, tile) }
-    }
-    
-    def processed : Option[NonEmptyList[(Pos, Square, Tile)]] = {
-      val unwrapped = sortedList map {case (pos, tile) => unwrap(pos, tile)} sequence 
-      
+    def unwrap(pos: Pos, tile: Tile): Option[(Pos, Square, Tile)] = game.board.squareAt(pos) map { sq => (pos, sq, tile) }
+
+    def processed: Option[NonEmptyList[(Pos, Square, Tile)]] = {
+      val unwrapped = sortedList map { case (pos, tile) => unwrap(pos, tile) } sequence
+
       unwrapped flatMap (list => list.toNel)
     }
 
-    processed.toTry(Failure(UnlikelyInternalError())){list => Try(ValidPlaceLettersMove(game, list))}
+    processed.toTry(Failure(UnlikelyInternalError())) { list => Try(ValidPlaceLettersMove(game, list)) }
   }
 
 }
@@ -39,10 +38,8 @@ sealed case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, S
     if (this.horizontal) horizontal else vertical
   }
 
-  //@TODO:Think about how to record games. Tidy up buildWords function. Test it - properly.
-
-  /** Processes the placed letters. Sorts them into positional order. */
   private lazy val placedProcessed = placed.list
+
   /**
    * Returns the updated game if the move is a valid scrabble move, otherwise returns an InvalidMove
    * with an explanation of why the move is invalid
@@ -76,7 +73,7 @@ sealed case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, S
 
     makeMove flatMap {
       newGame =>
-        newGame.getPlayer(game.playersMove).fold[Try[Boolean]](Failure(UnlikelyInternalError())) {
+        newGame.getPlayer(game.playersMove).toTry(Failure(UnlikelyInternalError())) {
           player =>
             Success(newGame.bag.size == 0 && player.letters.size == 0)
         }
@@ -95,10 +92,10 @@ sealed case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, S
               /* Split the remaining player's letters up till it matches one of their placed letters. */
               val (upTo, after) = remainingLetters.span { let => let != y._3 }
 
-              if (upTo.size == remainingLetters.size) Failure(playerDoesNotHaveLettersClientError()) else {
+              if (after == Nil) Failure(playerDoesNotHaveLettersClientError()) else {
                 val newLetters: List[Tile] = upTo ::: after.drop(1)
 
-                board.placeLetter(y._1, y._3).fold[Try[(Board, Player)]](Failure(UnlikelyInternalError())) {
+                board.placeLetter(y._1, y._3).toTry(Failure(UnlikelyInternalError())) {
                   board => place(rest, newLetters, board)
                 }
 
@@ -310,8 +307,22 @@ case class PassMove(game: Game) extends Move(game) {
   def meetsEndCondition: Try[Boolean] = Success(game.consecutivePasses == game.players.size * 3)
 }
 
-case class ExchangeMove(game: Game, exchangeLetters: List[Tile]) extends Move(game) {
-  def makeMove: Try[Game] = ???
+case class ExchangeMove(game: Game, exchanged: List[Tile]) extends Move(game) {
+  def makeMove: Try[Game] = {
+    val newGame = game.currentPlayer map {
+      player: Player =>
+        game.bag.exchange(exchanged) flatMap {
+          case (given, newBag) =>
+            player.exchangeLetters(given, exchanged) map {
+              ply =>
+                game.copy(players = game.players.updated(game.playersMove, ply),
+                  playersMove = game.nextPlayerNo, moves = game.moves + 1, bag = newBag)
+            }
+
+        }
+    }
+    newGame.toTry(Failure(UnlikelyInternalError()))(a => a)
+  }
 
   def meetsEndCondition = Success(false)
 }

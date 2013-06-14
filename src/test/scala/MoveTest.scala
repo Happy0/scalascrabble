@@ -456,10 +456,6 @@ class MoveTest extends ScrabbleTest {
       } must beSome
 
     }
-    
-    "Sort the PosTile input before passing it to the ValidPlaceMove" in {
-      
-    }
 
     "ends the game in the appropriate conditions" in {
 

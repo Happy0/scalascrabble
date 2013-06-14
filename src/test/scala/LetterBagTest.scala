@@ -1,6 +1,8 @@
 package scrabble
 
 import scalaz.MA
+import scala.util.{ Try, Success, Failure }
+
 
 class LetterBagTest extends ScrabbleTest {
 
@@ -135,7 +137,7 @@ class LetterBagTest extends ScrabbleTest {
           newbag.size must beEqualTo(letterBag.size)
       }
 
-      exch must beSome
+      exch must not be equalTo(Failure(BagNotFullEnoughToExchange()))
     }
 
     def strToLetters(str: String) = str.toList.map { c => letterBag.tileSet.get(c) }.flatten
@@ -152,7 +154,7 @@ class LetterBagTest extends ScrabbleTest {
     "fail to exchange when there is not enough letters in the bag to exchange for" in {
       val (_, smallBag) = letterBag.remove(98)
 
-      smallBag.exchange(strToLetters("AABCDD")) must beNone
+      smallBag.exchange(strToLetters("AABCDD")) must beEqualTo(Failure(BagNotFullEnoughToExchange()))
 
     }
 
@@ -169,7 +171,7 @@ class LetterBagTest extends ScrabbleTest {
           exchBag.size must beEqualTo(94)
       }
 
-      res must beSome
+      res must not be equalTo(Failure(BagNotFullEnoughToExchange()))
 
     }
 

@@ -1,6 +1,9 @@
 package scrabble
 
 import util.Random
+import scala.util.{ Try, Success, Failure }
+
+
 
 //@TODO: Think about how to generalise this to other languages. Perhaps using configuration files...
 
@@ -28,12 +31,12 @@ case class LetterBag(letters: List[Tile], size: Int, tileSet: Map[Char, Tile]) {
    * Exchange @exchanged letters for the same number of letters from the bag. Returns None if there is
    *   not enough letters in the bag to exchange. Otherwise, returns the new bag after shuffling its contents.
    */
-  def exchange(exchanged: List[Tile]): Option[(List[Tile], LetterBag)] = {
-    if (exchanged.size > size) None else {
+  def exchange(exchanged: List[Tile]): Try[(List[Tile], LetterBag)] = {
+    if (exchanged.size > size) Failure(BagNotFullEnoughToExchange()) else {
 
       val (given, bag) = remove(exchanged.size)
       val newLetters = util.Random.shuffle(exchanged ::: bag.letters)
-      Some((given, copy(letters = newLetters)))
+      Success((given, copy(letters = newLetters)))
     }
 
   }

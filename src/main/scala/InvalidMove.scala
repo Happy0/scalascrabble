@@ -43,6 +43,19 @@ case class LetterNotInTileSetClientError(errorcode: Int = 8) extends InvalidMove
   def defaultMessage = "Letter not in the tileset for this game. Client error or malicious client."
 }
 
+case class MustExchangeSameNumberofLetters(errorcode: Int = 10) extends InvalidMove(errorcode) {
+  def defaultMessage = "Not enough letters given to exchange"
+}
+
+case class BagNotFullEnoughToExchange(errorcode: Int = 11) extends InvalidMove(errorcode) {
+  def defaultMessage = "The bag does not contain enough letters to make this exchange."
+}
+
+case class PlayerDoesNotHaveLettersToExchange(errorcode: Int = 12) extends InvalidMove(errorcode) {
+  def defaultMessage = "The player does not have these letters to exchange"
+}
+
+
 case class UnlikelyInternalError(errorcode: Int = 9) extends InvalidMove(errorcode) {
   def defaultMessage = "The compiler and I had a disagreement, and the compiler won the argument."
 }
