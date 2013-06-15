@@ -25,7 +25,7 @@ trait ScrabbleTest extends Specification with NonEmptyLists with Lists {
   val predictableLetterBag = LetterBag.fromLetters(
     "LISVURDIGQAWLOEIYURADYEICBLEDHMSIXNFERAIWOANETGAELGFIUT_TJHAI_BDONENOECTRIEEREKOAZPVETONSASURAPMNOTO",
     LetterBag.init.tileSet)
-    predictableLetterBag must beSome
+  predictableLetterBag must beSome
 
   val predictableLetterbagGame = {
     predictableLetterBag flatMap {
@@ -34,13 +34,25 @@ trait ScrabbleTest extends Specification with NonEmptyLists with Lists {
     }
   }
   predictableLetterbagGame must beSome
-  
+
+  val blankGame: Option[Game] = {
+    val str = "JEARVINENVO_NILLEWBKONUIEUWEAZBDESIAPAEOOURGOCDSNIADOAACAR_RMYELTUTYTEREOSITNIRFGPHAQLHESOIITXFDMETG"
+    val bag = LetterBag.fromLetters(str, letterBag.tileSet)
+
+    bag flatMap {
+      bag =>
+        Game.make(List("a", "b", "c", "d"), enDict, bag)
+    }
+
+  }
+
   def safeUpdateTile(list: Option[NonEmptyList[(Pos, Tile)]], i: Int, tileReplace: Tile) = {
     list flatMap {
-      list => list.list.zipWithIndex map {
-        case ((pos, tile), index) =>
-          if (index == i) pos -> tileReplace else pos -> tile
-      } toNel
+      list =>
+        list.list.zipWithIndex map {
+          case ((pos, tile), index) =>
+            if (index == i) pos -> tileReplace else pos -> tile
+        } toNel
     }
   }
 
@@ -96,17 +108,27 @@ trait ScrabbleTest extends Specification with NonEmptyLists with Lists {
   crossedWords must beSome
 
   /** Place tiles on the board at the specified positions */
-  def placeSquares(board: Board, placed: Option[NonEmptyList[(Pos, Tile)]]): Option[Board] =
-    {
-      placed flatMap {
-        placed =>
-          placed.list.foldLeft[Option[Board]](Some(board)) {
-            case (Some(b), placed) =>
-              b.placeLetter(placed._1, placed._2)
-            case (None, _) => None
-          }
-      }
+  def placeSquares(board: Board, placed: Option[NonEmptyList[(Pos, Tile)]]): Option[Board] = {
+    placed flatMap {
+      placed =>
+        placed.list.foldLeft[Option[Board]](Some(board)) {
+          case (Some(b), placed) =>
+            b.placeLetter(placed._1, placed._2)
+          case (None, _) => None
+        }
     }
+  }
+  
+    def furtherGame(game: Option[Game], place: Option[NonEmptyList[PosTile]]): Option[Game] = {
+    game flatMap {
+      game =>
+        place flatMap {
+          place =>
+            PlaceLettersMove(game, place).validate flatMap (_.makeMove) toOption
+
+        }
+    }
+  }
 
   implicit def pimpNonEmptyList[A](nel: NonEmptyList[A]) = G(nel)
 

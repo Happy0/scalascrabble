@@ -55,7 +55,7 @@ sealed case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, S
               case (board, player) =>
                 // give the player letters
                 val (given, newbag) = game.bag.remove(amountPlaced)
-                val newplayer = player.copy(letters = player.letters ++ given, score = player.score + scr.overAllScore)
+                val newplayer = player.copy(letters = given ::: player.letters, score = player.score + scr.overAllScore)
                 val nextPlayer = game.nextPlayerNo
                 val players = game.players.updated(game.playersMove, newplayer)
                 game.copy(players = players, board = board, playersMove = nextPlayer, bag = newbag, moves = game.moves + 1,
@@ -259,7 +259,7 @@ sealed case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, S
                   between.find { case (ps, sq, tile) => ps == predicsorPos } map (_ => between)
               }
 
-              between.fold[Try[List[List[(Pos, Square, Tile)]]]] {
+              between.toTry {
                 Failure(MisPlacedLetters(pos.x, pos.y))
               } {
                 case between =>

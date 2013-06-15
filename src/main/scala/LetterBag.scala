@@ -3,8 +3,6 @@ package scrabble
 import util.Random
 import scala.util.{ Try, Success, Failure }
 
-
-
 //@TODO: Think about how to generalise this to other languages. Perhaps using configuration files...
 
 /** tiles: The current tiles in the bag */

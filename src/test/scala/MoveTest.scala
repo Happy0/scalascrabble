@@ -37,30 +37,8 @@ class MoveTest extends ScrabbleTest {
 
   }
 
-  def furtherGame(game: Option[Game], place: Option[NonEmptyList[PosTile]]): Option[Game] = {
-    game flatMap {
-      game =>
-        place flatMap {
-          place =>
-            PlaceLettersMove(game, place).validate flatMap (_.makeMove) toOption
-
-        }
-    }
-  }
-
   val gibberishPlace = {
     addPlaceLists(toPlace("T", false, pos(6, 4)), toPlace("ESTS", false, pos(6, 6)))
-  }
-
-  val blankGame: Option[Game] = {
-    val str = "JEARVINENVO_NILLEWBKONUIEUWEAZBDESIAPAEOOURGOCDSNIADOAACAR_RMYELTUTYTEREOSITNIRFGPHAQLHESOIITXFDMETG"
-    val bag = LetterBag.fromLetters(str, letterBag.tileSet)
-
-    bag flatMap {
-      bag =>
-        Game.make(List("a", "b", "c", "d"), enDict, bag)
-    }
-
   }
 
   val ravinePlaced = {
@@ -301,6 +279,8 @@ class MoveTest extends ScrabbleTest {
       checkBuiltWords(game1, place, "OR" :: Nil)
 
       // @TODO: Horizontal single letter
+      val placeHor = toPlace("O", true, pos(7, 8))
+      checkBuiltWords(game1, placeHor, "ORAVINE" :: Nil)
 
       // @TODO: Build multiple words
     }
@@ -356,13 +336,11 @@ class MoveTest extends ScrabbleTest {
             "ADYEICBLEDHMSIXNFERAIWOANETGAELGFIUT_TJHAI_BDONENOECTRIEEREKOAZPVETONSASURAPMNOTO")
 
           predictableGame.currentPlayer must beSome
+          predictableGame.getPlayer(0) must beSome
+          predictableGame.getPlayer(0).foreach { _.score must be equalTo (16) }
           predictableGame.currentPlayer foreach { _.letters.map(_.letter).mkString must beEqualTo("IGQAWLO") }
           predictableGame.playersMove must beEqualTo(1)
       }
-
-    }
-
-    "ends the game in the appropriate conditions" in {
 
     }
 
@@ -377,7 +355,7 @@ class MoveTest extends ScrabbleTest {
           moveMade must not be equalTo(Failure(MustExchangeSameNumberofLetters()))
           moveMade.toOption must not beNone
 
-          move.makeMove foreach {
+          moveMade foreach {
             newGame =>
               val player = newGame.players get (game.playersMove)
               player must not beNone
@@ -398,6 +376,22 @@ class MoveTest extends ScrabbleTest {
     }
 
     "handle pass moves correctly" in {
+      val passed = game.foreach {
+        game =>
+          val pass = PassMove(game).makeMove
+          pass.toOption must beSome
+
+          pass.foreach {
+            passGame =>
+              passGame.playersMove must beEqualTo(1)
+              passGame.consecutivePasses must beEqualTo(1)
+          }
+
+      }
+
+    }
+
+    "ends the game in the appropriate conditions" in {
 
     }
 
