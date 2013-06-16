@@ -1,4 +1,10 @@
 package scrabble;
+
+abstract class gameStatus
+case object InProgress extends gameStatus
+case object Ended extends gameStatus
+case object AgreedToEnd extends gameStatus
+
 case class Game private (
   players: Map[Int, Player],
   dictionary: Dictionary,
@@ -6,12 +12,20 @@ case class Game private (
   playersMove: Int, // Index into the list of players
   bag: LetterBag,
   consecutivePasses: Int,
-  moves: Int) {
+  moves: Int,
+  status: gameStatus = InProgress) {
 
-  def getPlayer(playerNo: Int) : Option[Player] = players get playerNo 
-  
+  def getPlayer(playerNo: Int): Option[Player] = players get playerNo
+
   val currentPlayer = players get playersMove
+
   val nextPlayerNo: Int = (playersMove + 1) % (players.size)
+
+  val gameEnded = status != InProgress || consecutivePasses >= 3 * players.size || (bag.size == 0 &&
+    players.find { case (key, player) => player.letters.size == 0 }.isDefined)
+
+  def setStatus(change: gameStatus): Game = copy(status = change)
+
 }
 
 object Game {

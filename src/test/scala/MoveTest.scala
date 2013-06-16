@@ -391,10 +391,6 @@ class MoveTest extends ScrabbleTest {
 
     }
 
-    "ends the game in the appropriate conditions" in {
-
-    }
-
   }
 
 }

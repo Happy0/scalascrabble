@@ -55,6 +55,10 @@ case class PlayerDoesNotHaveLettersToExchange(errorcode: Int = 12) extends Inval
   def defaultMessage = "The player does not have these letters to exchange"
 }
 
+case class GameHasEnded(errorcode: Int = 13) extends InvalidMove(errorcode) {
+  def defaultMessage = "Game cannot be played further as it has ended."
+}
+
 
 case class UnlikelyInternalError(errorcode: Int = 9) extends InvalidMove(errorcode) {
   def defaultMessage = "The compiler and I had a disagreement, and the compiler won the argument."

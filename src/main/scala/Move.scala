@@ -8,8 +8,6 @@ abstract class Move(game: Game) {
 
   def makeMove: Try[Game]
 
-  def meetsEndCondition: Try[Boolean]
-
 }
 
 case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) extends Lists {
@@ -27,7 +25,8 @@ case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) exten
       unwrapped flatMap (list => list.toNel)
     }
 
-    processed.toTry(Failure(UnlikelyInternalError())) { list => Try(ValidPlaceLettersMove(game, list)) }
+    if (game.status != InProgress) Failure(GameHasEnded()) else
+      processed.toTry(Failure(UnlikelyInternalError())) { list => Try(ValidPlaceLettersMove(game, list)) }
   }
 
 }
@@ -58,26 +57,15 @@ sealed case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, S
                 val newplayer = player.copy(letters = given ::: player.letters, score = player.score + scr.overAllScore)
                 val nextPlayer = game.nextPlayerNo
                 val players = game.players.updated(game.playersMove, newplayer)
-                game.copy(players = players, board = board, playersMove = nextPlayer, bag = newbag, moves = game.moves + 1,
+                val updatedGame = game.copy(players = players, board = board, playersMove = nextPlayer, bag = newbag, moves = game.moves + 1,
                   consecutivePasses = 0)
+
+                if (updatedGame.gameEnded) updatedGame.copy(status = Ended) else updatedGame
             }
         }
       }
     }
 
-  }
-
-  /* @TODO: Think about whether we should determine whether a valid move is possible for any player from the position, 
-   * or perhaps end on multiple consecutive passes */
-  lazy val meetsEndCondition: Try[Boolean] = {
-
-    makeMove flatMap {
-      newGame =>
-        newGame.getPlayer(game.playersMove).toTry(Failure(UnlikelyInternalError())) {
-          player =>
-            Success(newGame.bag.size == 0 && player.letters.size == 0)
-        }
-    }
   }
 
   /** Removes letters from player's letter rack and updates the board. Returns an error if the player does not have the letters  */
@@ -303,8 +291,6 @@ case class PassMove(game: Game) extends Move(game) {
       moves = game.moves + 1))
   }
 
-  // Each player scoring 0 for three consecutive turns ends the game
-  def meetsEndCondition: Try[Boolean] = Success(game.consecutivePasses == game.players.size * 3)
 }
 
 case class ExchangeMove(game: Game, exchanged: List[Tile]) extends Move(game) {
@@ -313,18 +299,17 @@ case class ExchangeMove(game: Game, exchanged: List[Tile]) extends Move(game) {
       player: Player =>
         game.bag.exchange(exchanged) flatMap {
           case (given, newBag) =>
-            player.exchangeLetters(exchanged, given ) map {
+            player.exchangeLetters(exchanged, given) map {
               ply =>
                 game.copy(players = game.players.updated(game.playersMove, ply),
-                  playersMove = game.nextPlayerNo, moves = game.moves + 1, bag = newBag)
+                  playersMove = game.nextPlayerNo, moves = game.moves + 1, bag = newBag, consecutivePasses = 0)
             }
 
         }
     }
-    newGame.toTry(Failure(UnlikelyInternalError()))(a => a)
+    newGame.fold[Try[Game]](Failure(UnlikelyInternalError()))(a => a)
   }
 
-  def meetsEndCondition = Success(false)
 }
 
 
