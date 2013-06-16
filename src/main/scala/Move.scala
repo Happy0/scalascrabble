@@ -70,28 +70,23 @@ sealed case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, S
 
   /** Removes letters from player's letter rack and updates the board. Returns an error if the player does not have the letters  */
   private lazy val placeLetters: Try[(Board, Player)] = {
-    game.currentPlayer.fold[Try[(Board, Player)]](Failure(UnlikelyInternalError())) {
+
+    game.currentPlayer.toTry(Failure(UnlikelyInternalError())) {
+
       currentPlayer =>
-        val playerLetters = currentPlayer.letters
+        val playerRemoved = currentPlayer.removeLetters(placedProcessed.map(_._3))
 
-        def place(placed: List[(Pos, Square, Tile)], remainingLetters: List[Tile], board: Board): Try[(Board, Player)] = {
-          placed match {
-            case y :: rest =>
-              /* Split the remaining player's letters up till it matches one of their placed letters. */
-              val (upTo, after) = remainingLetters.span { let => let != y._3 }
+        playerRemoved.toTry {
+          Failure(playerDoesNotHaveLettersClientError())
+        } {
+          newPlayer =>
+            val brd = board.placeLetters(placedProcessed)
 
-              if (after == Nil) Failure(playerDoesNotHaveLettersClientError()) else {
-                val newLetters: List[Tile] = upTo ::: after.drop(1)
+            brd.toTry(Failure(UnlikelyInternalError())) {
+              brd => Success(brd, newPlayer)
+            }
 
-                board.placeLetter(y._1, y._3).toTry(Failure(UnlikelyInternalError())) {
-                  board => place(rest, newLetters, board)
-                }
-
-              }
-            case Nil => Success(board, currentPlayer.replaceLetters(remainingLetters))
-          }
         }
-        place(placedProcessed, playerLetters, board)
     }
 
   }

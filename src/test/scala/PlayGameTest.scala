@@ -19,10 +19,7 @@ class PlayGameTest extends ScrabbleTest {
     addPlaceLists(toPlace("W", true, pos(9, 7)), toPlace("KE", false, pos(9, 9))),
     toPlace("N", true, pos(11, 9)),
     addPlaceLists(toPlace("B", true, pos(13, 7)), toPlace("D", true, pos(13, 9))),
-    toPlace("NAI", true, pos(9, 12))
-    
-  
-  )
+    toPlace("NAI", true, pos(9, 12)))
 
   "a playtest" should {
 

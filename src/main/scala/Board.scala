@@ -35,9 +35,22 @@ case class Board(
       }
     }
 
-  //  squareAt(pos) map {sq => copy(squares = squares.updated(pos, sq.setLetter(let))) }
   def placeLetter(pos: Pos, let: Tile): Option[Board] =
     squareAt(pos).fold[Option[Board]](None)(sq => Some(copy(squares = squares.updated(pos, sq.setLetter(let)))))
+
+  def placeLetters(list: List[PosSquare]): Option[Board] = {
+
+    def place(xs: List[PosSquare], board: Option[Board]): Option[Board] = {
+      (xs, board) match {
+        case (Nil, board) => board
+        case (x :: xs, Some(board)) => place(xs, board.placeLetter(x._1, x._3))
+        case (_, None) => None
+      }
+    }
+
+    place(list, Some(this))
+
+  }
 
 }
 
