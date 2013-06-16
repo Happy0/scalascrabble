@@ -12,7 +12,7 @@ abstract class Move(game: Game) {
 
 case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) extends Lists {
 
-  def validate: Try[ValidPlaceLettersMove] = {
+  def validate: Try[ValidInputPlaceLettersMove] = {
 
     // Makes sure the tiles are sorted into ascending order of position
     val sortedList = placed.list.sortBy { case (pos: Pos, _) => (pos.x, pos.y) }
@@ -34,14 +34,14 @@ case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) exten
     if (game.status != InProgress) Failure(GameHasEnded()) else
       processed.toTry(Failure(UnlikelyInternalError())) { list =>
         if (alreadyOccupiedSquares(list.list)) Failure(SquareOccupiedClientError()) else {
-          Try(ValidPlaceLettersMove(game, list))
+          Try(ValidInputPlaceLettersMove(game, list))
         }
       }
   }
 
 }
 
-sealed case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Square, Tile)]) extends Move(game) {
+sealed case class ValidInputPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Square, Tile)]) extends Move(game) {
 
   def horizontalElseVertical[A](horizontal: => A)(vertical: => A): A = {
     if (this.horizontal) horizontal else vertical

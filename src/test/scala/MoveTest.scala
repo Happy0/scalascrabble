@@ -8,7 +8,7 @@ import org.specs2.matcher.MatchResult
 class MoveTest extends ScrabbleTest {
 
   def withGameAndPositions(game: Option[Game], placed: Option[NonEmptyList[(Pos, Tile)]])(
-    behaviour: ValidPlaceLettersMove => Unit) = {
+    behaviour: ValidInputPlaceLettersMove => Unit) = {
     game must beSome
     placed must beSome
 
@@ -52,7 +52,7 @@ class MoveTest extends ScrabbleTest {
 
   }
 
-  val coversTwoBonuses: Option[ValidPlaceLettersMove] = {
+  val coversTwoBonuses: Option[ValidInputPlaceLettersMove] = {
 
     val place = addPlaceLists(toPlace("ven", false, pos(11, 5)), toPlace(
       "son", false, pos(11, 9)))
