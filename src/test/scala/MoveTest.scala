@@ -106,8 +106,15 @@ class MoveTest extends ScrabbleTest {
 
     "not place letters on top of occupied squares" in {
       val place = toPlace("hello", true, pos(3, 5))
+      playedGame foreach {
+        game =>
+          place foreach {
+            place =>
+              PlaceLettersMove(game, place).validate must be equalTo (Failure(SquareOccupiedClientError()))
+          }
+      }
 
-      withGameAndPositions(playedGame, place)(_.makeMove must beEqualTo(Failure(SquareOccupiedClientError(6))))
+     // withGameAndPositions(playedGame, place)(_.makeMove must beEqualTo(Failure(SquareOccupiedClientError(6))))
     }
 
     "not place letters that the player does not have" in {
@@ -389,6 +396,10 @@ class MoveTest extends ScrabbleTest {
 
       }
 
+    }
+
+    "not allow a move on a finished game" in {
+      pending
     }
 
   }

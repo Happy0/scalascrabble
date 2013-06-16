@@ -25,8 +25,18 @@ case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) exten
       unwrapped flatMap (list => list.toNel)
     }
 
+    def alreadyOccupiedSquares(list: List[PosSquare]) = {
+      list.find {
+        case (pos: Pos, sq, _) => !(sq.isEmpty)
+      } nonEmpty
+    }
+
     if (game.status != InProgress) Failure(GameHasEnded()) else
-      processed.toTry(Failure(UnlikelyInternalError())) { list => Try(ValidPlaceLettersMove(game, list)) }
+      processed.toTry(Failure(UnlikelyInternalError())) { list =>
+        if (alreadyOccupiedSquares(list.list)) Failure(SquareOccupiedClientError()) else {
+          Try(ValidPlaceLettersMove(game, list))
+        }
+      }
   }
 
 }
@@ -46,24 +56,23 @@ sealed case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, S
   def makeMove: Try[Game] = {
 
     if (!obeysFirstMovePositionRule) Failure(FirstMovePositionWrong()) else {
-      if (!alreadyOccupiedSquares.isEmpty) Failure(SquareOccupiedClientError()) else {
 
-        score.flatMap {
-          scr =>
-            placeLetters.map {
-              case (board, player) =>
-                // give the player letters
-                val (given, newbag) = game.bag.remove(amountPlaced)
-                val newplayer = player.copy(letters = given ::: player.letters, score = player.score + scr.overAllScore)
-                val nextPlayer = game.nextPlayerNo
-                val players = game.players.updated(game.playersMove, newplayer)
-                val updatedGame = game.copy(players = players, board = board, playersMove = nextPlayer, bag = newbag, moves = game.moves + 1,
-                  consecutivePasses = 0)
+      score.flatMap {
+        scr =>
+          placeLetters.map {
+            case (board, player) =>
+              // give the player letters
+              val (given, newbag) = game.bag.remove(amountPlaced)
+              val newplayer = player.copy(letters = given ::: player.letters, score = player.score + scr.overAllScore)
+              val nextPlayer = game.nextPlayerNo
+              val players = game.players.updated(game.playersMove, newplayer)
+              val updatedGame = game.copy(players = players, board = board, playersMove = nextPlayer, bag = newbag, moves = game.moves + 1,
+                consecutivePasses = 0)
 
-                if (updatedGame.gameEnded) updatedGame.copy(status = Ended) else updatedGame
-            }
-        }
+              if (updatedGame.gameEnded) updatedGame.copy(status = Ended) else updatedGame
+          }
       }
+
     }
 
   }
@@ -145,10 +154,6 @@ sealed case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, S
 
   private lazy val obeysFirstMovePositionRule = (game.moves > 0) || {
     placedProcessed.find { case (pos, _, let) => pos == startPosition } isDefined
-  }
-
-  private lazy val alreadyOccupiedSquares = placedProcessed.find {
-    case (pos: Pos, sq, _) => !(sq.isEmpty)
   }
 
   private lazy val startPosition = Pos.startPosition
