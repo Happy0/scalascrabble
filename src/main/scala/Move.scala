@@ -242,7 +242,7 @@ sealed case class ValidPlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, S
 
               val between = predicesor flatMap {
                 predicsorPos =>
-                  val between: List[(Pos, Square, Tile)] =
+                  val between =
                     horizontalElseVertical(board.LettersRight(lastPos))(board.LettersAbove(lastPos))
                   between.find { case (ps, sq, tile) => ps == predicsorPos } map (_ => between)
               }

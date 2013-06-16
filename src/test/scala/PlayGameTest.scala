@@ -19,10 +19,25 @@ class PlayGameTest extends ScrabbleTest {
     addPlaceLists(toPlace("W", true, pos(9, 7)), toPlace("KE", false, pos(9, 9))),
     toPlace("N", true, pos(11, 9)),
     addPlaceLists(toPlace("B", true, pos(13, 7)), toPlace("D", true, pos(13, 9))),
-    toPlace("NAI", true, pos(9, 12))
-    
-  
-  )
+    toPlace("NAI", true, pos(9, 12)),
+    addPlaceLists(toPlace("B", true, pos(11, 11)), toPlace("LLE", true, pos(13, 11))),
+    toPlace("WEE", false, pos(10, 13)),
+    addPlaceLists(toPlace("JA", false, pos(15, 9)), toPlace("GERS", false, pos(15, 12))),
+    addPlaceLists(toPlace("CANOPI", true, pos(4, 15)), toPlace("D", true, pos(11, 15))),
+    toPlace("SONI", false, pos(4, 11)),
+    toPlace("AUDIO", false, pos(3, 10)),
+    safeUpdateTile(toPlace("RAZER", false, pos(5, 8)), 3, BlankLetter('E')),
+    toPlace("MULEY", false, pos(2, 6)),
+    toPlace("ROOTY", false, pos(3, 2)),
+    toPlace("ETUIS", false, pos(14, 4)),
+    toPlace("RACING", false, pos(1, 10)),
+    toPlace("HATP", false, pos(11, 4)),
+    toPlace("HAES", false, pos(12, 2)),
+    toPlace("DOUX", false, pos(15, 1)),
+    toPlace("GEM", false, pos(13, 1)),
+    addPlaceLists(toPlace("Q", true, pos(4, 9)), toPlace("T", true, pos(6, 9))),
+    toPlace("IO", false, pos(6, 13)),
+    toPlace("FIT", false, pos(10, 2)))
 
   "a playtest" should {
 
@@ -44,9 +59,49 @@ class PlayGameTest extends ScrabbleTest {
 
       makeSteps match {
         case Success(game) =>
-          game.players.get(1).foreach { player => println(player.letters.map(_.letter).mkString) }
-          println(game.bag.lettersAsString)
-          game.getPlayer(1).map(_.score) must beEqualTo(Some(17))
+          game.bag.size must beEqualTo(0)
+          game.gameEnded must beEqualTo(true)
+          game.moves must beEqualTo(24)
+
+          val player1 = game getPlayer (0)
+          val player2 = game getPlayer (1)
+          val player3 = game getPlayer (2)
+          val player4 = game getPlayer (3)
+
+          player1 must not beNone
+
+          player2 must not beNone
+
+          player3 must not beNone
+
+          player4 must not beNone
+
+          player1.foreach {
+            player =>
+              player.score must beEqualTo(189)
+              player.letters.map(t => t.letter).mkString must be equalTo ("TF")
+          }
+
+          player2.foreach {
+            player =>
+              player.score must beEqualTo(186)
+              player.letters.map(t => t.letter).mkString must beEqualTo("L")
+          }
+
+          player3.foreach {
+            player =>
+              player.score must beEqualTo(110)
+              player.letters.map(t => t.letter).mkString must beEqualTo("E")
+          }
+
+          player4.foreach {
+            player =>
+              player.score must beEqualTo(57 + 77 + 20)
+              player.letters.map(t => t.letter).mkString must beEqualTo("")
+
+          }
+
+          game.status must beEqualTo(Ended)
 
         // well, uh.. this is a hardly ideal hack. there must be a way to extend specs2 appropriately.
         case x => x must beEqualTo(9902131)
