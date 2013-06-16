@@ -7,6 +7,12 @@ case class Player(
   username: String,
   score: Int) {
 
+  def hasLetters(tiles: List[Tile]) = (letters intersect tiles) == tiles
+
+  /** Removes letters from player's rack. Returns None if the player does not have all the input tiles */
+  def removeLetters(tiles: List[Tile]): Option[Player] =
+    if (!hasLetters(tiles)) None else Some(copy(letters = letters diff tiles))
+
   def replaceLetters(lettrs: List[Tile]): Player = copy(letters = lettrs)
 
   def exchangeLetters(replace: List[Tile], replaceWith: List[Tile]): Try[Player] =
@@ -17,7 +23,7 @@ case class Player(
     (replace) match {
       case (x :: xs) =>
         val (before, after) = playerLetters.span(let => let != x)
-       
+
         if (after == Nil) Failure(PlayerDoesNotHaveLettersToExchange()) else {
           accumulateLetters(xs, replaceWith, before ::: after.drop(1))
         }
