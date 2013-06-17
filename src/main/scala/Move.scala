@@ -146,7 +146,6 @@ sealed case class ValidInputPlaceLettersMove(game: Game, placed: NonEmptyList[(P
     } else (starty == endy, startx == endx)
   }
 
-  // @TODO: Absolutely hurrendous looking. Need to tidy it up.
   private def buildWords: Try[FormedWords] = {
 
     def isLastPlaced(pos: Pos): Boolean = pos.x == endx && pos.y == endy
@@ -204,7 +203,9 @@ sealed case class ValidInputPlaceLettersMove(game: Game, placed: NonEmptyList[(P
 
             } else {
               val predicesor = horizontalElseVertical(lastPos.left)(lastPos.down)
-              // Add the letters inbetween and the current char to the first list, then look for letters above and below the current char
+              
+              /* Add the letters inbetween and the current char to the first list,
+              * then look for letters above and below the current char */
 
               val between = predicesor flatMap {
                 predicsorPos =>
@@ -238,7 +239,7 @@ sealed case class ValidInputPlaceLettersMove(game: Game, placed: NonEmptyList[(P
         formedWords =>
           val finished = formedWords.prependToMainWord(afterEnd)
 
-          val attached = finished.mainWord.size > placedProcessed.size || finished.adjacentWords.size > 0 || game.moves == 0
+          val attached = finished.adjacentWords.nonEmpty || finished.mainWord.size > placedProcessed.size || game.moves == 0
           if (attached) Success(finished) else Failure(NotAttachedToWord())
       }
 
