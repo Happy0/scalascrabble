@@ -106,6 +106,10 @@ class MoveTest extends ScrabbleTest {
 
     "not place letters on top of occupied squares" in {
       val place = toPlace("hello", true, pos(3, 5))
+      
+      place must beSome
+      playedGame must beSome
+      
       playedGame foreach {
         game =>
           place foreach {

@@ -33,14 +33,16 @@ case class LetterBag(letters: List[Tile], size: Int, tileSet: Map[Char, Tile]) {
     if (exchanged.size > size) Failure(BagNotFullEnoughToExchange()) else {
 
       val (given, bag) = remove(exchanged.size)
-      val newLetters = util.Random.shuffle(exchanged ::: bag.letters)
-      Success((given, copy(letters = newLetters)))
+      val newLetters = exchanged ::: bag.letters
+      Success((given, copy(letters = newLetters).shuffle))
     }
 
   }
 
   def letterFor(letter: Char): Option[Tile] = tileSet get letter
 
+  def shuffle : LetterBag = copy(letters = Random.shuffle(letters))
+  
 }
 
 object LetterBag {
@@ -70,7 +72,7 @@ object LetterBag {
   /** Returns a new LetterBag in its intial state. List is in randomised order. */
   def init: LetterBag = {
     // Construct with a randomised list
-    LetterBag(util.Random.shuffle(letters), 100, tileSet)
+    LetterBag(letters, 100, tileSet).shuffle
   }
 
   /**

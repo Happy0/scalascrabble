@@ -8,6 +8,9 @@ package object scrabble extends scalaz.Zeros with scalaz.MABs {
   type PosSquare = (Pos, Square, Tile)
   type PosSquares = List[PosSquare]
   type Direction = Pos => Option[Pos]
+  
+  type Word = List[PosSquare]
+
 
   implicit final class ScrabblePimpedOption[A](o: Option[A]) {
 
