@@ -219,7 +219,6 @@ sealed case class ValidInputPlaceLettersMove(game: Game, placed: NonEmptyList[(P
         builder: FormedWords): Try[FormedWords] = {
 
         (placed, builder) match {
-          // case (_, Nil) => Failure(UnlikelyInternalError())
           case (Nil, builder) => Success(builder)
 
           case (((pos, sq, let) :: rest), builder) =>
@@ -238,13 +237,13 @@ sealed case class ValidInputPlaceLettersMove(game: Game, placed: NonEmptyList[(P
               findWords(rest, pos, nextbuilder)
 
             } else {
-              val predicesor = horizontalElseVertical(pos.right)(pos.up)
+              val predicesor = horizontalElseVertical(lastPos.left)(lastPos.down)
               // Add the letters inbetween and the current char to the first list, then look for letters above and below the current char
 
               val between = predicesor flatMap {
                 predicsorPos =>
                   val between =
-                    horizontalElseVertical(board.LettersLeft(lastPos))(board.LettersBelow(lastPos))
+                    horizontalElseVertical(board.LettersRight(pos))(board.LettersAbove(pos))
                   between.find { case (ps, sq, tile) => ps == predicsorPos } map (_ => between)
               }
 
