@@ -89,7 +89,7 @@ class MoveTest extends ScrabbleTest {
 
         move.formedWords foreach {
           built =>
-            val words = builtToStr(built)
+            val words = builtToStr(built.getWords)
             words must containAllOf(shouldContain)
             words must have size shouldContain.size
         }
@@ -184,10 +184,10 @@ class MoveTest extends ScrabbleTest {
       checkMisplaced(playedGame, first, (3, 1))
 
       // linear, but missing a square to complete the the 'line'
-      checkMisplaced(playedGame, second, (5, 1))
+      checkMisplaced(playedGame, second, (3, 1))
 
       // Start to complete a word at one side, but misplace letter at the other
-      checkMisplaced(playedGame, toPlace3, (11, 5))
+      checkMisplaced(playedGame, toPlace3, (2, 5))
 
     }
 
@@ -306,7 +306,7 @@ class MoveTest extends ScrabbleTest {
 
           words foreach {
             wrds =>
-              builtToStr(wrds) must contain("VENISON")
+              builtToStr(wrds.getWords) must contain("VENISON")
           }
       }
 

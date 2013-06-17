@@ -15,7 +15,7 @@ case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) exten
   def validate: Try[ValidInputPlaceLettersMove] = {
 
     // Makes sure the tiles are sorted into ascending order of position
-    val sortedList = placed.list.sortBy { case (pos: Pos, _) => (pos.x, pos.y) }
+    val sortedList = placed.list.sortBy { case (pos: Pos, _) => (pos.x, pos.y) } reverse //@TODO: Do this with sortWith
 
     def unwrap(pos: Pos, tile: Tile): Option[(Pos, Square, Tile)] = game.board.squareAt(pos) map { sq => (pos, sq, tile) }
 
@@ -110,15 +110,15 @@ sealed case class ValidInputPlaceLettersMove(game: Game, placed: NonEmptyList[(P
    *  placement of the letters or an error if the player has not placed the words linearly or the letters are not attached
    *   to at least one existing letter on the board
    */
-  lazy val formedWords: Try[List[List[(Pos, Square, Tile)]]] = buildWords
+  lazy val formedWords: Try[FormedWords] = buildWords
 
   /** Returns an overall score, and a score for each word. Returns a list of words that are not in the dictionary (empty if none) */
   lazy val score: Try[Score] = {
     def toWord(list: List[(Pos, Square, Tile)]): String = list.map { case (pos, sq, tile) => tile.letter }.mkString
 
     formedWords.flatMap {
-      lists =>
-        val (score, lsts, badwords) = lists.foldLeft((0, List.empty[(String, Int)], List.empty[String])) {
+      formedWords =>
+        val (score, lsts, badwords) = formedWords.getWords.foldLeft((0, List.empty[(String, Int)], List.empty[String])) {
           case ((acc, lsts, badwords), xs) =>
             val word = toWord(xs)
             val bdwords = if (!game.dictionary.isValidWord(word)) word :: badwords else badwords
@@ -173,22 +173,19 @@ sealed case class ValidInputPlaceLettersMove(game: Game, placed: NonEmptyList[(P
 
   private lazy val (horizontal, vertical): (Boolean, Boolean) = {
     if (amountPlaced == 1) {
-      val horizontal = !board.LettersLeft(first._1).isEmpty || !board.LettersRight(first._1).isEmpty
-      val vertical = !board.LettersAbove(first._1).isEmpty || !board.LettersBelow(first._1).isEmpty
+      val horizontal = board.LettersLeft(first._1).nonEmpty || board.LettersRight(first._1).nonEmpty
+      val vertical = board.LettersAbove(first._1).nonEmpty || board.LettersBelow(first._1).nonEmpty
 
       (horizontal, vertical)
     } else (starty == endy, startx == endx)
   }
 
   // @TODO: Absolutely hurrendous looking. Need to tidy it up.
-  private def buildWords: Try[List[List[(Pos, Square, Tile)]]] = {
+  private def buildWords: Try[FormedWords] = {
 
     def isLastPlaced(pos: Pos): Boolean = pos.x == endx && pos.y == endy
 
-    def afterEnd(pos: Pos) =
-      if (isLastPlaced(pos)) {
-        horizontalElseVertical(board.LettersRight(pos))(board.LettersAbove(pos))
-      } else Nil
+    lazy val afterEnd = horizontalElseVertical(board.LettersLeft(last._1))(board.LettersBelow(last._1))
 
     /** Returns words that are formed from the placement of a letter on a square on the board */
     def allAdjacentTo(pos: Pos, sq: Square, let: Tile): List[(Pos, Square, Tile)] = {
@@ -211,44 +208,43 @@ sealed case class ValidInputPlaceLettersMove(game: Game, placed: NonEmptyList[(P
 
     if (!horizontal && !vertical) Failure(NotLinear()) else {
 
-      //@TODO: Tidy this up. My god. 
-      val startList: List[(Pos, Square, Tile)] =
-        ((horizontalElseVertical(board.LettersLeft(first._1))(board.LettersBelow(first._1))) :+ (first._1, first._2, first._3)) ::: afterEnd(first._1)
-      val otherWords = allAdjacentTo(first._1, first._2, first._3)
-      val startWith: List[List[(Pos, Square, Tile)]] = if (otherWords.isEmpty) List(startList) else List(startList) :+ otherWords
+      val mainWordStart: List[PosSquare] =
+        first :: ((horizontalElseVertical(board.LettersRight(first._1))(board.LettersAbove(first._1))))
+      val adjacentWord = allAdjacentTo(first._1, first._2, first._3)
+      val adjStart: List[List[(Pos, Square, Tile)]] = if (adjacentWord.isEmpty) Nil else adjacentWord :: Nil
+
+      val startWith = FormedWords(mainWordStart, adjStart)
 
       def findWords(placed: List[(Pos, Square, Tile)], lastPos: Pos,
-        startWith: List[List[(Pos, Square, Tile)]]): Try[List[List[(Pos, Square, Tile)]]] = {
+        builder: FormedWords): Try[FormedWords] = {
 
-        (placed, startWith) match {
-          case (_, Nil) => Failure(UnlikelyInternalError())
-          case (Nil, xs) => Success(xs)
+        (placed, builder) match {
+          // case (_, Nil) => Failure(UnlikelyInternalError())
+          case (Nil, builder) => Success(builder)
 
-          case (((pos, sq, let) :: rest), (x :: xs)) =>
+          case (((pos, sq, let) :: rest), builder) =>
 
             val isLinear = horizontalElseVertical(pos.y == lastPos.y)(pos.x == lastPos.x)
             if (!isLinear) Failure(MisPlacedLetters(pos.x, pos.y))
 
-            val comesAfter = horizontalElseVertical(pos.x == lastPos.x + 1)(pos.y == lastPos.y + 1)
+            val comesAfter = horizontalElseVertical(pos.x == lastPos.x - 1)(pos.y == lastPos.y - 1)
 
             if (comesAfter) {
               // Add the letter to the first list
-              val newlist: List[(Pos, Square, Tile)] = x ::: (pos, sq, let) :: afterEnd(pos)
-              val updatedList = newlist :: xs
-              val otherWords = allAdjacentTo(pos, sq, let)
+              val newbuilder: FormedWords = builder.prependToMainWord((pos, sq, let))
+              val adjacent = allAdjacentTo(pos, sq, let)
+              val nextbuilder = if (adjacent.nonEmpty) newbuilder.addAdjacentWord(adjacent) else newbuilder
 
-              findWords(rest, pos, if (!otherWords.isEmpty) updatedList :+ otherWords else updatedList)
+              findWords(rest, pos, nextbuilder)
 
             } else {
-
-              // val range = horizontalElseVertical(List.range(lastx + 1, pos.x))(List.range(lasty + 1, pos.y))
-              val predicesor = horizontalElseVertical(pos.left)(pos.down)
+              val predicesor = horizontalElseVertical(pos.right)(pos.up)
               // Add the letters inbetween and the current char to the first list, then look for letters above and below the current char
 
               val between = predicesor flatMap {
                 predicsorPos =>
                   val between =
-                    horizontalElseVertical(board.LettersRight(lastPos))(board.LettersAbove(lastPos))
+                    horizontalElseVertical(board.LettersLeft(lastPos))(board.LettersBelow(lastPos))
                   between.find { case (ps, sq, tile) => ps == predicsorPos } map (_ => between)
               }
 
@@ -256,11 +252,10 @@ sealed case class ValidInputPlaceLettersMove(game: Game, placed: NonEmptyList[(P
                 Failure(MisPlacedLetters(pos.x, pos.y))
               } {
                 case between =>
-                  val newlist: List[(Pos, Square, Tile)] = ((x ::: between)) ::: (pos, sq, let) :: afterEnd(pos)
-                  val updatedList = newlist :: xs
-                  val otherWords: List[(Pos, Square, Tile)] = allAdjacentTo(pos, sq, let)
+                  val newBuilder: FormedWords = builder.prependToMainWord((pos, sq, let) :: between)
+                  val adjacent: List[(Pos, Square, Tile)] = allAdjacentTo(pos, sq, let)
 
-                  findWords(rest, pos, if (!otherWords.isEmpty) updatedList :+ otherWords else updatedList)
+                  findWords(rest, pos, if (adjacent.nonEmpty) newBuilder.addAdjacentWord(adjacent) else newBuilder)
               }
             }
         }
@@ -275,14 +270,11 @@ sealed case class ValidInputPlaceLettersMove(game: Game, placed: NonEmptyList[(P
       }
 
       words flatMap {
-        lists =>
-          lists match {
-            case Nil =>
-              Failure(UnlikelyInternalError())
-            case (x :: xs) =>
-              val attached = x.size > placedProcessed.size || lists.size > 1 || game.moves == 0
-              if (attached) Success(lists) else Failure(NotAttachedToWord())
-          }
+        formedWords =>
+          val finished = formedWords.prependToMainWord(afterEnd)
+
+          val attached = finished.mainWord.size > placedProcessed.size || finished.adjacentWords.size > 0 || game.moves == 0
+          if (attached) Success(finished) else Failure(NotAttachedToWord())
       }
 
     }

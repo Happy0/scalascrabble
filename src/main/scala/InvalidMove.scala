@@ -10,6 +10,7 @@ case class FirstMovePositionWrong(errorCode: Int = 0) extends InvalidMove(errorC
 }
 
 case class MisPlacedLetters(x: Int, y: Int, errorCode: Int = 1) extends InvalidMove(errorCode) {
+  override def toString = "MisPlacedLetters" + (x,y)
 
   def defaultMessage = ("Letter placed at " + Pos.posAt(x, y).get.toString + " starts an illegal move. Must be a linear placement, and attached to a word. ")
 }
