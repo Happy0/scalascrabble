@@ -112,45 +112,11 @@ sealed case class ValidInputPlaceLettersMove(game: Game, placed: NonEmptyList[(P
    */
   lazy val formedWords: Try[FormedWords] = buildWords
 
-  /** Returns an overall score, and a score for each word. Returns a list of words that are not in the dictionary (empty if none) */
-  lazy val score: Try[Score] = {
-    def toWord(list: List[(Pos, Square, Tile)]): String = list.map { case (pos, sq, tile) => tile.letter }.mkString
-
-    formedWords.flatMap {
-      formedWords =>
-        val (score, lsts, badwords) = formedWords.getWords.foldLeft((0, List.empty[(String, Int)], List.empty[String])) {
-          case ((acc, lsts, badwords), xs) =>
-            val word = toWord(xs)
-            val bdwords = if (!game.dictionary.isValidWord(word)) word :: badwords else badwords
-            // Sort to put the word bonus squares last
-            val (score, wordBonuses) = xs.foldLeft(0, List.empty[Int => Int]) {
-              case ((scr, wordBonuses), (pos, sq, tile)) =>
-
-                // If the bonus has already been used, ignore the bonus square
-                sq.tile.fold {
-                  sq match {
-                    case NormalSquare(_) => (scr + tile.value, wordBonuses)
-                    case DoubleLetterSquare(_) => (scr + (tile.value * 2), wordBonuses)
-                    case TripleLetterSquare(_) => (scr + (tile.value * 3), wordBonuses)
-                    case DoubleWordSquare(_) => (scr + tile.value, ((i: Int) => i * 2) :: wordBonuses)
-                    case TripleWordSquare(_) => (scr + tile.value, ((i: Int) => i * 3) :: wordBonuses)
-                  }
-                }(currentTile =>
-                  (scr + currentTile.value, wordBonuses))
-            }
-
-            val finalScore = wordBonuses.foldLeft(score) { case (score, func) => func(score) }
-
-            (acc + finalScore, lsts :+ (word, finalScore), bdwords)
-
-        }
-        val the_score: Score = if (sevenLetterBonus) Score(score + 50, lsts) else Score(score, lsts)
-
-        if (badwords.isEmpty) Success(the_score) else Failure(WordsNotInDictionary(badwords, the_score))
-
-    }
-
-  }
+  /**
+   * Returns an overall score, and a score for each word. Returns a list of words that are not
+   *   in the dictionary (empty if none)
+   */
+  lazy val score: Try[Score] = formedWords.flatMap(_.calculateScore(game.dictionary, sevenLetterBonus))
 
   private lazy val obeysFirstMovePositionRule = (game.moves > 0) || {
     placedProcessed.find { case (pos, _, let) => pos == startPosition } isDefined
