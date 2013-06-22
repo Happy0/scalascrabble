@@ -3,6 +3,8 @@ package scrabble
 abstract class Tile() {
   val letter: Char
   val value: Int
+  
+  override def toString = letter.toString
 }
 
 case class Letter(letter: Char, value: Int) extends Tile {

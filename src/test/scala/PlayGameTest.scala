@@ -101,6 +101,7 @@ class PlayGameTest extends ScrabbleTest {
 
           }
 
+          println(game.board)
           game.status must beEqualTo(Ended)
 
         // well, uh.. this is a hardly ideal hack. there must be a way to extend specs2 appropriately.

@@ -7,10 +7,10 @@ case class Board(
     List.range(1, 16).map { (x) =>
       List.range(1, 16).map {
         y =>
-          val squareStr = this.squares.get(Pos.posAt(x, y).get).get.toString
+          val squareStr = this.squares.get(Pos.posAt(y, x).get).get.toString + " "
           if (y == 15) squareStr + "\n " else squareStr
-      }
-    }.toString
+      }.mkString
+    }.mkString
   }
 
   // *shakes fist at Ornicar and the compiler*
@@ -106,12 +106,6 @@ object Board {
       }
       Board(board)
     }
-
-  def main(args: Array[String]) {
-    val board = Board.init
-    println(board)
-
-  }
 
 }
 

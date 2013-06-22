@@ -24,14 +24,6 @@ object Dictionary {
     Dictionary(dict)
   }
 
-  def main(args: Array[String]) {
-    //@TODO: Find out how to make this a relative path / think about implications for deployment
-    val dict = load("Dict/en.txt")
-    println(dict.dictionary.size)
-    
-    println(dict.isValidWord("monitor"))
-  }
-
 }
 
 
