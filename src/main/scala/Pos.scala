@@ -25,8 +25,8 @@ object Pos {
   val all: List[(Int, Int)] = for { i <- List.range(1, 16); j <- List.range(1, 16) } yield i -> j
 
   val allPositions: Map[(Int, Int), Pos] = {
-    def gridCoords = Stream continually ('A' until 'P')
-    val mappedToCoords = all zip gridCoords.flatten
+    def gridCoords = Stream continually ('A' until 'P') flatten
+    val mappedToCoords = all zip gridCoords
     mappedToCoords map { case ((x, y), coord) => (x, y) -> Pos(x, y, coord.toString + y) } toMap
   }
 
