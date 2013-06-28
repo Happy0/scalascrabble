@@ -100,7 +100,6 @@ object Board {
         }
 
       // Construct and return the board. Anything that is not a bonus square is a NormalSquare.
-      val all = Pos.all
 
       val board = Pos.allPositions map {
         case ((x, y), pos) =>

@@ -14,6 +14,22 @@ class PosTest extends ScrabbleTest {
       }
 
     }
+
+    "Correctly label the X axis with a letter" in {
+      val gridLetters = (1 to 15) zip ('A' until 'P') toMap
+
+      Pos.allPositions foreach {
+        case (_, Pos(x, y, coord)) =>
+          val let = gridLetters get x
+          let should beSome
+
+          let foreach {
+            let =>
+              coord must be equalTo (let.toString + y)
+          }
+
+      }
+    }
   }
 
 }

@@ -22,7 +22,7 @@ object Pos {
   def posAt(x: Int, y: Int): Option[Pos] = allPositions get (x, y)
 
   // All the positions in the 15 x 15 board
-  val all: List[(Int, Int)] = for { i <- List.range(1, 16); j <- List.range(1, 16) } yield i -> j
+  private val all: List[(Int, Int)] = for { i <- List.range(1, 16); j <- List.range(1, 16) } yield j -> i
 
   val allPositions: Map[(Int, Int), Pos] = {
     def gridCoords = Stream continually ('A' until 'P') flatten
