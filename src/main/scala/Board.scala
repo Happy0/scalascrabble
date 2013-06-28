@@ -4,12 +4,18 @@ case class Board(
   squares: Map[Pos, Square]) {
 
   override def toString = {
-    List.range(1, 16).map { (x) =>
+    List.range(1, 16).map { x =>
       List.range(1, 16).map {
         y =>
-          val squareStr = this.squares.get(Pos.posAt(y, x).get).get.toString + " "
-          if (y == 15) squareStr + "\n " else squareStr
-      }.mkString
+          Pos.posAt(y, x) flatMap {
+            pos =>
+              val squareStr = this.squares get pos
+              squareStr map {
+                square =>
+                  if (y == 15) square + "\n " else square.tile.fold(square + " "){_ => String.format("[%s] ",square) }
+              }
+          }
+      }.flatten.mkString
     }.mkString
   }
 
@@ -96,13 +102,11 @@ object Board {
       // Construct and return the board. Anything that is not a bonus square is a NormalSquare.
       val all = Pos.all
 
-      val board = all.foldLeft(Map.empty[Pos, Square]) {
-        case (map, (x, y)) =>
+      val board = Pos.allPositions map {
+        case ((x, y), pos) =>
           val special = bonusSquares.get(x, y)
           val square: Square = special getOrElse NormalSquare(None)
-          val entry = Pos.posAt(x, y).get -> square
-
-          map + entry
+          pos -> square
       }
       Board(board)
     }
