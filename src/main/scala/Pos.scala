@@ -22,12 +22,12 @@ object Pos {
   def posAt(x: Int, y: Int): Option[Pos] = allPositions get (x, y)
 
   // All the positions in the 15 x 15 board
-  private val all: List[(Int, Int)] = for { i <- List.range(1, 16); j <- List.range(1, 16) } yield j -> i
+  private val all: Stream[(Int, Int)] = for { i <- Stream.range(1, 16); j <- Stream.range(1, 16) } yield j -> i
 
   val allPositions: Map[(Int, Int), Pos] = {
     def gridCoords = Stream continually ('A' until 'P') flatten
-    val mappedToCoords = all zip gridCoords
-    mappedToCoords map { case ((x, y), coord) => (x, y) -> Pos(x, y, coord.toString + y) } toMap
+    val mappedToCoords = gridCoords zip all
+    mappedToCoords map { case (coord, (x, y)) => (x, y) -> Pos(x, y, coord.toString + y) } toMap
   }
 
 }
