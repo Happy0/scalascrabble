@@ -26,8 +26,8 @@ object Pos {
 
   val allPositions: Map[(Int, Int), Pos] = {
     def gridCoords = Stream continually ('A' until 'P') flatten
-    val mappedToCoords = all zip gridCoords
-    mappedToCoords map { case ((x, y), coord) => (x, y) -> Pos(x, y, coord.toString + y) } toMap
+    val mappedToCoords = gridCoords zip all
+    mappedToCoords map { case (coord, (x, y)) => (x, y) -> Pos(x, y, coord.toString + y) } toMap
   }
 
 }
