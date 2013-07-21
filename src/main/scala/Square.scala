@@ -10,7 +10,7 @@ abstract class Square() extends Ordered[Square] {
 
   def compare(other: Square) = if (other.isInstanceOf[DoubleWordSquare] || other.isInstanceOf[TripleWordSquare]) -1 else 0
 
-  def isEmpty = tile.isEmpty
+  def isEmpty = tile isEmpty
 
   def setLetter(letter: Tile): Square
 
