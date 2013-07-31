@@ -57,22 +57,26 @@ sealed case class ValidInputPlaceLettersMove(game: Game, placed: NonEmptyList[(P
 
     if (!obeysFirstMovePositionRule) Failure(FirstMovePositionWrong()) else {
 
-      score.flatMap {
-        scr =>
-          placeLetters.map {
-            case (board, player) =>
-              // give the player letters
-              val (given, newbag) = game.bag.remove(amountPlaced)
-              val newplayer = player.copy(letters = given ::: player.letters, score = player.score + scr.overAllScore)
-              val nextPlayer = game.nextPlayerNo
-              val players = game.players.updated(game.playersMove, newplayer)
-              val updatedGame = game.copy(players = players, board = board, playersMove = nextPlayer, bag = newbag, moves = game.moves + 1,
-                consecutivePasses = 0)
+      for {
+        scr <- score
+        formed <- formedWords
+        (board, player) <- placeLetters
 
-              if (updatedGame.gameEnded) updatedGame.copy(status = Ended) else updatedGame
-          }
-      }
+        (given, newbag) = game.bag.remove(amountPlaced)
+        newplayer = player.copy(letters = given ::: player.letters, score = player.score + scr.overAllScore)
+        nextPlayer = game.nextPlayerNo
+        players = game.players.updated(game.playersMove, newplayer)
 
+        summary = PlaceSummary(placed.map(f => f._1 -> f._3), formed, scr)
+
+        hist = game.log.fold(History(game, NonEmptyList(summary)))(log => log.addToLog(summary))
+
+        updatedGame = game.copy(players = players, board = board, playersMove = nextPlayer, bag = newbag, moves = game.moves + 1,
+          consecutivePasses = 0, log = Some(hist))
+
+        newGame = if (updatedGame.gameEnded) updatedGame.copy(status = Ended) else updatedGame
+
+      } yield (newGame)
     }
 
   }
@@ -203,7 +207,7 @@ sealed case class ValidInputPlaceLettersMove(game: Game, placed: NonEmptyList[(P
 
             } else {
               val predicesor = horizontalElseVertical(lastPos.left)(lastPos.down)
-              
+
               /* Add the letters inbetween and the current char to the first list,
               * then look for letters above and below the current char */
 
@@ -250,13 +254,23 @@ sealed case class ValidInputPlaceLettersMove(game: Game, placed: NonEmptyList[(P
 
 case class PassMove(game: Game) extends Move(game) {
   def makeMove: Try[Game] = {
+    lazy val init = History(game, NonEmptyList(SkippedSummary()))
+    val hist = game.log.fold(init)(log => log.addToLog(SkippedSummary()))
+
     Success(game.copy(consecutivePasses = game.consecutivePasses + 1, playersMove = game.nextPlayerNo,
-      moves = game.moves + 1))
+      moves = game.moves + 1, log = Some(hist)))
   }
 
 }
 
 case class ExchangeMove(game: Game, exchanged: List[Tile]) extends Move(game) {
+
+  def history(newBag: String): History = {
+    val summary = ExchangedSummary(exchanged, newBag)
+    lazy val init = History(game, NonEmptyList(summary))
+    game.log.fold(init)(log => log.addToLog(summary))
+  }
+
   def makeMove: Try[Game] = {
     val newGame = game.currentPlayer map {
       player: Player =>
@@ -265,7 +279,8 @@ case class ExchangeMove(game: Game, exchanged: List[Tile]) extends Move(game) {
             player.exchangeLetters(exchanged, given) map {
               ply =>
                 game.copy(players = game.players.updated(game.playersMove, ply),
-                  playersMove = game.nextPlayerNo, moves = game.moves + 1, bag = newBag, consecutivePasses = 0)
+                  playersMove = game.nextPlayerNo, moves = game.moves + 1, bag = newBag, consecutivePasses = 0,
+                  log = Some(history(newBag.lettersAsString)))
             }
 
         }

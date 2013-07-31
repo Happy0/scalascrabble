@@ -13,7 +13,8 @@ case class Game private (
   bag: LetterBag,
   consecutivePasses: Int,
   moves: Int,
-  status: gameStatus = InProgress) {
+  status: gameStatus = InProgress,
+  log: Option[History] = None) {
 
   def getPlayer(playerNo: Int): Option[Player] = players get playerNo
 

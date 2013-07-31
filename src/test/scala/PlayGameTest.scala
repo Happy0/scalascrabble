@@ -39,23 +39,33 @@ class PlayGameTest extends ScrabbleTest {
     toPlace("IO", false, pos(6, 13)),
     toPlace("FIT", false, pos(10, 2)))
 
-  "a playtest" should {
+  val tryGame = blankGame.toTry(Failure(UnlikelyInternalError())) { gm => Success(gm) }
 
-    "successfully complete a full game with the right state transitions" in {
+  val makeSteps = steps.foldLeft(tryGame) {
+    case (game, place) =>
 
-      val tryGame = blankGame.toTry(Failure(UnlikelyInternalError())) { gm => Success(gm) }
-
-      val makeSteps = steps.foldLeft(tryGame) {
-        case (game, place) =>
-
-          game flatMap {
-            gm =>
-              place.toTry(Failure(UnlikelyInternalError())) {
-                place =>
-                  PlaceLettersMove(gm, place).validate flatMap (_.makeMove)
-              }
+      game flatMap {
+        gm =>
+          place.toTry(Failure(UnlikelyInternalError())) {
+            place =>
+              PlaceLettersMove(gm, place).validate flatMap (_.makeMove)
           }
       }
+  }
+
+  "a playtest" should {
+
+    "keep a log properly" in {
+      makeSteps match {
+        case Success(game) =>
+          game.log must beSome
+          game.log foreach { log => log.moveHistory.list.size must beEqualTo(steps.size) }
+
+        case Failure(x) =>
+      }
+    }
+
+    "successfully complete a full game with the right state transitions" in {
 
       makeSteps match {
         case Success(game) =>

@@ -15,8 +15,8 @@ package object scrabble extends scalaz.Zeros with scalaz.MABs {
   implicit final class ScrabblePimpedOption[A](o: Option[A]) {
 
     def ??[B: scalaz.Zero](f: A => B): B = o.fold(mzero[B])(f)
-    
-    def toTry[B]( failure: => Failure[B])(success: A => Try[B] ) = o.fold[Try[B]](failure){success}
+
+    def toTry[B](failure: => Failure[B])(success: A => Try[B]) = o.fold[Try[B]](failure) { success }
     
   }
   

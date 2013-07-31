@@ -10,7 +10,7 @@ case class FirstMovePositionWrong(errorCode: Int = 0) extends InvalidMove(errorC
 }
 
 case class MisPlacedLetters(x: Int, y: Int, errorCode: Int = 1) extends InvalidMove(errorCode) {
-  override def toString = "MisPlacedLetters" + (x,y)
+  override def toString = "MisPlacedLetters" + (x, y)
 
   def defaultMessage = ("Letter placed at " + Pos.posAt(x, y).get.toString + " starts an illegal move. Must be a linear placement, and attached to a word. ")
 }
@@ -24,8 +24,8 @@ case class NotInDictionary(word: String, errorcode: Int = 3) extends InvalidMove
 }
 
 /** $score : The prospective score, if it was not an invalid word */
-case class WordsNotInDictionary(words: List[String], score: Score, errorCode:Int = 4) extends InvalidMove(errorCode) {
-  def defaultMessage = words.fold(""){case (str, wrd) => str + " " + wrd } + " are not in the dictionary. "
+case class WordsNotInDictionary(words: List[String], score: Score, errorCode: Int = 4) extends InvalidMove(errorCode) {
+  def defaultMessage = words.fold("") { case (str, wrd) => str + " " + wrd } + " are not in the dictionary. "
 }
 
 case class NotLinear(errorcode: Int = 5) extends InvalidMove(errorcode) {
@@ -60,6 +60,9 @@ case class GameHasEnded(errorcode: Int = 13) extends InvalidMove(errorcode) {
   def defaultMessage = "Game cannot be played further as it has ended."
 }
 
+case class GameHasNotStarted(errorcode: Int = 14) extends InvalidMove(errorcode) {
+  def defaultMessage = "Game has not started"
+}
 
 case class UnlikelyInternalError(errorcode: Int = 9) extends InvalidMove(errorcode) {
   def defaultMessage = "The compiler and I had a disagreement, and the compiler won the argument."
