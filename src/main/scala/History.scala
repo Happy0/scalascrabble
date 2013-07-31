@@ -3,24 +3,13 @@ package scrabble
 import scala.util.{ Try, Success, Failure }
 import scalaz.NonEmptyList
 
-abstract class MoveSummary {
-  def toNotation: String
+abstract class MoveSummary 
 
-}
+case class PlaceSummary(placed: NonEmptyList[PosTile], formedWords: FormedWords, score: Score) extends MoveSummary()
 
-case class PlaceSummary(placed: NonEmptyList[PosTile], formedWords: FormedWords, score: Score) extends MoveSummary() {
-  def toNotation = ""
+case class SkippedSummary() extends MoveSummary()
 
-}
-
-case class SkippedSummary() extends MoveSummary() {
-  def toNotation = ""
-
-}
-
-case class ExchangedSummary(given: List[Tile], newBag: String) extends MoveSummary() {
-  def toNotation = ""
-}
+case class ExchangedSummary(given: List[Tile], newBag: String) extends MoveSummary()
 
 case class History(startGame: Game, moveHistory: NonEmptyList[MoveSummary]) {
 
@@ -28,7 +17,7 @@ case class History(startGame: Game, moveHistory: NonEmptyList[MoveSummary]) {
 
   def latestMove: MoveSummary = moveHistory.head
 
-  // This seems inelegant. There must be another way...
+  // This seems inelegant. There must be another way... :o
   def latestPlace: Option[PlaceSummary] = moveHistory.list collectFirst {
     case PlaceSummary(placed, formedWords, score) => PlaceSummary(placed, formedWords, score)
   }
@@ -47,6 +36,8 @@ case class History(startGame: Game, moveHistory: NonEmptyList[MoveSummary]) {
 
     }
   }
+  
+  def logInOrder = moveHistory.reverse
 
   def stepThrough: Iterator[Game] = {
     val it = moveHistory.reverse.tail.iterator.scanLeft(replayMove(startGame, moveHistory.head)) {
