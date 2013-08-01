@@ -3,11 +3,11 @@ package scrabble
 import scala.util.{ Try, Success, Failure }
 import scalaz.NonEmptyList
 
-abstract class MoveSummary
+sealed abstract class MoveSummary
 
 case class PlaceSummary(placed: NonEmptyList[PosTile], formedWords: FormedWords, score: Score) extends MoveSummary()
 
-case class SkippedSummary() extends MoveSummary()
+case object SkippedSummary extends MoveSummary()
 
 case class ExchangedSummary(given: List[Tile], newBag: String) extends MoveSummary()
 
@@ -17,15 +17,12 @@ case class History(startGame: Game, moveHistory: NonEmptyList[MoveSummary]) {
 
   def latestMove: MoveSummary = moveHistory.head
 
-  // This seems inelegant. There must be another way... :o
-  def latestPlace: Option[PlaceSummary] = moveHistory.list collectFirst {
-    case PlaceSummary(placed, formedWords, score) => PlaceSummary(placed, formedWords, score)
-  }
+  def latestPlace: Option[PlaceSummary] = moveHistory.list collectFirst { case p: PlaceSummary => p }
 
   def replayMove(game: Game, summary: MoveSummary): Try[Game] = {
     summary match {
       case PlaceSummary(placed, _, _) => PlaceLettersMove(game, placed).validate flatMap (_.makeMove)
-      case SkippedSummary() => PassMove(game).makeMove
+      case SkippedSummary => PassMove(game).makeMove
       case ExchangedSummary(given, newBag) =>
         ExchangeMove(game, given).makeMove flatMap {
           g =>
@@ -39,7 +36,7 @@ case class History(startGame: Game, moveHistory: NonEmptyList[MoveSummary]) {
   def logInOrder = moveHistory.reverse
 
   def stepThrough: Iterator[Game] = {
-    
+
     val it = logInOrder.list.iterator.scanLeft(Try(startGame)) {
       case (tryGame, summary) => tryGame.flatMap(g => replayMove(g, summary))
     }

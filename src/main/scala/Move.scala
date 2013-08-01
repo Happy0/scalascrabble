@@ -254,8 +254,8 @@ sealed case class ValidInputPlaceLettersMove(game: Game, placed: NonEmptyList[(P
 
 case class PassMove(game: Game) extends Move(game) {
   def makeMove: Try[Game] = {
-    lazy val init = History(game, NonEmptyList(SkippedSummary()))
-    val hist = game.log.fold(init)(log => log.addToLog(SkippedSummary()))
+    lazy val init = History(game, NonEmptyList(SkippedSummary))
+    val hist = game.log.fold(init)(log => log.addToLog(SkippedSummary))
 
     Success(game.copy(consecutivePasses = game.consecutivePasses + 1, playersMove = game.nextPlayerNo,
       moves = game.moves + 1, log = Some(hist)))
