@@ -13,6 +13,8 @@ case class Step(letterString: String, place: Option[NonEmptyList[PosTile]], newR
 
 class PlayGameTest extends ScrabbleTest {
 
+  // @TODO: Introduce some Pass and Exchange moves
+
   val steps: List[Option[NonEmptyList[PosTile]]] = List(
     toPlace("RAVINE", true, pos(8, 8)),
     safeUpdateTile(toPlace("OVEL", false, pos(12, 9)), 3, BlankLetter('L')),
@@ -55,16 +57,6 @@ class PlayGameTest extends ScrabbleTest {
 
   "a playtest" should {
 
-    "keep a log properly" in {
-      makeSteps match {
-        case Success(game) =>
-          game.log must beSome
-          game.log foreach { log => log.moveHistory.list.size must beEqualTo(steps.size) }
-
-        case Failure(x) =>
-      }
-    }
-
     "successfully complete a full game with the right state transitions" in {
 
       makeSteps match {
@@ -73,10 +65,10 @@ class PlayGameTest extends ScrabbleTest {
           game.gameEnded must beEqualTo(true)
           game.moves must beEqualTo(24)
 
-          val player1 = game getPlayer (0)
-          val player2 = game getPlayer (1)
-          val player3 = game getPlayer (2)
-          val player4 = game getPlayer (3)
+          val player1 = game getPlayer 0
+          val player2 = game getPlayer 1
+          val player3 = game getPlayer 2
+          val player4 = game getPlayer 3
 
           player1 must not beNone
 
@@ -118,6 +110,55 @@ class PlayGameTest extends ScrabbleTest {
         case x => x must beEqualTo(9902131)
 
       }
+    }
+
+    "successfully keep a game state log " in {
+      def transitions = steps.scanLeft(tryGame) {
+        case (game, place) =>
+
+          game flatMap {
+            gm =>
+              place.toTry(Failure(UnlikelyInternalError())) {
+                place =>
+                  PlaceLettersMove(gm, place).validate flatMap (_.makeMove)
+              }
+          }
+      } collect { case Success(x) => x }
+
+      def lastGame = transitions.lastOption
+      lastGame must beSome
+
+      lastGame foreach {
+        gm =>
+          val history = gm.log
+
+          history must beSome
+
+          history foreach {
+            hist =>
+              hist.moveHistory.list.size must beEqualTo(transitions.size - 1)
+
+              val zipped = hist.stepThrough.toList zip transitions
+              
+              zipped must not be equalTo(Nil)
+
+              zipped foreach {
+                case (histState, trans) =>
+                  
+                  histState.board.squares must beEqualTo(trans.board.squares)
+
+                  histState.players.equals(trans.players) must beEqualTo(true)
+
+                  histState.bag.letters.equals(trans.bag.letters) must beEqualTo(true)
+
+                  histState.moves must beEqualTo(trans.moves)
+                  
+                  //histState must beEqualTo(trans)
+              }
+          }
+
+      }
+
     }
 
   }

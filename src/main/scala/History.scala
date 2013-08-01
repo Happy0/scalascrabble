@@ -3,7 +3,7 @@ package scrabble
 import scala.util.{ Try, Success, Failure }
 import scalaz.NonEmptyList
 
-abstract class MoveSummary 
+abstract class MoveSummary
 
 case class PlaceSummary(placed: NonEmptyList[PosTile], formedWords: FormedWords, score: Score) extends MoveSummary()
 
@@ -33,14 +33,14 @@ case class History(startGame: Game, moveHistory: NonEmptyList[MoveSummary]) {
               Success(game.copy(bag = replaceBag))
             }
         }
-
     }
   }
-  
+
   def logInOrder = moveHistory.reverse
 
   def stepThrough: Iterator[Game] = {
-    val it = moveHistory.reverse.tail.iterator.scanLeft(replayMove(startGame, moveHistory.head)) {
+    
+    val it = logInOrder.list.iterator.scanLeft(Try(startGame)) {
       case (tryGame, summary) => tryGame.flatMap(g => replayMove(g, summary))
     }
 
