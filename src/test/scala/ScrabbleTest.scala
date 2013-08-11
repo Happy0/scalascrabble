@@ -35,9 +35,11 @@ trait ScrabbleTest extends Specification with NonEmptyLists with Lists {
   }
   predictableLetterbagGame must beSome
 
+  val blankBagStr = "JEARVINENVO_NILLEWBKONUIEUWEAZBDESIAPAEOOURGOCDSNIADOAACAR_RMYELTUTYTEREOSITNIRFGPHAQLHESOIITXFDMETG"
+
   val blankGame: Option[Game] = {
-    val str = "JEARVINENVO_NILLEWBKONUIEUWEAZBDESIAPAEOOURGOCDSNIADOAACAR_RMYELTUTYTEREOSITNIRFGPHAQLHESOIITXFDMETG"
-    val bag = LetterBag.fromLetters(str, letterBag.tileSet)
+
+    val bag = LetterBag.fromLetters(blankBagStr, letterBag.tileSet)
 
     bag flatMap {
       bag =>
@@ -118,8 +120,8 @@ trait ScrabbleTest extends Specification with NonEmptyLists with Lists {
         }
     }
   }
-  
-    def furtherGame(game: Option[Game], place: Option[NonEmptyList[PosTile]]): Option[Game] = {
+
+  def furtherGame(game: Option[Game], place: Option[NonEmptyList[PosTile]]): Option[Game] = {
     game flatMap {
       game =>
         place flatMap {

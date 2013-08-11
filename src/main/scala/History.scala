@@ -13,6 +13,14 @@ case class ExchangedSummary(given: List[Tile], newBag: String) extends MoveSumma
 
 case class History(startGame: Game, moveHistory: NonEmptyList[MoveSummary]) {
 
+  def originalBag = {
+    val sortedPlayers = startGame.players.toList.sortBy(x => x._1)
+
+    sortedPlayers.foldRight(startGame.bag.lettersAsString) {
+      case ((_, player), str) => player.letters.map(_.letter).mkString ++ str
+    }
+  }
+
   def addToLog(summary: MoveSummary): History = copy(moveHistory = summary <:: moveHistory)
 
   def latestMove: MoveSummary = moveHistory.head

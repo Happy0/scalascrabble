@@ -41,6 +41,18 @@ class PlayGameTest extends ScrabbleTest {
     toPlace("IO", false, pos(6, 13)),
     toPlace("FIT", false, pos(10, 2)))
 
+  def transitions = steps.scanLeft(tryGame) {
+    case (game, place) =>
+
+      game flatMap {
+        gm =>
+          place.toTry(Failure(UnlikelyInternalError())) {
+            place =>
+              PlaceLettersMove(gm, place).validate flatMap (_.makeMove)
+          }
+      }
+  } collect { case Success(x) => x }
+
   val tryGame = blankGame.toTry(Failure(UnlikelyInternalError())) { gm => Success(gm) }
 
   val makeSteps = steps.foldLeft(tryGame) {
@@ -113,17 +125,6 @@ class PlayGameTest extends ScrabbleTest {
     }
 
     "successfully keep a game state log " in {
-      def transitions = steps.scanLeft(tryGame) {
-        case (game, place) =>
-
-          game flatMap {
-            gm =>
-              place.toTry(Failure(UnlikelyInternalError())) {
-                place =>
-                  PlaceLettersMove(gm, place).validate flatMap (_.makeMove)
-              }
-          }
-      } collect { case Success(x) => x }
 
       def lastGame = transitions.lastOption
       lastGame must beSome
@@ -136,15 +137,17 @@ class PlayGameTest extends ScrabbleTest {
 
           history foreach {
             hist =>
+              hist.originalBag must beEqualTo(blankBagStr)
+              
               hist.moveHistory.list.size must beEqualTo(transitions.size - 1)
 
               val zipped = hist.stepThrough.toList zip transitions
-              
+
               zipped must not be equalTo(Nil)
 
               zipped foreach {
                 case (histState, trans) =>
-                  
+
                   histState.board.squares must beEqualTo(trans.board.squares)
 
                   histState.players.equals(trans.players) must beEqualTo(true)
@@ -152,8 +155,8 @@ class PlayGameTest extends ScrabbleTest {
                   histState.bag.letters.equals(trans.bag.letters) must beEqualTo(true)
 
                   histState.moves must beEqualTo(trans.moves)
-                  
-                  //histState must beEqualTo(trans)
+
+                //histState must beEqualTo(trans)
               }
           }
 
