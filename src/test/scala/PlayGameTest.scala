@@ -46,21 +46,21 @@ class PlayGameTest extends ScrabbleTest {
 
       game flatMap {
         gm =>
-          place.toTry(Failure(UnlikelyInternalError())) {
+          place.toTry(UnlikelyInternalError()) flatMap {
             place =>
               PlaceLettersMove(gm, place).validate flatMap (_.makeMove)
           }
       }
   } collect { case Success(x) => x }
 
-  val tryGame = blankGame.toTry(Failure(UnlikelyInternalError())) { gm => Success(gm) }
+  val tryGame = blankGame.toTry(UnlikelyInternalError())
 
   val makeSteps = steps.foldLeft(tryGame) {
     case (game, place) =>
 
       game flatMap {
         gm =>
-          place.toTry(Failure(UnlikelyInternalError())) {
+          place.toTry(UnlikelyInternalError()) flatMap {
             place =>
               PlaceLettersMove(gm, place).validate flatMap (_.makeMove)
           }
@@ -138,7 +138,7 @@ class PlayGameTest extends ScrabbleTest {
           history foreach {
             hist =>
               hist.originalBag must beEqualTo(blankBagStr)
-              
+
               hist.moveHistory.list.size must beEqualTo(transitions.size - 1)
 
               val zipped = hist.stepThrough.toList zip transitions

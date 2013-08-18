@@ -34,8 +34,8 @@ case class History(startGame: Game, moveHistory: NonEmptyList[MoveSummary]) {
       case ExchangedSummary(given, newBag) =>
         ExchangeMove(game, given).makeMove flatMap {
           g =>
-            LetterBag.fromLetters(newBag, g.bag.tileSet).toTry(Failure(LetterNotInTileSetClientError())) { replaceBag =>
-              Success(game.copy(bag = replaceBag))
+            LetterBag.fromLetters(newBag, g.bag.tileSet).toTry(LetterNotInTileSetClientError()) map { replaceBag =>
+              game.copy(bag = replaceBag)
             }
         }
     }

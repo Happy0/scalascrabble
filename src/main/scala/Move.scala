@@ -32,7 +32,7 @@ case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) exten
     }
 
     if (game.status != InProgress) Failure(GameHasEnded()) else
-      processed.toTry(Failure(UnlikelyInternalError())) { list =>
+      processed.toTry(UnlikelyInternalError()) flatMap { list =>
         if (alreadyOccupiedSquares(list.list)) Failure(SquareOccupiedClientError()) else {
           Try(ValidInputPlaceLettersMove(game, list))
         }
@@ -96,7 +96,7 @@ sealed case class ValidInputPlaceLettersMove(game: Game, placed: NonEmptyList[(P
               if (after == Nil) Failure(playerDoesNotHaveLettersClientError()) else {
                 val newLetters: List[Tile] = upTo ::: after.drop(1)
 
-                board.placeLetter(y._1, y._3).toTry(Failure(UnlikelyInternalError())) {
+                board.placeLetter(y._1, y._3).toTry(UnlikelyInternalError()) flatMap {
                   board => place(rest, newLetters, board)
                 }
 
@@ -219,8 +219,8 @@ sealed case class ValidInputPlaceLettersMove(game: Game, placed: NonEmptyList[(P
               }
 
               between.toTry {
-                Failure(MisPlacedLetters(pos.x, pos.y))
-              } {
+                MisPlacedLetters(pos.x, pos.y)
+              } flatMap {
                 case between =>
                   val newBuilder: FormedWords = builder.prependToMainWord((pos, sq, let) :: between)
                   val adjacent: List[(Pos, Square, Tile)] = allAdjacentTo(pos, sq, let)
