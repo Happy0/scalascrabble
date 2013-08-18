@@ -14,8 +14,8 @@ case class PlaceLettersMove(game: Game, placed: NonEmptyList[(Pos, Tile)]) exten
 
   def validate: Try[ValidInputPlaceLettersMove] = {
 
-    // Makes sure the tiles are sorted into ascending order of position
-    val sortedList = placed.list.sortBy { case (pos: Pos, _) => (pos.x, pos.y) } reverse //@TODO: Do this with sortWith
+    // Makes sure the tiles are sorted into descending order of position
+    val sortedList = placed.list.sortBy { case (pos: Pos, _) => (-pos.x, -pos.y) }
 
     def unwrap(pos: Pos, tile: Tile): Option[(Pos, Square, Tile)] = game.board.squareAt(pos) map { sq => (pos, sq, tile) }
 
