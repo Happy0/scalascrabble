@@ -1,3 +1,7 @@
+This project is incomplete, and I'm not particularly proud about how it turned out. It was my first functional language project, and I learned a lot in the process. I am mildly less embarrassed about how my haskell implementation turned out: http://www.github.com/happy0/haskellscrabble
+
+====================================
+
 Scrabble API written in scala. It is functional, immutable, and free of side effects.
 
 INSTALL
