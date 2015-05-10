@@ -3,8 +3,6 @@ package scrabble
 import util.Random
 import scala.util.{ Try, Success, Failure }
 
-//@TODO: Think about how to generalise this to other languages. Perhaps using configuration files...
-
 /** tiles: The current tiles in the bag */
 case class LetterBag(letters: List[Tile], size: Int, tileSet: Map[Char, Tile]) {
 
@@ -17,10 +15,10 @@ case class LetterBag(letters: List[Tile], size: Int, tileSet: Map[Char, Tile]) {
    *  and the resulting letter bag
    */
   def remove(num: Int): (List[Tile], LetterBag) = {
-    val split = letters.splitAt(num)
-    val removedLetters = split._1
-    val newSize = if (size - num <= 0) 0 else size - num;
-    val newBag = copy(letters = split._2, size = newSize)
+    val(removedLetters, newLetters) = letters.splitAt(num)
+
+    val newSize = if (size - num <= 0) 0 else size - num
+    val newBag = copy(newLetters, size = newSize)
 
     (removedLetters, newBag)
   }
@@ -31,18 +29,16 @@ case class LetterBag(letters: List[Tile], size: Int, tileSet: Map[Char, Tile]) {
    */
   def exchange(exchanged: List[Tile]): Try[(List[Tile], LetterBag)] = {
     if (exchanged.size > size) Failure(BagNotFullEnoughToExchange()) else {
-
       val (given, bag) = remove(exchanged.size)
       val newLetters = exchanged ::: bag.letters
       Success((given, copy(letters = newLetters).shuffle))
     }
-
   }
 
-  def letterFor(letter: Char): Option[Tile] = tileSet get letter
+  def letterFor(letter: Char): Option[Tile] = tileSet.get(letter)
 
   def shuffle : LetterBag = copy(letters = Random.shuffle(letters))
-  
+
 }
 
 object LetterBag {
@@ -70,12 +66,9 @@ object LetterBag {
   private val tileSet: Map[Char, Tile] = englishLetters.map { tile => tile.letter -> tile } toMap
 
   private val englishBag = LetterBag(englishLetters, 100, tileSet)
-  
-  /** Returns a new LetterBag in its intial state. List is in randomised order. */
-  def init: LetterBag = {
-    // Construct with a randomised list
-    englishBag.shuffle
-  }
+
+  /** Returns a new LetterBag in its initial state. List is in randomised order. */
+  def apply(): LetterBag = englishBag.shuffle
 
   /**
    * Constructs a letter bag from a string of letters in the order they should be taken from the bag.
@@ -95,15 +88,12 @@ object LetterBag {
       }
     }
 
-    buildLetterBag(letters.toList reverse, LetterBag(Nil, 0, tileSet))
-
+    buildLetterBag(letters.toList.reverse, LetterBag(Nil, 0, tileSet))
   }
-
-  //@TODO: Placeholder for other language generalisation
-  def apply(filePath: String): LetterBag = ???
 
   def main(args: Array[String]) {
-    val bag = LetterBag.init
+    val bag = LetterBag()
     println(bag.lettersAsString)
   }
+
 }

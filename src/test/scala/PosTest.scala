@@ -9,7 +9,7 @@ class PosTest extends ScrabbleTest {
 
       check.foreach {
         case (x, y) =>
-          if (x < 1 || x > 15 || y < 1 || y > 15) Pos.posAt(x, y) must beNone else Pos.posAt(x, y) must beSome
+          if (x < 1 || x > 15 || y < 1 || y > 15) Pos.at(x, y) must beNone else Pos.at(x, y) must beSome
 
       }
 
@@ -18,7 +18,7 @@ class PosTest extends ScrabbleTest {
     "Correctly label the X axis with a letter" in {
       val gridLetters = (1 to 15) zip ('A' until 'P') toMap
 
-      Pos.allPositions foreach {
+      Pos.allPositionsMap foreach {
         case (_, Pos(x, y, coord)) =>
           val let = gridLetters get x
           let should beSome

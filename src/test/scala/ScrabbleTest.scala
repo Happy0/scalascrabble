@@ -1,21 +1,21 @@
 package scrabble
-import org.specs2.matcher.Matcher
+
 import org.specs2.mutable.Specification
-import scalaz.NonEmptyList
-import scala.util.{ Try, Success, Failure }
-import scalaz.Lists
-import scalaz.NonEmptyLists
+
+import scala.util.Try
+import scalaz.{Lists, NonEmptyList, NonEmptyLists}
 
 trait ScrabbleTest extends Specification with NonEmptyLists with Lists {
-  val enDict = Dictionary.load("Dict/en.txt")
 
-  val board = Board.init
+  val enDict = Dictionary("Dict/en.txt")
 
-  val letterBag = LetterBag.init
+  val board = Board()
 
-  def pos(x: Int, y: Int) = Pos.posAt(x, y)
+  val letterBag = LetterBag()
 
-  val game = Game.make(List("jim", "joe"), enDict, LetterBag.init)
+  def pos(x: Int, y: Int) = Pos.at(x, y)
+
+  val game = Game(List("jim", "joe"), enDict, LetterBag())
   game must beSome
 
   def letterFor(c: Char) = letterBag.tileSet.get(c.toUpper)
@@ -24,13 +24,13 @@ trait ScrabbleTest extends Specification with NonEmptyLists with Lists {
 
   val predictableLetterBag = LetterBag.fromLetters(
     "LISVURDIGQAWLOEIYURADYEICBLEDHMSIXNFERAIWOANETGAELGFIUT_TJHAI_BDONENOECTRIEEREKOAZPVETONSASURAPMNOTO",
-    LetterBag.init.tileSet)
+    LetterBag.apply.tileSet)
   predictableLetterBag must beSome
 
   val predictableLetterbagGame = {
     predictableLetterBag flatMap {
       bag =>
-        Game.make(List("jim", "joe"), enDict, bag)
+        Game(List("jim", "joe"), enDict, bag)
     }
   }
   predictableLetterbagGame must beSome
@@ -41,9 +41,8 @@ trait ScrabbleTest extends Specification with NonEmptyLists with Lists {
 
     val bag = LetterBag.fromLetters(blankBagStr, letterBag.tileSet)
 
-    bag flatMap {
-      bag =>
-        Game.make(List("a", "b", "c", "d"), enDict, bag)
+    bag flatMap { bag =>
+        Game(List("a", "b", "c", "d"), enDict, bag)
     }
 
   }

@@ -4,14 +4,11 @@ import scala.util.{ Try, Success, Failure }
 
 case class FormedWords(mainWord: Word, adjacentWords: List[Word]) {
 
-  def prependToMainWord(posSquare: PosSquare): FormedWords =
-    copy(mainWord = posSquare :: mainWord)
+  def prependToMainWord(posSquare: PosSquare): FormedWords = copy(mainWord = posSquare :: mainWord)
 
-  def prependToMainWord(word: Word): FormedWords =
-    copy(mainWord = word ::: mainWord)
+  def prependToMainWord(word: Word): FormedWords = copy(mainWord = word ::: mainWord)
 
-  def addAdjacentWord(word: Word): FormedWords =
-    copy(adjacentWords = word :: adjacentWords)
+  def addAdjacentWord(word: Word): FormedWords = copy(adjacentWords = word :: adjacentWords)
 
   lazy val getWords = mainWord :: adjacentWords
 
@@ -44,9 +41,9 @@ case class FormedWords(mainWord: Word, adjacentWords: List[Word]) {
         (acc + finalScore, (word, finalScore) :: lsts, bdwords)
 
     }
-    val the_score: Score = if (sevenLetterBonus) Score(score + 50, lsts) else Score(score, lsts)
+    val theScore: Score = if (sevenLetterBonus) Score(score + 50, lsts) else Score(score, lsts)
 
-    if (badwords.isEmpty) Success(the_score) else Failure(WordsNotInDictionary(badwords, the_score))
+    if (badwords.isEmpty) Success(theScore) else Failure(WordsNotInDictionary(badwords, theScore))
 
   }
 

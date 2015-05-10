@@ -29,7 +29,7 @@ class BoardTest extends ScrabbleTest {
     "find letters above a position" in {
       val v = crossedWords.map {
         case b =>
-          checkNeighbours("RES", b.LettersAbove, pos(7, 5))
+          checkNeighbours("RES", b.lettersAbove, pos(7, 5))
       }
 
       v must beSome
@@ -38,7 +38,7 @@ class BoardTest extends ScrabbleTest {
     "find letters below a position" in {
       val v = crossedWords.map {
         case b =>
-          checkNeighbours("SC", b.LettersBelow, pos(7, 5))
+          checkNeighbours("SC", b.lettersBelow, pos(7, 5))
       }
 
       v must beSome
@@ -47,7 +47,7 @@ class BoardTest extends ScrabbleTest {
     "find letters left of a position" in {
       val v = crossedWords.map {
         case b =>
-          checkNeighbours("HIST", b.LettersLeft, pos(7, 5))
+          checkNeighbours("HIST", b.lettersLeft, pos(7, 5))
       }
 
       v must beSome
@@ -56,7 +56,7 @@ class BoardTest extends ScrabbleTest {
     "find letters right of a position" in {
       val v = crossedWords.map {
         case b =>
-          checkNeighbours("RY", b.LettersRight, pos(7, 5))
+          checkNeighbours("RY", b.lettersRight, pos(7, 5))
       }
 
       v must beSome
