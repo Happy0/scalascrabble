@@ -1,0 +1,5 @@
+lazy val root = (project in file("."))
+  .settings(libraryDependencies += "org.scalaz" %% "scalaz-core" % "6.0.4")
+  .settings(libraryDependencies += "org.specs2" %% "specs2" % "1.14" % "test")
+  .settings(scalaVersion := "2.10.5")
+  .settings(scalacOptions := Seq("-deprecation", "-unchecked", "-feature", "-language:_"))

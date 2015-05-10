@@ -143,8 +143,8 @@ sealed case class ValidInputPlaceLettersMove(game: Game, placed: NonEmptyList[(P
 
   private lazy val (horizontal, vertical): (Boolean, Boolean) = {
     if (amountPlaced == 1) {
-      val horizontal = board.LettersLeft(first._1).nonEmpty || board.LettersRight(first._1).nonEmpty
-      val vertical = board.LettersAbove(first._1).nonEmpty || board.LettersBelow(first._1).nonEmpty
+      val horizontal = board.lettersLeft(first._1).nonEmpty || board.lettersRight(first._1).nonEmpty
+      val vertical = board.lettersAbove(first._1).nonEmpty || board.lettersBelow(first._1).nonEmpty
 
       (horizontal, vertical)
     } else (starty == endy, startx == endx)
@@ -154,14 +154,14 @@ sealed case class ValidInputPlaceLettersMove(game: Game, placed: NonEmptyList[(P
 
     def isLastPlaced(pos: Pos): Boolean = pos.x == endx && pos.y == endy
 
-    lazy val afterEnd = horizontalElseVertical(board.LettersLeft(last._1))(board.LettersBelow(last._1))
+    lazy val afterEnd = horizontalElseVertical(board.lettersLeft(last._1))(board.lettersBelow(last._1))
 
     /** Returns words that are formed from the placement of a letter on a square on the board */
     def allAdjacentTo(pos: Pos, sq: Square, let: Tile): List[(Pos, Square, Tile)] = {
-      lazy val above = board.LettersAbove(pos)
-      lazy val below = board.LettersBelow(pos)
-      lazy val left = board.LettersLeft(pos)
-      lazy val right = board.LettersRight(pos)
+      lazy val above = board.lettersAbove(pos)
+      lazy val below = board.lettersBelow(pos)
+      lazy val left = board.lettersLeft(pos)
+      lazy val right = board.lettersRight(pos)
 
       horizontalElseVertical {
         if (above.nonEmpty || below.nonEmpty) {
@@ -178,7 +178,7 @@ sealed case class ValidInputPlaceLettersMove(game: Game, placed: NonEmptyList[(P
     if (!horizontal && !vertical) Failure(NotLinear()) else {
 
       val mainWordStart: List[PosSquare] =
-        first :: ((horizontalElseVertical(board.LettersRight(first._1))(board.LettersAbove(first._1))))
+        first :: ((horizontalElseVertical(board.lettersRight(first._1))(board.lettersAbove(first._1))))
       val adjacentWord = allAdjacentTo(first._1, first._2, first._3)
       val adjStart: List[List[(Pos, Square, Tile)]] = if (adjacentWord.isEmpty) Nil else adjacentWord :: Nil
 
@@ -214,7 +214,7 @@ sealed case class ValidInputPlaceLettersMove(game: Game, placed: NonEmptyList[(P
               val between = predicesor flatMap {
                 predicsorPos =>
                   val between =
-                    horizontalElseVertical(board.LettersRight(pos))(board.LettersAbove(pos))
+                    horizontalElseVertical(board.lettersRight(pos))(board.lettersAbove(pos))
                   between.find { case (ps, sq, tile) => ps == predicsorPos } map (_ => between)
               }
 

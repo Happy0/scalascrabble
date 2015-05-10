@@ -173,7 +173,7 @@ class MoveTest extends ScrabbleTest {
     "warn about misplaced letters" in {
 
       val place = toPlace("test", true, pos(1, 1))
-      val first = safeUpdateTile(place, 1, Pos.posAt(3, 2), 'C')
+      val first = safeUpdateTile(place, 1, Pos.at(3, 2), 'C')
 
       val place2 = toPlace("test", true, pos(1, 1))
       val second = safeUpdateTile(place2, 3, pos(5, 1), 'C')
@@ -340,7 +340,7 @@ class MoveTest extends ScrabbleTest {
           predictableGame.moves must beEqualTo(1)
           pos(7, 8) foreach {
             pos =>
-              predictableGame.board.LettersRight(pos).map { case (pos, sq, let) => let.letter }.mkString must beEqualTo("LURID")
+              predictableGame.board.lettersRight(pos).map { case (pos, sq, let) => let.letter }.mkString must beEqualTo("LURID")
           }
 
           predictableGame.bag.lettersAsString must beEqualTo(

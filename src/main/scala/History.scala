@@ -1,15 +1,15 @@
 package scrabble
 
-import scala.util.{ Try, Success, Failure }
+import scala.util.{ Try, Success }
 import scalaz.NonEmptyList
 
 sealed abstract class MoveSummary
 
-case class PlaceSummary(placed: NonEmptyList[PosTile], formedWords: FormedWords, score: Score) extends MoveSummary()
+case class PlaceSummary(placed: NonEmptyList[PosTile], formedWords: FormedWords, score: Score) extends MoveSummary
 
-case object SkippedSummary extends MoveSummary()
+case object SkippedSummary extends MoveSummary
 
-case class ExchangedSummary(given: List[Tile], newBag: String) extends MoveSummary()
+case class ExchangedSummary(given: List[Tile], newBag: String) extends MoveSummary
 
 case class History(startGame: Game, moveHistory: NonEmptyList[MoveSummary]) {
 

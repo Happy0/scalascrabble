@@ -1,7 +1,8 @@
 package scrabble;
+
 import scalaz.NonEmptyList
 
-import scala.util.{ Try, Success, Failure }
+import scala.util.Success
 
 /**
  *  @letterString: What the letterbag should be after the move
@@ -21,13 +22,13 @@ class PlayGameTest extends ScrabbleTest {
     addPlaceLists(toPlace("W", true, pos(9, 7)), toPlace("KE", false, pos(9, 9))),
     toPlace("N", true, pos(11, 9)),
     addPlaceLists(toPlace("B", true, pos(13, 7)), toPlace("D", true, pos(13, 9))),
-    toPlace("NAI", true, pos(9, 12)),
+    toPlace("NAI", horizontal = true, pos(9, 12)),
     addPlaceLists(toPlace("B", true, pos(11, 11)), toPlace("LLE", true, pos(13, 11))),
     toPlace("WEE", false, pos(10, 13)),
     addPlaceLists(toPlace("JA", false, pos(15, 9)), toPlace("GERS", false, pos(15, 12))),
     addPlaceLists(toPlace("CANOPI", true, pos(4, 15)), toPlace("D", true, pos(11, 15))),
-    toPlace("SONI", false, pos(4, 11)),
-    toPlace("AUDIO", false, pos(3, 10)),
+    toPlace("SONI", horizontal = false, pos(4, 11)),
+    toPlace("AUDIO", horizontal = false, pos(3, 10)),
     safeUpdateTile(toPlace("RAZER", false, pos(5, 8)), 3, BlankLetter('E')),
     toPlace("MULEY", false, pos(2, 6)),
     toPlace("ROOTY", false, pos(3, 2)),

@@ -5,32 +5,32 @@ class GameTest extends ScrabbleTest {
   "a game should" should {
 
     "have no less than 2 players" in {
-      Game.make(List("jim"), Dictionary.load("Dict/en.txt"),
-        LetterBag.init) must beNone
+      Game(List("jim"), Dictionary("Dict/en.txt"), LetterBag()) must beNone
     }
 
     "have no more than 4 players" in {
-      Game.make(List("jim", "joe", "charlie", "noam", "test"),
-        Dictionary.load("Dict/en.txt"), LetterBag.init) must beNone
+      Game(List("jim", "joe", "charlie", "noam", "test"),
+        Dictionary("Dict/en.txt"), LetterBag()) must beNone
     }
 
     "Initialise a game properly" in {
-      game foreach {
-        game =>
-          game.bag.size must beEqualTo(100 - 14) // Distribute the initial tiles
+      game.foreach(_ => eachGame(_))
 
-          game.players must haveKeys(0, 1)
+      def eachGame(g: Game) = {
+        g.bag.size must beEqualTo(100 - 14) // Distribute the initial tiles
 
-          game.players(0).letters must have size 7
-          game.players(1).letters must have size 7
+        g.players must haveKeys(0, 1)
 
-          game.board must beEqualTo(Board.init)
+        g.players(0).letters must have size 7
+        g.players(1).letters must have size 7
 
-          game.playersMove must beEqualTo(0)
+        g.board must beEqualTo(Board())
 
-          game.moves must beEqualTo(0)
+        g.playersMove must beEqualTo(0)
 
-          game.consecutivePasses must beEqualTo(0)
+        g.moves must beEqualTo(0)
+
+        g.consecutivePasses must beEqualTo(0)
       }
 
     }
@@ -48,7 +48,7 @@ class GameTest extends ScrabbleTest {
 
       }
 
-      val fourPlayerGame = Game.make(List("jim", "joe", "charlie", "noam"), Dictionary.load("Dict/en.txt"), LetterBag.init)
+      val fourPlayerGame = Game(List("jim", "joe", "charlie", "noam"), Dictionary("Dict/en.txt"), LetterBag())
       fourPlayerGame must beSome
 
       fourPlayerGame foreach {

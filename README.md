@@ -7,7 +7,7 @@ Scrabble API written in scala. It is functional, immutable, and free of side eff
 INSTALL
 -------
 
-Clone scalachess
+Clone scalascrabble
 
     git clone git://github.com/happy0/scalascrabble
 
